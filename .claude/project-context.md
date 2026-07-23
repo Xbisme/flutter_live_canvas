@@ -29,8 +29,9 @@
 - **Đã có sẵn**:
   - `docs/screen-inventory.md` — danh sách màn hình + data cần, làm nền cho contract (đã review, 1 giả định còn treo: Onboarding không cần data riêng).
   - `contracts/openapi.yaml` v0.3.0 + `.claude/api-context.md` v0.3.0 — cursor-based pagination, resource `Tag` curated, `POST /wallpapers/batch` cho Favorites, resource `Collection` curated (tab "Bộ sưu tập" + màn Collection Detail) qua `GET /collections`, `GET /collections/{id}`.
-- **Spec tiếp theo**: `MO-001-mobile-foundation` (sau khi contract #000 freeze — v0.3.0 coi như bản gần chốt, chờ xác nhận cuối).
+- **Spec tiếp theo**: `MO-001-project-bootstrap` — tạo project Flutter bằng `very_good_cli` với **đúng 2 flavor `development` + `production`** (gỡ `staging` mà very_good_cli sinh mặc định), gen Dart client từ `openapi.yaml`. Sau đó mới tới MO-002 (foundation/design system). Contract #000 v0.3.0 coi như bản gần chốt, chờ xác nhận cuối.
 - **Quyết định kỹ thuật đã chốt** (ảnh hưởng UI/state management):
+  - Bootstrap: dùng `very_good_cli` tạo project; **đúng 2 flavor `development` + `production`** — KHÔNG có `staging` hay flavor nào khác (gỡ `staging` mà very_good_cli sinh mặc định). Base URL backend lấy theo config từng flavor, không hardcode. Chi tiết + toàn bộ nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.0.0, Principle XII).
   - Pagination: cursor-based — dùng `ListView.builder`/`GridView.builder` lazy build, load trang tiếp khi gần cuối scroll, **dispose `VideoPlayerController` của item ngoài viewport** để tránh tràn RAM (đây là phần client phải tự làm, server chỉ giải quyết 1 nửa).
   - Favorites: chỉ lưu local mảng ID, mỗi lần mở màn gọi `POST /wallpapers/batch` lấy data mới nhất (không cache full data).
   - Tag: hiển thị dạng filter chips, danh sách lấy từ `GET /tags` (curated, không phân trang).
