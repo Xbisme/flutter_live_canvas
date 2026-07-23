@@ -1,0 +1,50 @@
+name: ci
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10 # SC-006 — the 4 gates must stay under this
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.7
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate l10n (gitignored output)
+        run: flutter gen-l10n
+
+      # Gate 1 — formatting
+      - name: Format
+        run: dart format --set-exit-if-changed .
+
+      # Gate 2 — static analysis, zero warnings (very_good_analysis)
+      - name: Analyze
+        run: flutter analyze
+
+      # Gate 3 — tests
+      - name: Test
+        run: |
+          dart pub global activate very_good_cli
+          very_good test --test-randomize-ordering-seed random
+
+      # Gate 4 — BLoC lint, zero violations
+      - name: BLoC lint
+        run: |
+          dart pub global activate bloc_tools
+          bloc lint .

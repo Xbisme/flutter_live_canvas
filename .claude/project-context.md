@@ -3,7 +3,7 @@
 > Repo: `livecanvas-mobile` (Flutter — iOS/Android/tablet 1 codebase)
 > Repo liên quan: `livecanvas-backend` (Django, độc lập hoàn toàn — đồng bộ qua `contracts/openapi.yaml` + `.claude/api-context.md`, copy tay giữa 2 repo)
 >
-> Last updated: 2026-07-23 (Repo khởi tạo — chưa có spec nào triển khai · contract v0.3.2 — synced từ backend, thêm thẻ ảo "All" ở /tags)
+> Last updated: 2026-07-23 (MO-001 đã implement trên branch `MO-001-project-bootstrap` — chờ PR/merge · contract v0.3.2)
 > **Mục đích**: Snapshot tối thiểu để bắt đầu 1 session làm việc trên repo mobile.
 >
 > **Đọc file nào khi nào**:
@@ -25,7 +25,14 @@
 
 ## Current Focus
 
-- **Trạng thái**: Repo mới khởi tạo, chưa merge spec nào.
+- **Trạng thái**: MO-001 (bootstrap) đã implement xong trên branch `MO-001-project-bootstrap`, 4 quality gate xanh local — chờ PR/merge. Backend đã merge BE-001→BE-003 (Core Content API thật, có seed data).
+- **Kết quả MO-001 + deviation đáng nhớ** (chi tiết: `specs/MO-001-project-bootstrap/`):
+  - Project very_good_cli, org `com.livecanvas`, ĐÚNG 2 flavor (staging + scheme Runner mặc định đã gỡ cả iOS/Android/VSCode launch).
+  - `AppConfig` per-flavor: development → backend local (`localhost:8000` / Android emulator `10.0.2.2:8000`, dev key `dev-app-key` commit); production → placeholder URL + `--dart-define=APP_KEY`.
+  - Client dart-dio + json_serializable sinh vào **`packages/livecanvas_api`** (path package, KHÔNG phải `lib/core/api` như spec gốc — dart-dio sinh package độc lập, không nhét được vào `lib/`); regenerate: `scripts/generate_api.sh` (cần Java; script tự bump sdk constraint ≥3.8 cho null-aware elements).
+  - **Version pins do xung khắc solver** (KHÔNG tự ý nâng): `injectable 3.0.0` + `injectable_generator 3.0.2` (codegen bằng **lean_builder**, không phải build_runner; lệnh: `dart run lean_builder build`) + `bloc_lint 0.4.1` (0.4.2 xung khắc `_fe_analyzer_shared`); `bloc_tools` là CLI global, không để trong dev_deps (gây xung khắc).
+  - ⚠️ **`phosphor_flutter` 2.1.0 vỡ với Flutter 3.44** (`IconData` thành final class) — đã gỡ khỏi MO-001; PHẢI chốt hướng xử lý (chờ bản vá / fork / thay icon set) trước khi làm UI thật ở MO-002.
+  - i18n: `app_vi.arb` là template mặc định; CI 4 gate tự viết ở `.github/workflows/main.yaml`.
 - **Đã có sẵn**:
   - `docs/screen-inventory.md` — danh sách màn hình + data cần, làm nền cho contract (đã review, 1 giả định còn treo: Onboarding không cần data riêng).
   - `.claude/openapi.yaml` v0.3.2 + `.claude/api-context.md` v0.3.2 (synced verbatim từ backend) — cursor-based pagination, resource `Tag` curated (+ **thẻ ảo "All"** `{id:0, slug:"all"}` ở đầu `GET /tags`, reserved slug), `POST /wallpapers/batch` cho Favorites, resource `Collection` curated (tab "Bộ sưu tập" + màn Collection Detail) qua `GET /collections`, `GET /collections/{id}`.
