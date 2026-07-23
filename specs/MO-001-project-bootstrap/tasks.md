@@ -14,9 +14,9 @@
 
 **Purpose**: Máy dev đủ toolchain + project very_good được scaffold vào repo root
 
-- [ ] T001 Cài/upgrade toolchain trên máy dev: `flutter upgrade` tại `~/Documents/develop/flutter` lên 3.44.7 stable + thêm `bin` vào PATH; `dart pub global activate very_good_cli 1.3.0`; `dart pub global activate bloc_tools`; `brew install temurin` (Java cho openapi-generator — máy hiện CHƯA có); verify `flutter doctor`, `java -version`, `npx --version`
-- [ ] T002 Scaffold `very_good create flutter_app livecanvas --desc "LiveCanvas — live wallpaper app" --org "com.livecanvas"` vào thư mục tạm, move toàn bộ nội dung vào repo root (GIỮ nguyên `.git/`, `.claude/`, `.specify/`, `specs/`, `LICENSE`; merge nội dung README template vào `README.md`); commit mốc scaffold nguyên bản
-- [ ] T003 Baseline xanh: `flutter pub get` → `flutter test` pass trên template nguyên bản; commit `pubspec.lock`
+- [X] T001 Cài/upgrade toolchain trên máy dev: `flutter upgrade` tại `~/Documents/develop/flutter` lên 3.44.7 stable + thêm `bin` vào PATH; `dart pub global activate very_good_cli 1.3.0`; `dart pub global activate bloc_tools`; `brew install temurin` (Java cho openapi-generator — máy hiện CHƯA có); verify `flutter doctor`, `java -version`, `npx --version`
+- [X] T002 Scaffold `very_good create flutter_app livecanvas --desc "LiveCanvas — live wallpaper app" --org "com.livecanvas"` vào thư mục tạm, move toàn bộ nội dung vào repo root (GIỮ nguyên `.git/`, `.claude/`, `.specify/`, `specs/`, `LICENSE`; merge nội dung README template vào `README.md`); commit mốc scaffold nguyên bản
+- [X] T003 Baseline xanh: `flutter pub get` → `flutter test` pass trên template nguyên bản; commit `pubspec.lock`
 
 **Checkpoint**: Repo có project Flutter chạy được (còn 3 flavor template — gỡ staging ở US1)
 
@@ -28,9 +28,9 @@
 
 **⚠️ CRITICAL**: Hoàn thành trước khi vào bất kỳ user story nào
 
-- [ ] T004 Cập nhật `pubspec.yaml` theo bảng version [research.md](research.md) R1 (caret pin, KHÔNG đoán): deps `flutter_bloc ^9.1.1`, `get_it ^9.2.1`, `injectable ^3.0.0`, `go_router ^17.3.0`, `dio ^5.10.0`, `phosphor_flutter ^2.1.0`, `intl ^0.20.3` (hạ theo pin flutter_localizations nếu pub solve kêu), `json_annotation ^4.12.0`; dev_deps `very_good_analysis ^10.3.0`, `bloc_lint ^0.4.2`, `bloc_test ^10.0.0`, `mocktail ^1.0.5`, `injectable_generator ^3.1.1`, `build_runner ^2.15.2`, `json_serializable ^6.14.0`; `flutter pub get` sạch, commit `pubspec.lock`
-- [ ] T005 Dựng khung thư mục Principle XI: `lib/core/{config,constants,di,router}/` (+ `.gitkeep` cho `lib/features/`); XOÁ feature counter của template (`lib/counter/`, test counter liên quan) — placeholder page thay thế làm ở T011
-- [ ] T006 [P] `analysis_options.yaml`: include `package:very_good_analysis/analysis_options.yaml` + `package:bloc_lint/recommended.yaml`; `flutter analyze` 0 warning trên khung hiện tại
+- [X] T004 Cập nhật `pubspec.yaml` theo bảng version [research.md](research.md) R1 (caret pin, KHÔNG đoán): deps `flutter_bloc ^9.1.1`, `get_it ^9.2.1`, `injectable ^3.0.0`, `go_router ^17.3.0`, `dio ^5.10.0`, `phosphor_flutter ^2.1.0`, `intl ^0.20.3` (hạ theo pin flutter_localizations nếu pub solve kêu), `json_annotation ^4.12.0`; dev_deps `very_good_analysis ^10.3.0`, `bloc_lint ^0.4.2`, `bloc_test ^10.0.0`, `mocktail ^1.0.5`, `injectable_generator ^3.1.1`, `build_runner ^2.15.2`, `json_serializable ^6.14.0`; `flutter pub get` sạch, commit `pubspec.lock`
+- [X] T005 Dựng khung thư mục Principle XI: `lib/core/{config,constants,di,router}/` (+ `.gitkeep` cho `lib/features/`); XOÁ feature counter của template (`lib/counter/`, test counter liên quan) — placeholder page thay thế làm ở T011
+- [X] T006 [P] `analysis_options.yaml`: include `package:very_good_analysis/analysis_options.yaml` + `package:bloc_lint/recommended.yaml`; `flutter analyze` 0 warning trên khung hiện tại
 
 **Checkpoint**: Nền sẵn — US1 bắt đầu được
 
@@ -42,11 +42,11 @@
 
 **Independent Test**: [quickstart.md](quickstart.md) V1 — 4/4 tổ hợp boot hiển thị đúng environment; chạy flavor staging phải lỗi; grep `staging` sạch
 
-- [ ] T007 [US1] Tạo `lib/core/config/app_config.dart`: enum `AppEnvironment {development, production}` + class `AppConfig {environment, apiBaseUrl, appKey}` immutable theo [data-model.md](data-model.md); factory/const cho từng flavor — development: baseUrl platform-aware (`Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://localhost:8000'`), dev appKey commit thẳng; production: placeholder `https://api.livecanvas.example` (TODO chốt domain) + `appKey = String.fromEnvironment('APP_KEY')`
-- [ ] T008 [US1] Entrypoints: sửa `lib/main_development.dart` + `lib/main_production.dart` gọi `bootstrap(AppConfig.development()/.production())` (sửa `lib/bootstrap.dart` nhận `AppConfig`); XOÁ `lib/main_staging.dart`
-- [ ] T009 [US1] Gỡ staging Android: xoá flavor `staging` khỏi `android/app/build.gradle` (productFlavors) + mọi resource/config staging kèm theo; verify `cd android && ./gradlew tasks | grep -i staging` → rỗng
-- [ ] T010 [US1] Gỡ staging iOS: xoá scheme `staging` (`ios/Runner.xcodeproj/xcshareddata/xcschemes/staging.xcscheme`), build configurations `Debug-staging`/`Release-staging`/`Profile-staging` trong `project.pbxproj`, xcconfig staging nếu có; verify `xcodebuild -list -project ios/Runner.xcodeproj` chỉ còn development/production
-- [ ] T011 [US1] Placeholder page `lib/app/view/app.dart` (+ page tối giản) hiển thị `config.environment.name` (đọc AppConfig — tạm truyền constructor, chuyển sang DI ở T016) + widget test `test/app/view/app_test.dart` verify hiển thị đúng tên environment
+- [X] T007 [US1] Tạo `lib/core/config/app_config.dart`: enum `AppEnvironment {development, production}` + class `AppConfig {environment, apiBaseUrl, appKey}` immutable theo [data-model.md](data-model.md); factory/const cho từng flavor — development: baseUrl platform-aware (`Platform.isAndroid ? 'http://10.0.2.2:8000' : 'http://localhost:8000'`), dev appKey commit thẳng; production: placeholder `https://api.livecanvas.example` (TODO chốt domain) + `appKey = String.fromEnvironment('APP_KEY')`
+- [X] T008 [US1] Entrypoints: sửa `lib/main_development.dart` + `lib/main_production.dart` gọi `bootstrap(AppConfig.development()/.production())` (sửa `lib/bootstrap.dart` nhận `AppConfig`); XOÁ `lib/main_staging.dart`
+- [X] T009 [US1] Gỡ staging Android: xoá flavor `staging` khỏi `android/app/build.gradle` (productFlavors) + mọi resource/config staging kèm theo; verify `cd android && ./gradlew tasks | grep -i staging` → rỗng
+- [X] T010 [US1] Gỡ staging iOS: xoá scheme `staging` (`ios/Runner.xcodeproj/xcshareddata/xcschemes/staging.xcscheme`), build configurations `Debug-staging`/`Release-staging`/`Profile-staging` trong `project.pbxproj`, xcconfig staging nếu có; verify `xcodebuild -list -project ios/Runner.xcodeproj` chỉ còn development/production
+- [X] T011 [US1] Placeholder page `lib/app/view/app.dart` (+ page tối giản) hiển thị `config.environment.name` (đọc AppConfig — tạm truyền constructor, chuyển sang DI ở T016) + widget test `test/app/view/app_test.dart` verify hiển thị đúng tên environment
 - [ ] T012 [US1] Verify toàn bộ V1 [quickstart.md](quickstart.md): 4/4 tổ hợp `flutter run` (iOS sim + Android emu × 2 flavor), `flutter run --flavor staging` fail, `grep -ri staging lib android ios` (đuôi dart/gradle/xcconfig/pbxproj/xcscheme) = 0 kết quả
 
 **Checkpoint**: US1 = MVP — SC-002/SC-003 đạt, app flavor-correct trên cả 2 platform
@@ -59,11 +59,11 @@
 
 **Independent Test**: [quickstart.md](quickstart.md) V2 + V3 — xoá `lib/core/api` regenerate lại sạch; backend local nhận đúng header
 
-- [ ] T013 [P] [US2] Contract Sync (FR-006): copy `.claude/openapi.yaml` → `contracts/openapi.yaml`; verify `diff .claude/openapi.yaml contracts/openapi.yaml` = identical
-- [ ] T014 [US2] Tạo `openapitools.json` (pin generator core **7.14.0**) + `scripts/generate_api.sh` idempotent: xoá `lib/core/api/` → `npx @openapitools/openapi-generator-cli generate -g dart-dio -i contracts/openapi.yaml -o lib/core/api --additional-properties=serializationLibrary=json_serializable,...` → chạy build_runner cho code sinh nếu generator yêu cầu → `dart format lib/core/api`; script fail rõ (exit ≠ 0) khi yaml lỗi/thiếu Java
-- [ ] T015 [US2] Chạy `scripts/generate_api.sh` lần đầu: client vào `lib/core/api/`; thêm `lib/core/api/README.md` cảnh báo GENERATED-ONLY (không sửa tay — Principle I); project compile, `flutter analyze` 0 warning (thêm exclude cho `lib/core/api/**` trong analysis_options nếu code sinh vi phạm lint — chỉ exclude thư mục generated)
-- [ ] T016 [US2] DI `lib/core/di/injection.dart`: setup get_it + injectable (`@InjectableInit`, build_runner gen `injection.config.dart`); đăng ký `AppConfig` (từ bootstrap) + `Dio` với interceptor gắn header `X-App-Key` từ `AppConfig` (FR-005); `bootstrap()` gọi `configureDependencies(config)`; T011 placeholder chuyển sang đọc config từ getIt
-- [ ] T017 [US2] Unit test `test/core/di/app_key_interceptor_test.dart`: request qua Dio đã đăng ký có header `X-App-Key` đúng giá trị config; verify V2 (rm -rf + regenerate → analyze 0 warning, git diff chỉ trong `lib/core/api`) + V3 (backend local: curl không key → 401 `INVALID_APP_KEY`, có key → 200)
+- [X] T013 [P] [US2] Contract Sync (FR-006): copy `.claude/openapi.yaml` → `contracts/openapi.yaml`; verify `diff .claude/openapi.yaml contracts/openapi.yaml` = identical
+- [X] T014 [US2] Tạo `openapitools.json` (pin generator core **7.14.0**) + `scripts/generate_api.sh` idempotent: xoá `lib/core/api/` → `npx @openapitools/openapi-generator-cli generate -g dart-dio -i contracts/openapi.yaml -o lib/core/api --additional-properties=serializationLibrary=json_serializable,...` → chạy build_runner cho code sinh nếu generator yêu cầu → `dart format lib/core/api`; script fail rõ (exit ≠ 0) khi yaml lỗi/thiếu Java
+- [X] T015 [US2] Chạy `scripts/generate_api.sh` lần đầu: client vào `lib/core/api/`; thêm `lib/core/api/README.md` cảnh báo GENERATED-ONLY (không sửa tay — Principle I); project compile, `flutter analyze` 0 warning (thêm exclude cho `lib/core/api/**` trong analysis_options nếu code sinh vi phạm lint — chỉ exclude thư mục generated)
+- [X] T016 [US2] DI `lib/core/di/injection.dart`: setup get_it + injectable (`@InjectableInit`, build_runner gen `injection.config.dart`); đăng ký `AppConfig` (từ bootstrap) + `Dio` với interceptor gắn header `X-App-Key` từ `AppConfig` (FR-005); `bootstrap()` gọi `configureDependencies(config)`; T011 placeholder chuyển sang đọc config từ getIt
+- [X] T017 [US2] Unit test `test/core/di/app_key_interceptor_test.dart`: request qua Dio đã đăng ký có header `X-App-Key` đúng giá trị config; verify V2 (rm -rf + regenerate → analyze 0 warning, git diff chỉ trong `lib/core/api`) + V3 (backend local: curl không key → 401 `INVALID_APP_KEY`, có key → 200)
 
 **Checkpoint**: US1 + US2 độc lập hoạt động — SC-004 đạt
 
@@ -75,10 +75,10 @@
 
 **Independent Test**: Spec US3 acceptance — đối chiếu pubspec với R1; chuỗi UI từ ARB; cấu trúc đúng Principle XI
 
-- [ ] T018 [P] [US3] `lib/core/router/app_router.dart`: go_router tối giản — abstract final class `AppRoutes` (const path `/`) + `GoRouter` 1 route placeholder page; `App` widget dùng `MaterialApp.router(routerConfig:)`; không dùng `Navigator.of` (Principle X)
-- [ ] T019 [P] [US3] i18n vi-first (Principle XV): `l10n.yaml` với `template-arb-file: app_vi.arb`, `arb-dir: lib/l10n/arb`; tạo `lib/l10n/arb/app_vi.arb` (template, mặc định) + `app_en.arb`; chuyển mọi chuỗi placeholder page sang `context.l10n` (kèm `@description`); widget test T011 cập nhật theo
+- [X] T018 [P] [US3] `lib/core/router/app_router.dart`: go_router tối giản — abstract final class `AppRoutes` (const path `/`) + `GoRouter` 1 route placeholder page; `App` widget dùng `MaterialApp.router(routerConfig:)`; không dùng `Navigator.of` (Principle X)
+- [X] T019 [P] [US3] i18n vi-first (Principle XV): `l10n.yaml` với `template-arb-file: app_vi.arb`, `arb-dir: lib/l10n/arb`; tạo `lib/l10n/arb/app_vi.arb` (template, mặc định) + `app_en.arb`; chuyển mọi chuỗi placeholder page sang `context.l10n` (kèm `@description`); widget test T011 cập nhật theo
 - [ ] T020 [P] [US3] Dùng `PhosphorIcon` trong placeholder page (1 icon bất kỳ từ `phosphor_flutter`) — smoke-proof bộ icon hoạt động, không mix `Icons.*` cho content icon (Principle VI)
-- [ ] T021 [US3] Cập nhật `README.md` (FR-011): prerequisites ([quickstart.md](quickstart.md) bảng), lệnh chạy từng flavor + build release với `--dart-define=APP_KEY`, lệnh `scripts/generate_api.sh` + yêu cầu Java, pre-commit checklist constitution (`dart format .` / `flutter analyze` / `very_good test` / `bloc lint .`)
+- [X] T021 [US3] Cập nhật `README.md` (FR-011): prerequisites ([quickstart.md](quickstart.md) bảng), lệnh chạy từng flavor + build release với `--dart-define=APP_KEY`, lệnh `scripts/generate_api.sh` + yêu cầu Java, pre-commit checklist constitution (`dart format .` / `flutter analyze` / `very_good test` / `bloc lint .`)
 
 **Checkpoint**: Toàn bộ story nền hoàn thành
 
@@ -90,7 +90,7 @@
 
 **Independent Test**: Spec US4 acceptance — commit vi phạm format → CI đỏ; sửa → xanh
 
-- [ ] T022 [US4] Tạo `.github/workflows/main.yaml`: trigger PR + push main; steps checkout → `subosito/flutter-action` (channel stable, cache: true) → `flutter pub get` → `dart format --set-exit-if-changed .` → `flutter analyze` → `dart pub global activate very_good_cli` + `very_good test` → `dart pub global activate bloc_tools` + `bloc lint .`; cache pub
+- [X] T022 [US4] Tạo `.github/workflows/main.yaml`: trigger PR + push main; steps checkout → `subosito/flutter-action` (channel stable, cache: true) → `flutter pub get` → `dart format --set-exit-if-changed .` → `flutter analyze` → `dart pub global activate very_good_cli` + `very_good test` → `dart pub global activate bloc_tools` + `bloc lint .`; cache pub
 - [ ] T023 [US4] Verify CI: push branch → workflow chạy đủ 4 gate xanh ≤ 10 phút (SC-006); test negative: commit tạm phá format → CI đỏ → revert (chứng minh gate chặn thật)
 
 **Checkpoint**: Mọi PR từ nay có gate

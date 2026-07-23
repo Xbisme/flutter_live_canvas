@@ -1,5 +1,8 @@
 # LiveCanvas — Mobile
 
+[![style: very good analysis][very_good_analysis_badge]][very_good_analysis_link]
+[![License: MIT][license_badge]][license_link]
+
 > Ứng dụng **hình nền động (live video wallpaper)** viết bằng Flutter.
 > Duyệt và tải các hình nền video lặp, đặt làm hình nền động trên Android
 > (`WallpaperService`) và qua luồng hướng dẫn Shortcuts trên iOS.
@@ -9,192 +12,149 @@ LiveCanvas không có hệ thống tài khoản: **favorite/lịch sử lưu loc
 (tự viết verify-receipt, không dùng RevenueCat).
 
 - **Nền tảng**: Android (đặt live wallpaper trực tiếp) · iOS/iPadOS (preview +
-  hướng dẫn Shortcuts, do Apple không cho set video wallpaper qua API công
-  khai) · Tablet responsive.
+  hướng dẫn Shortcuts) · Tablet responsive.
 - **Repo backend đi kèm**: `livecanvas-backend` (Django) — độc lập, đồng bộ qua
   contract (xem [Contract Sync](#contract-sync)).
-
----
-
-## Mục lục
-
-- [Kiến trúc & nguyên tắc](#kiến-trúc--nguyên-tắc)
-- [Yêu cầu môi trường](#yêu-cầu-môi-trường)
-- [Khởi tạo project (bootstrap)](#khởi-tạo-project-bootstrap)
-- [Chạy app theo flavor](#chạy-app-theo-flavor)
-- [Sinh API client từ contract](#sinh-api-client-từ-contract)
-- [Cấu trúc thư mục](#cấu-trúc-thư-mục)
-- [Lệnh thường dùng](#lệnh-thường-dùng)
-- [Contract Sync](#contract-sync)
-- [Lộ trình spec](#lộ-trình-spec)
+- Scaffold bởi [Very Good CLI][very_good_cli_link] (spec MO-001).
 
 ---
 
 ## Kiến trúc & nguyên tắc
 
-Mọi quyết định kỹ thuật tuân theo bản hiến pháp dự án:
+Mọi quyết định kỹ thuật tuân theo hiến pháp dự án:
 [`.specify/memory/constitution.md`](.specify/memory/constitution.md) (v1.0.0).
-Tóm tắt những điều bắt buộc:
+Tóm tắt bắt buộc:
 
-- **Contract-driven**: Dart API client được **generate** từ
-  `contracts/openapi.yaml`, không viết tay model API.
-- **Video & bộ nhớ**: list luôn dùng `GridView.builder` lazy, **dispose
-  `VideoPlayerController` khi tile rời viewport**, cursor pagination.
-- **State**: BLoC/Cubit (`flutter_bloc`), pattern 4 trạng thái
-  `initial → loading → loaded → error`.
-- **Lỗi**: repository trả `Result<T>` + `AppFailure` (không throw lên UI).
-- **Entitlement**: client **không bao giờ tự quyết Premium** — gate thật ở
-  `GET /wallpapers/{id}/download-url` phía backend.
-- **Design system**: token màu/spacing/typography port từ bộ handoff
-  (`.claude/livecanvas-detail-screens`), không hardcode màu/pixel.
-- **Flavor**: **đúng 2 flavor `development` + `production`** (xem bên dưới).
+- **Contract-driven**: Dart API client **generate** từ
+  `contracts/openapi.yaml` (v0.3.2) — không viết tay model API.
+- **Flavor**: **đúng 2 flavor `development` + `production`** — không có
+  `staging` (Principle XII; thêm flavor = amend hiến pháp).
+- **State**: BLoC/Cubit (`flutter_bloc`), 4 trạng thái
+  `initial → loading → loaded → error`; **Lỗi**: `Result<T>` + `AppFailure`.
+- **Entitlement**: client không bao giờ tự quyết Premium — gate thật ở
+  `download-url` phía backend.
+- **Video & bộ nhớ**: builder lazy + dispose `VideoPlayerController` ngoài
+  viewport, cursor pagination (từ MO-003).
 
 ## Yêu cầu môi trường
 
-- **Flutter** (bản stable mới nhất) + **Dart** SDK đi kèm.
-- **very_good_cli**: `dart pub global activate very_good_cli`
-- **OpenAPI Generator** (để sinh Dart client):
-  `dart pub global activate openapi_generator_cli`  hoặc bản CLI
-  `@openapitools/openapi-generator-cli`.
-- Xcode (iOS) + Android SDK/Android Studio.
-- (Tuỳ chọn) **Prism** để mock backend từ `openapi.yaml`:
-  `npm i -g @stoplight/prism-cli`.
-
-## Khởi tạo project (bootstrap)
-
-> Đây là spec **MO-001** trong lộ trình. Repo hiện mới có tài liệu contract +
-> hiến pháp, **chưa có mã Flutter** — các bước dưới đây tạo skeleton.
-
-1. **Tạo project bằng very_good_cli** (KHÔNG dựng skeleton tay):
-
-   ```bash
-   very_good create flutter_app livecanvas \
-     --org com.livecanvas --desc "LiveCanvas — live video wallpapers"
-   ```
-
-2. **Chỉ giữ 2 flavor `development` + `production`.**
-   `very_good_cli` sinh mặc định 3 flavor (development / **staging** /
-   production). Phải **gỡ bỏ hoàn toàn `staging`**:
-   - Xoá `lib/main_staging.dart`.
-   - Xoá scheme/xcconfig `Staging` phía iOS (Xcode: Runner schemes +
-     `ios/Flutter/*Staging*`).
-   - Xoá `staging` trong Android `buildTypes`/`productFlavors`
-     (`android/app/build.gradle`).
-   - Kết quả: chỉ còn `development` và `production` (kiểm bằng
-     `flutter run --flavor development` và `--flavor production`, không còn
-     `staging`).
-
-3. **Backend base URL theo flavor** (không hardcode trong feature code):
-   - `development` → staging-api (`https://staging-api.example.com/v1`)
-   - `production` → production API (`https://api.example.com/v1`)
-
-4. **Sinh Dart API client** từ contract (xem
-   [mục dưới](#sinh-api-client-từ-contract)).
-
-5. **Cài nền**: `flutter_bloc`, `get_it` + `injectable`, `go_router`,
-   `very_good_analysis` + `bloc_lint`, i18n ARB (vi mặc định), Phosphor icons.
-   > Lấy version **mới nhất trên pub.dev** tại thời điểm cài — không đoán
-   > version (hiến pháp Principle XVI).
+| Công cụ | Ghi chú |
+|---|---|
+| Flutter ≥ 3.44.7 stable | `flutter upgrade` |
+| very_good_cli | `dart pub global activate very_good_cli` |
+| bloc_tools (CLI `bloc lint`) | `dart pub global activate bloc_tools` |
+| Java ≥ 11 (chạy openapi-generator) | `brew install openjdk` |
+| Node/npm (npx) | cho `@openapitools/openapi-generator-cli` |
+| Xcode + Android SDK | build iOS/Android |
+| Backend local (flavor development) | repo `livecanvas-backend`: `python manage.py runserver` |
 
 ## Chạy app theo flavor
 
 ```bash
-# Development (trỏ staging-api)
+# Development — trỏ backend local
+#   iOS simulator:    http://localhost:8000
+#   Android emulator: http://10.0.2.2:8000  (tự chọn theo platform)
 flutter run --flavor development -t lib/main_development.dart
 
-# Production (trỏ production API)
-flutter run --flavor production  -t lib/main_production.dart
+# Production — placeholder URL (domain thật chốt trước MO-007);
+# X-App-Key bơm qua --dart-define, KHÔNG commit
+flutter run --flavor production -t lib/main_production.dart \
+  --dart-define=APP_KEY=<key>
 ```
 
 Build release production:
 
 ```bash
-flutter build ipa --flavor production -t lib/main_production.dart      # iOS
-flutter build appbundle --flavor production -t lib/main_production.dart # Android
+flutter build ipa       --flavor production -t lib/main_production.dart --dart-define=APP_KEY=<key>
+flutter build appbundle --flavor production -t lib/main_production.dart --dart-define=APP_KEY=<key>
 ```
+
+Không tồn tại flavor thứ ba — `flutter run --flavor staging` phải báo lỗi.
 
 ## Sinh API client từ contract
 
-Contract nguồn: [`contracts/openapi.yaml`](contracts/openapi.yaml) (**v0.3.0**).
-Sinh client `dart-dio` vào `lib/core/api` (code generated — **không sửa tay**,
-sinh lại khi contract đổi):
+Contract nguồn: [`contracts/openapi.yaml`](contracts/openapi.yaml)
+(**v0.3.2**, sync tay với repo backend). Client `dart-dio` +
+`json_serializable` được sinh vào **`packages/livecanvas_api/`** (package
+path-dependency riêng, GENERATED-ONLY — không sửa tay):
 
 ```bash
-openapi-generator-cli generate \
-  -i contracts/openapi.yaml \
-  -g dart-dio \
-  -o lib/core/api \
-  --additional-properties=pubName=livecanvas_api
-# sau đó:
-dart run build_runner build --delete-conflicting-outputs
+scripts/generate_api.sh   # idempotent: xoá client cũ → generate → codegen → format
 ```
 
-Mock backend khi backend thật chưa sẵn sàng:
-
-```bash
-prism mock contracts/openapi.yaml
-```
+Generator pin version trong [`openapitools.json`](openapitools.json)
+(core 7.14.0). Script tự bump SDK constraint của package sinh ra lên ≥3.8
+(json_serializable dùng null-aware elements).
 
 ## Cấu trúc thư mục
 
 ```
 lib/
   core/
-    api/           # Dart client generated từ openapi.yaml (không sửa tay)
-    config/        # cấu hình theo flavor (base URL, app key)
-    constants/     # routes, channel methods, token names
-    di/            # get_it + injectable
-    domain/        # Result<T>, AppFailure, base Cubit
-    router/        # go_router (StatefulShellRoute — 5 tab)
-    services/      # wallpaper setter, IAP, storage…
-    theme/         # design tokens port từ handoff
-    widgets/       # WallpaperCard, TabBar, TopBar, PremiumBadge, sheets…
-    l10n/          # ARB (vi mặc định, en phụ)
-  features/
-    browse/        # grid + cursor pagination
-    search/        # tìm + tag chips
-    collections/   # tab Bộ sưu tập + Collection Detail
-    favorites/     # local IDs + batch refetch
-    wallpaper_detail/
-    wallpaper_setter/  # Android native + iOS Shortcuts
-    paywall/       # IAP + entitlement UI
-  main_development.dart
-  main_production.dart
-contracts/
-  openapi.yaml     # bản sao đồng bộ tay với repo backend
-.claude/           # project-context, roadmap, api-context, screen-inventory, design handoff
-.specify/          # constitution + speckit templates
+    config/        # AppConfig theo flavor (base URL, X-App-Key)
+    constants/     # (channel methods… từ MO-005)
+    di/            # get_it + injectable 3 (codegen: dart run lean_builder build)
+    network/       # AppKeyInterceptor (Dio)
+    router/        # go_router — AppRoutes constants
+  features/        # (trống — feature đầu tiên ở MO-002/003)
+  l10n/arb/        # app_vi.arb (template, MẶC ĐỊNH) + app_en.arb
+  app/             # App widget + HomePage placeholder
+  bootstrap.dart   # bootstrap(builder, config) → DI
+  main_development.dart / main_production.dart
+packages/
+  livecanvas_api/  # client generated (GENERATED.md — không sửa tay)
+contracts/openapi.yaml
+scripts/generate_api.sh
+.claude/           # project-context, roadmap, api-context, design handoff
+.specify/          # constitution + speckit
 ```
 
-## Lệnh thường dùng
+## Pre-commit checklist (bắt buộc — hiến pháp)
 
 ```bash
 dart format .                    # format
 flutter analyze                  # 0 warning
 very_good test --test-randomize-ordering-seed random
-dart run bloc_tools:bloc lint .  # 0 vi phạm BLoC
+bloc lint .                      # 0 vi phạm (bloc_tools)
 ```
+
+CI ([.github/workflows/main.yaml](.github/workflows/main.yaml)) chạy đúng 4
+gate này trên mọi PR — đỏ là không merge.
 
 ## Contract Sync
 
-3 file sau **tồn tại ở CẢ 2 repo** (`livecanvas-mobile`,
-`livecanvas-backend`) và được **copy tay cho giống hệt** khi API đổi:
+3 file sau **tồn tại ở CẢ 2 repo** (`livecanvas-mobile`, `livecanvas-backend`)
+và được **copy tay cho giống hệt** khi API đổi:
 
 - `contracts/openapi.yaml`
 - `.claude/api-context.md`
 - `docs/screen-inventory.md` *(bản làm việc hiện đặt trong `.claude/`)*
 
-Quy tắc: khi cần shape mới → sửa **`screen-inventory.md` trước** → rồi
-`openapi.yaml` + `api-context.md` → rồi copy sang repo còn lại. **Không thêm
-field chỉ-có-ở-client.** Contract hiện tại: **`v0.3.0`**.
+Quy tắc: cần shape mới → sửa **`screen-inventory.md` trước** → rồi
+`openapi.yaml` + `api-context.md` → copy sang repo còn lại → chạy
+`scripts/generate_api.sh`. **Không thêm field chỉ-có-ở-client.**
+Contract hiện tại: **`v0.3.2`**.
+
+## i18n
+
+ARB tại `lib/l10n/arb/` — **`app_vi.arb` là template/mặc định**, `app_en.arb`
+phụ. Thêm string mới vào `app_vi.arb` (kèm `@description`) → dịch sang
+`app_en.arb` → `flutter gen-l10n` (tự chạy khi build). Dùng qua
+`context.l10n`.
 
 ## Lộ trình spec
 
-Xem [`.claude/sdd-roadmap.md`](.claude/sdd-roadmap.md). Thứ tự:
-`#000 Contract Freeze → MO-001 Bootstrap (2 flavor) → MO-002 Foundation/Design
-→ MO-003 Browse/Collections/Detail → MO-004 Favorites → MO-005 Set Wallpaper →
+Xem [`.claude/sdd-roadmap.md`](.claude/sdd-roadmap.md):
+`#000 Contract Freeze → MO-001 Bootstrap ✅ → MO-002 Foundation/Design →
+MO-003 Browse/Collections/Detail → MO-004 Favorites → MO-005 Set Wallpaper →
 MO-006 IAP/Paywall → MO-007 Store Submission`.
 
 ---
 
 > Giao tiếp: tiếng Việt giữa dev ↔ Claude · tiếng Anh cho code/comment/commit.
+
+[license_badge]: https://img.shields.io/badge/license-MIT-blue.svg
+[license_link]: https://opensource.org/licenses/MIT
+[very_good_analysis_badge]: https://img.shields.io/badge/style-very_good_analysis-B22C89.svg
+[very_good_analysis_link]: https://pub.dev/packages/very_good_analysis
+[very_good_cli_link]: https://github.com/VeryGoodOpenSource/very_good_cli
