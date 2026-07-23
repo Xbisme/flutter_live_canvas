@@ -91,7 +91,7 @@
 **Independent Test**: Spec US4 acceptance — commit vi phạm format → CI đỏ; sửa → xanh
 
 - [X] T022 [US4] Tạo `.github/workflows/main.yaml`: trigger PR + push main; steps checkout → `subosito/flutter-action` (channel stable, cache: true) → `flutter pub get` → `dart format --set-exit-if-changed .` → `flutter analyze` → `dart pub global activate very_good_cli` + `very_good test` → `dart pub global activate bloc_tools` + `bloc lint .`; cache pub
-- [ ] T023 [US4] Verify CI: push branch → workflow chạy đủ 4 gate xanh ≤ 10 phút (SC-006); test negative: commit tạm phá format → CI đỏ → revert (chứng minh gate chặn thật)
+- [X] T023 [US4] Verify CI: push branch → workflow chạy đủ 4 gate xanh ≤ 10 phút (SC-006); test negative: commit tạm phá format → CI đỏ → revert (chứng minh gate chặn thật)
 
 **Checkpoint**: Mọi PR từ nay có gate
 
