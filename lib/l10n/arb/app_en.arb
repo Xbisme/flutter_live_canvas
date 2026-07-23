@@ -1,7 +1,16 @@
 {
     "@@locale": "en",
-    "counterAppBarTitle": "Counter",
-    "@counterAppBarTitle": {
-        "description": "Text shown in the AppBar of the Counter Page"
+    "appTitle": "LiveCanvas",
+    "@appTitle": {
+        "description": "App name shown in the AppBar"
+    },
+    "environmentLabel": "Environment: {environment}",
+    "@environmentLabel": {
+        "description": "Placeholder label showing which flavor the app runs",
+        "placeholders": {
+            "environment": {
+                "type": "String"
+            }
+        }
     }
 }

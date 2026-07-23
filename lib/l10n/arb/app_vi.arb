@@ -1,0 +1,16 @@
+{
+    "@@locale": "vi",
+    "appTitle": "LiveCanvas",
+    "@appTitle": {
+        "description": "Tên ứng dụng hiển thị trên AppBar"
+    },
+    "environmentLabel": "Môi trường: {environment}",
+    "@environmentLabel": {
+        "description": "Nhãn placeholder cho biết app đang chạy flavor nào",
+        "placeholders": {
+            "environment": {
+                "type": "String"
+            }
+        }
+    }
+}

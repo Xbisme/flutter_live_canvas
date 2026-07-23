@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:livecanvas/counter/counter.dart';
+import 'package:livecanvas/core/router/app_router.dart';
 import 'package:livecanvas/l10n/l10n.dart';
 
 class App extends StatelessWidget {
@@ -7,16 +7,11 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(
-        appBarTheme: AppBarTheme(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        ),
-        useMaterial3: true,
-      ),
+    return MaterialApp.router(
+      theme: ThemeData(useMaterial3: true),
+      routerConfig: buildAppRouter(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const CounterPage(),
     );
   }
 }

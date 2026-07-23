@@ -9,19 +9,24 @@ environment:
 
 dependencies:
   bloc: ^9.2.1
+  dio: ^5.10.0
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
   flutter_localizations:
     sdk: flutter
+  get_it: ^9.2.1
+  go_router: ^17.3.0
+  injectable: ^3.0.0
   intl: ^0.20.2
-
 dev_dependencies:
+  # bloc_lint 0.4.1 (not 0.4.2): its _fe_analyzer_shared pin (93-99) must match
+  # injectable_generator 3.0.x's lean_builder; 0.4.2 pins 100-104 and conflicts.
   bloc_lint: ^0.4.1
   bloc_test: ^10.0.0
-  bloc_tools: ^0.1.0-dev.24
   flutter_test:
     sdk: flutter
+  injectable_generator: ^3.0.2
   mocktail: ^1.0.5
   very_good_analysis: ^10.3.0
 
