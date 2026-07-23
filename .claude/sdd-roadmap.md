@@ -78,7 +78,7 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 
 ### MO-001: Project Bootstrap & Flavors
 
-- **Status**: ⬜ Not started
+- **Status**: 🟡 Implemented trên branch `MO-001-project-bootstrap` (2026-07-23) — 4 gate xanh local, chờ PR/merge. Deviation ghi ở `.claude/project-context.md` §Current Focus (client ở `packages/livecanvas_api`, injectable 3/lean_builder, bloc_lint 0.4.1, ⚠️ phosphor_flutter blocked)
 - **Branch**: `MO-001-project-bootstrap`
 - **Depends on**: #000
 - **Scope**:

@@ -47,7 +47,7 @@
 - [X] T009 [US1] Gỡ staging Android: xoá flavor `staging` khỏi `android/app/build.gradle` (productFlavors) + mọi resource/config staging kèm theo; verify `cd android && ./gradlew tasks | grep -i staging` → rỗng
 - [X] T010 [US1] Gỡ staging iOS: xoá scheme `staging` (`ios/Runner.xcodeproj/xcshareddata/xcschemes/staging.xcscheme`), build configurations `Debug-staging`/`Release-staging`/`Profile-staging` trong `project.pbxproj`, xcconfig staging nếu có; verify `xcodebuild -list -project ios/Runner.xcodeproj` chỉ còn development/production
 - [X] T011 [US1] Placeholder page `lib/app/view/app.dart` (+ page tối giản) hiển thị `config.environment.name` (đọc AppConfig — tạm truyền constructor, chuyển sang DI ở T016) + widget test `test/app/view/app_test.dart` verify hiển thị đúng tên environment
-- [ ] T012 [US1] Verify toàn bộ V1 [quickstart.md](quickstart.md): 4/4 tổ hợp `flutter run` (iOS sim + Android emu × 2 flavor), `flutter run --flavor staging` fail, `grep -ri staging lib android ios` (đuôi dart/gradle/xcconfig/pbxproj/xcscheme) = 0 kết quả
+- [X] T012 [US1] Verify toàn bộ V1 [quickstart.md](quickstart.md): 4/4 tổ hợp `flutter run` (iOS sim + Android emu × 2 flavor), `flutter run --flavor staging` fail, `grep -ri staging lib android ios` (đuôi dart/gradle/xcconfig/pbxproj/xcscheme) = 0 kết quả
 
 **Checkpoint**: US1 = MVP — SC-002/SC-003 đạt, app flavor-correct trên cả 2 platform
 
@@ -77,7 +77,7 @@
 
 - [X] T018 [P] [US3] `lib/core/router/app_router.dart`: go_router tối giản — abstract final class `AppRoutes` (const path `/`) + `GoRouter` 1 route placeholder page; `App` widget dùng `MaterialApp.router(routerConfig:)`; không dùng `Navigator.of` (Principle X)
 - [X] T019 [P] [US3] i18n vi-first (Principle XV): `l10n.yaml` với `template-arb-file: app_vi.arb`, `arb-dir: lib/l10n/arb`; tạo `lib/l10n/arb/app_vi.arb` (template, mặc định) + `app_en.arb`; chuyển mọi chuỗi placeholder page sang `context.l10n` (kèm `@description`); widget test T011 cập nhật theo
-- [ ] T020 [P] [US3] Dùng `PhosphorIcon` trong placeholder page (1 icon bất kỳ từ `phosphor_flutter`) — smoke-proof bộ icon hoạt động, không mix `Icons.*` cho content icon (Principle VI)
+- [~] T020 [P] [US3] (BLOCKED — phosphor_flutter 2.1.0 vỡ với Flutter 3.44, IconData final; đã gỡ dep khỏi MO-001, chốt hướng xử lý trước MO-002) Dùng `PhosphorIcon` trong placeholder page (1 icon bất kỳ từ `phosphor_flutter`) — smoke-proof bộ icon hoạt động, không mix `Icons.*` cho content icon (Principle VI)
 - [X] T021 [US3] Cập nhật `README.md` (FR-011): prerequisites ([quickstart.md](quickstart.md) bảng), lệnh chạy từng flavor + build release với `--dart-define=APP_KEY`, lệnh `scripts/generate_api.sh` + yêu cầu Java, pre-commit checklist constitution (`dart format .` / `flutter analyze` / `very_good test` / `bloc lint .`)
 
 **Checkpoint**: Toàn bộ story nền hoàn thành
@@ -99,8 +99,8 @@
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T024 Chạy full [quickstart.md](quickstart.md) V1→V5 + đối chiếu SC-001→SC-006 của [spec.md](spec.md); fix mọi lệch phát hiện
-- [ ] T025 Cập nhật planning docs: `.claude/project-context.md` (trạng thái MO-001, follow-up amend constitution contract v0.3.0→v0.3.2), `.claude/sdd-roadmap.md` (MO-001 status), `.claude/changelog.md` (entry ship MO-001)
+- [X] T024 Chạy full [quickstart.md](quickstart.md) V1→V5 + đối chiếu SC-001→SC-006 của [spec.md](spec.md); fix mọi lệch phát hiện
+- [X] T025 Cập nhật planning docs: `.claude/project-context.md` (trạng thái MO-001, follow-up amend constitution contract v0.3.0→v0.3.2), `.claude/sdd-roadmap.md` (MO-001 status), `.claude/changelog.md` (entry ship MO-001)
 
 ---
 
