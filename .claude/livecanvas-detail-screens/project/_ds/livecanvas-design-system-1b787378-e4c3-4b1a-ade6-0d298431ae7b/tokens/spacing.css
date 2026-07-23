@@ -1,0 +1,35 @@
+/* LiveCanvas spacing, radius, sizing — 4px base grid → Flutter EdgeInsets / SizedBox. */
+:root{
+  --sp-1:4px;
+  --sp-2:8px;
+  --sp-3:12px;
+  --sp-4:16px;
+  --sp-5:20px;
+  --sp-6:24px;
+  --sp-8:32px;
+  --sp-10:40px;
+  --sp-12:48px;
+  --sp-16:64px;
+
+  /* screen gutters + grid */
+  --gutter:16px;        /* screen edge padding */
+  --grid-gap:12px;      /* gap between wallpaper tiles */
+
+  /* corner radius */
+  --r-xs:6px;
+  --r-sm:10px;
+  --r-md:14px;
+  --r-lg:20px;   /* wallpaper tile */
+  --r-xl:28px;   /* hero card / bottom sheet */
+  --r-pill:999px;
+
+  /* control sizing */
+  --hit:44px;           /* minimum touch target */
+  --btn-h:52px;         /* primary button height */
+  --chip-h:36px;        /* filter chip height */
+  --icon-btn:44px;      /* circular icon button */
+  --tabbar-h:64px;      /* bottom nav height */
+
+  /* wallpaper aspect ratio */
+  --wall-ratio:9 / 16; /* @kind other */
+}

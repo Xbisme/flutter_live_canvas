@@ -1,0 +1,21 @@
+/* LiveCanvas elevation + the Aura signature.
+   Shadows are dark and soft (dark UI). The Aura is a large, color-derived glow
+   cast by wallpaper content — its COLOR is set at runtime (Flutter: palette_generator
+   → BoxShadow.color). Tokens below fix everything except that hue. */
+:root{
+  --shadow-1:0 2px 8px rgba(0,0,0,0.30);
+  --shadow-2:0 8px 24px rgba(0,0,0,0.42);
+  --shadow-3:0 16px 48px rgba(0,0,0,0.50);
+  --shadow-sheet:0 -10px 44px rgba(0,0,0,0.55);
+
+  /* Aura — signature glow behind a tile. Combine spread + blur; color = content hue.
+     Default hue below is the brand iris, overridden per-tile via --aura-color. */
+  --aura-color:rgba(124,92,255,0.55);
+  --aura-blur:36px;
+  --aura-spread:-6px;
+  --aura:0 10px var(--aura-blur) var(--aura-spread) var(--aura-color);
+
+  /* blur backdrops (glass bars / sheets) → Flutter BackdropFilter(ImageFilter.blur) */
+  --blur-bar:18px;
+  --blur-sheet:28px;
+}

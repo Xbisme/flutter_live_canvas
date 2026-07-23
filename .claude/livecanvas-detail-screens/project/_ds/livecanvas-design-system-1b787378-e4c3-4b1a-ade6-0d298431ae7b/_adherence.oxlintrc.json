@@ -1,0 +1,332 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "components/controls/**",
+              "components/feedback/**",
+              "components/navigation/**",
+              "components/wallpaper/**",
+              "ui_kits/livecanvas_app/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Clash Display|Satoshi|Space Mono))/i]",
+        "message": "Font not provided by the design system. Available: Clash Display, Satoshi, Space Mono."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|variant|size|fullWidth|icon|iconRight|disabled|onClick|style|key|ref|className|style|children)$/]",
+        "message": "<Button> doesn't accept that prop. Declared props: children, variant, size, fullWidth, icon, iconRight, disabled, onClick, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='variant'] > Literal[value!=/^(?:primary|aurora|secondary|ghost)$/]",
+        "message": "<Button> variant must be one of 'primary' | 'aurora' | 'secondary' | 'ghost'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='Button'] > JSXAttribute[name.name='size'] > Literal[value!=/^(?:sm|md|lg)$/]",
+        "message": "<Button> size must be one of 'sm' | 'md' | 'lg'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='EmptyState'] > JSXAttribute > JSXIdentifier[name!=/^(?:icon|title|description|actionLabel|onAction|style|key|ref|className|style|children)$/]",
+        "message": "<EmptyState> doesn't accept that prop. Declared props: icon, title, description, actionLabel, onAction, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='FilterChip'] > JSXAttribute > JSXIdentifier[name!=/^(?:label|active|icon|count|onClick|style|key|ref|className|style|children)$/]",
+        "message": "<FilterChip> doesn't accept that prop. Declared props: label, active, icon, count, onClick, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='IconButton'] > JSXAttribute > JSXIdentifier[name!=/^(?:icon|activeIcon|active|variant|size|label|onClick|style|key|ref|className|style|children)$/]",
+        "message": "<IconButton> doesn't accept that prop. Declared props: icon, activeIcon, active, variant, size, label, onClick, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='IconButton'] > JSXAttribute[name.name='variant'] > Literal[value!=/^(?:glass|solid|ghost)$/]",
+        "message": "<IconButton> variant must be one of 'glass' | 'solid' | 'ghost'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='MetaChip'] > JSXAttribute > JSXIdentifier[name!=/^(?:children|icon|tone|live|style|key|ref|className|style|children)$/]",
+        "message": "<MetaChip> doesn't accept that prop. Declared props: children, icon, tone, live, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='MetaChip'] > JSXAttribute[name.name='tone'] > Literal[value!=/^(?:glass|surface)$/]",
+        "message": "<MetaChip> tone must be one of 'glass' | 'surface'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='PremiumBadge'] > JSXAttribute > JSXIdentifier[name!=/^(?:variant|label|style|key|ref|className|style|children)$/]",
+        "message": "<PremiumBadge> doesn't accept that prop. Declared props: variant, label, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='PremiumBadge'] > JSXAttribute[name.name='variant'] > Literal[value!=/^(?:tag|dot)$/]",
+        "message": "<PremiumBadge> variant must be one of 'tag' | 'dot'."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='TabItem'] > JSXAttribute > JSXIdentifier[name!=/^(?:id|icon|label|key|ref|className|style|children)$/]",
+        "message": "<TabItem> doesn't accept that prop. Declared props: id, icon, label."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='TopBar'] > JSXAttribute > JSXIdentifier[name!=/^(?:title|wordmark|leading|trailing|transparent|style|key|ref|className|style|children)$/]",
+        "message": "<TopBar> doesn't accept that prop. Declared props: title, wordmark, leading, trailing, transparent, style."
+      },
+      {
+        "selector": "JSXOpeningElement[name.name='WallpaperCard'] > JSXAttribute > JSXIdentifier[name!=/^(?:preview|auraColor|title|author|premium|favorite|duration|live|width|onClick|onFavorite|style|key|ref|className|style|children)$/]",
+        "message": "<WallpaperCard> doesn't accept that prop. Declared props: preview, auraColor, title, author, premium, favorite, duration, live, width, onClick, onFavorite, style."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {
+      "Button": {
+        "replaces": []
+      },
+      "EmptyState": {
+        "replaces": []
+      },
+      "FilterChip": {
+        "replaces": []
+      },
+      "IconButton": {
+        "replaces": []
+      },
+      "MetaChip": {
+        "replaces": []
+      },
+      "PremiumBadge": {
+        "replaces": []
+      },
+      "TabItem": {
+        "replaces": []
+      },
+      "TopBar": {
+        "replaces": []
+      },
+      "WallpaperCard": {
+        "replaces": []
+      }
+    },
+    "tokens": [
+      "--accent",
+      "--accent-hover",
+      "--accent-press",
+      "--aqua-500",
+      "--aura",
+      "--aura-blur",
+      "--aura-color",
+      "--aura-spread",
+      "--aurora",
+      "--aurora-soft",
+      "--bg-app",
+      "--bg-raised",
+      "--bg-raised-hover",
+      "--bg-surface",
+      "--blur-bar",
+      "--blur-sheet",
+      "--blush-400",
+      "--blush-500",
+      "--border-strong",
+      "--border-subtle",
+      "--btn-h",
+      "--chip-h",
+      "--danger",
+      "--favorite",
+      "--font-body",
+      "--font-display",
+      "--font-mono",
+      "--fs-2xs",
+      "--fs-body",
+      "--fs-display",
+      "--fs-h1",
+      "--fs-h2",
+      "--fs-h3",
+      "--fs-sm",
+      "--fs-xs",
+      "--fw-black",
+      "--fw-bold",
+      "--fw-medium",
+      "--fw-regular",
+      "--grid-gap",
+      "--gutter",
+      "--hit",
+      "--icon-btn",
+      "--ink",
+      "--iris-400",
+      "--iris-500",
+      "--iris-600",
+      "--lh-body",
+      "--lh-snug",
+      "--lh-tight",
+      "--line",
+      "--line-strong",
+      "--ls-display",
+      "--ls-wide",
+      "--on-accent",
+      "--onyx",
+      "--onyx-2",
+      "--onyx-3",
+      "--r-lg",
+      "--r-md",
+      "--r-pill",
+      "--r-sm",
+      "--r-xl",
+      "--r-xs",
+      "--scrim",
+      "--shadow-1",
+      "--shadow-2",
+      "--shadow-3",
+      "--shadow-sheet",
+      "--sp-1",
+      "--sp-10",
+      "--sp-12",
+      "--sp-16",
+      "--sp-2",
+      "--sp-3",
+      "--sp-4",
+      "--sp-5",
+      "--sp-6",
+      "--sp-8",
+      "--success",
+      "--tabbar-h",
+      "--text-hi",
+      "--text-lo",
+      "--text-mid",
+      "--text-primary",
+      "--text-secondary",
+      "--text-tertiary",
+      "--void",
+      "--wall-ratio",
+      "--warn"
+    ],
+    "tokenKinds": {
+      "--void": "color",
+      "--ink": "color",
+      "--onyx": "color",
+      "--onyx-2": "color",
+      "--onyx-3": "color",
+      "--line": "color",
+      "--line-strong": "color",
+      "--scrim": "color",
+      "--text-hi": "font",
+      "--text-mid": "font",
+      "--text-lo": "font",
+      "--iris-400": "color",
+      "--iris-500": "color",
+      "--iris-600": "color",
+      "--blush-500": "color",
+      "--blush-400": "color",
+      "--aqua-500": "color",
+      "--aurora": "color",
+      "--aurora-soft": "color",
+      "--success": "color",
+      "--warn": "color",
+      "--danger": "color",
+      "--bg-app": "color",
+      "--bg-surface": "color",
+      "--bg-raised": "color",
+      "--bg-raised-hover": "color",
+      "--border-subtle": "color",
+      "--border-strong": "color",
+      "--text-primary": "font",
+      "--text-secondary": "font",
+      "--text-tertiary": "font",
+      "--accent": "color",
+      "--accent-hover": "color",
+      "--accent-press": "color",
+      "--on-accent": "color",
+      "--favorite": "color",
+      "--font-display": "font",
+      "--font-body": "font",
+      "--font-mono": "font",
+      "--fs-display": "spacing",
+      "--fs-h1": "spacing",
+      "--fs-h2": "spacing",
+      "--fs-h3": "spacing",
+      "--fs-body": "spacing",
+      "--fs-sm": "spacing",
+      "--fs-xs": "spacing",
+      "--fs-2xs": "spacing",
+      "--lh-tight": "other",
+      "--lh-snug": "other",
+      "--lh-body": "other",
+      "--fw-regular": "other",
+      "--fw-medium": "other",
+      "--fw-bold": "other",
+      "--fw-black": "other",
+      "--ls-display": "spacing",
+      "--ls-wide": "spacing",
+      "--sp-1": "spacing",
+      "--sp-2": "spacing",
+      "--sp-3": "spacing",
+      "--sp-4": "spacing",
+      "--sp-5": "spacing",
+      "--sp-6": "spacing",
+      "--sp-8": "spacing",
+      "--sp-10": "spacing",
+      "--sp-12": "spacing",
+      "--sp-16": "spacing",
+      "--gutter": "spacing",
+      "--grid-gap": "spacing",
+      "--r-xs": "spacing",
+      "--r-sm": "spacing",
+      "--r-md": "spacing",
+      "--r-lg": "spacing",
+      "--r-xl": "spacing",
+      "--r-pill": "spacing",
+      "--hit": "spacing",
+      "--btn-h": "spacing",
+      "--chip-h": "spacing",
+      "--icon-btn": "spacing",
+      "--tabbar-h": "spacing",
+      "--wall-ratio": "other",
+      "--shadow-1": "shadow",
+      "--shadow-2": "shadow",
+      "--shadow-3": "shadow",
+      "--shadow-sheet": "shadow",
+      "--aura-color": "color",
+      "--aura-blur": "spacing",
+      "--aura-spread": "spacing",
+      "--aura": "color",
+      "--blur-bar": "spacing",
+      "--blur-sheet": "spacing"
+    },
+    "fontFamilies": [
+      "Clash Display",
+      "Satoshi",
+      "Space Mono"
+    ]
+  }
+}

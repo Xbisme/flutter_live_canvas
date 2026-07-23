@@ -1,0 +1,55 @@
+/* LiveCanvas color system — dark, violet-tinted "Void" base.
+   The chrome stays quiet; color is carried by content + the Aura signature.
+   All values are flat hex / rgba → map directly to Flutter Color / ThemeData. */
+:root{
+  /* ---- Neutrals: violet-tinted ink, never pure black ---- */
+  --void:#0D0A13;      /* app background */
+  --ink:#12101A;       /* alt background / scrim base */
+  --onyx:#1A1626;      /* surface: cards, sheets, bars */
+  --onyx-2:#241E33;    /* raised surface: chips, inputs, pressed rows */
+  --onyx-3:#302943;    /* hover / active raised */
+
+  --line:rgba(255,255,255,0.08);        /* hairline border */
+  --line-strong:rgba(255,255,255,0.16); /* emphasized border */
+  --scrim:rgba(9,7,14,0.72);            /* content-over gradient base */
+
+  /* ---- Text ---- */
+  --text-hi:#F6F3FB;   /* primary */
+  --text-mid:#ADA4BE;  /* secondary */
+  --text-lo:#6E6683;   /* tertiary / disabled */
+
+  /* ---- Brand triad (forms the Aurora gradient) ---- */
+  --iris-400:#9B82FF;  /* accent hover / lighter */
+  --iris-500:#7C5CFF;  /* PRIMARY accent */
+  --iris-600:#6344E6;  /* accent press / darker */
+  --blush-500:#FF6F9C; /* warm accent — favorites / like */
+  --blush-400:#FF8FB2;
+  --aqua-500:#46D5E6;  /* cool accent — info / new */
+
+  /* ---- Aurora gradient (brand expression: wordmark, PRO, paywall CTA) ---- */
+  --aurora:linear-gradient(105deg,#FF6F9C 0%,#7C5CFF 52%,#46D5E6 100%); /* @kind color */
+  --aurora-soft:linear-gradient(105deg,rgba(255,111,156,0.22) 0%,rgba(124,92,255,0.22) 52%,rgba(70,213,230,0.22) 100%); /* @kind color */
+
+  /* ---- Semantic ---- */
+  --success:#3FE0A6;
+  --warn:#FFC24C;
+  --danger:#FF5D6C;
+
+  /* ---------- Semantic aliases (what components reference) ---------- */
+  --bg-app:var(--void);
+  --bg-surface:var(--onyx);
+  --bg-raised:var(--onyx-2);
+  --bg-raised-hover:var(--onyx-3);
+  --border-subtle:var(--line);
+  --border-strong:var(--line-strong);
+
+  --text-primary:var(--text-hi);
+  --text-secondary:var(--text-mid);
+  --text-tertiary:var(--text-lo);
+
+  --accent:var(--iris-500);
+  --accent-hover:var(--iris-400);
+  --accent-press:var(--iris-600);
+  --on-accent:#FFFFFF;
+  --favorite:var(--blush-500);
+}

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiveCanvas — iPad</title>
+<link rel="stylesheet" href="../_ds/livecanvas-design-system-1b787378-e4c3-4b1a-ade6-0d298431ae7b/tokens/fonts.css">
+<link rel="stylesheet" href="../_ds/livecanvas-design-system-1b787378-e4c3-4b1a-ade6-0d298431ae7b/tokens/colors.css">
+<link rel="stylesheet" href="../_ds/livecanvas-design-system-1b787378-e4c3-4b1a-ade6-0d298431ae7b/tokens/typography.css">
+<link rel="stylesheet" href="../_ds/livecanvas-design-system-1b787378-e4c3-4b1a-ade6-0d298431ae7b/tokens/spacing.css">
+<link rel="stylesheet" href="../_ds/livecanvas-design-system-1b787378-e4c3-4b1a-ade6-0d298431ae7b/tokens/elevation.css">
+<link rel="stylesheet" href="../_ds/livecanvas-design-system-1b787378-e4c3-4b1a-ade6-0d298431ae7b/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font-body);background:radial-gradient(120% 90% at 50% 0%,#1B1530,#0A0810 70%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  a{color:var(--iris-400);text-decoration:none}a:hover{color:var(--iris-500)}
+  .ipad{width:1194px;height:834px;background:#000;border-radius:38px;padding:14px;box-shadow:0 40px 120px rgba(0,0,0,.6),0 0 0 2px #26203a}
+  .screen{position:relative;width:100%;height:100%;background:var(--bg-app);border-radius:26px;overflow:hidden;display:flex}
+  .statusbar{position:absolute;z-index:6;top:0;left:88px;right:0;display:flex;align-items:center;justify-content:space-between;height:34px;padding:0 26px;color:#F6F3FB;pointer-events:none}
+  .statusbar .t{font-family:var(--font-body);font-size:13px;font-weight:700}
+  .statusbar .ic{display:flex;gap:7px;font-size:14px}
+  ::-webkit-scrollbar{width:0;height:0}
+  input::placeholder{color:var(--text-tertiary)}
+  .lc-drift{animation:lcDrift 14s ease-in-out infinite}
+  @keyframes lcDrift{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
+  .lc-blob{animation:lcBlob 9s ease-in-out infinite;will-change:transform}
+  @keyframes lcBlob{0%{transform:translate(-8%,4%) scale(1)}50%{transform:translate(10%,-6%) scale(1.12)}100%{transform:translate(-8%,4%) scale(1)}}
+  .lc-toast{animation:lcToast .24s ease}
+  @keyframes lcToast{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .lc-modal{animation:lcModal .3s cubic-bezier(.22,1,.36,1)}
+  @keyframes lcModal{from{opacity:0;transform:scale(.97) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  .lc-fade{animation:lcFade .2s ease}@keyframes lcFade{from{opacity:0}to{opacity:1}}
+  .lc-coll-card{transition:transform .14s ease}.lc-coll-card:active{transform:scale(.985)}
+  .lc-rail-btn{transition:background .15s ease,color .15s ease}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../_ds/livecanvas-design-system-1b787378-e4c3-4b1a-ade6-0d298431ae7b/_ds_bundle.js"></script>
+<script src="data.js"></script>
+<script type="text/babel" src="Sheets.jsx"></script>
+<script type="text/babel" src="SetWallpaper.jsx"></script>
+<script type="text/babel" src="Paywall.jsx"></script>
+<script type="text/babel">
+const { TopBar, IconButton, Button, FilterChip, WallpaperCard, MetaChip, PremiumBadge, EmptyState } = window.LiveCanvasDesignSystem_1b7873;
+
+function StatusBar(){
+  return (<div className="statusbar">
+    <span className="t">9:41 · Thứ Tư 23 thg 7</span>
+    <span className="ic"><i className="ph-fill ph-cell-signal-full"></i><i className="ph-fill ph-wifi-high"></i><span style={{fontFamily:"var(--font-mono)",fontSize:12}}>82%</span><i className="ph-fill ph-battery-high"></i></span>
+  </div>);
+}
+
+/* ---- Left navigation rail (replaces the phone bottom tab bar) ---- */
+function NavRail({ tabs, active, onChange }){
+  return (
+    <nav style={{width:88,flexShrink:0,background:"var(--bg-surface)",borderRight:"1px solid var(--border-subtle)",display:"flex",flexDirection:"column",alignItems:"center",padding:"22px 0 18px",gap:6}}>
+      <div style={{fontFamily:"var(--font-display)",fontSize:26,fontWeight:600,background:"var(--aurora)",WebkitBackgroundClip:"text",backgroundClip:"text",WebkitTextFillColor:"transparent",marginBottom:16}}>L</div>
+      {tabs.map(t=>{const on=t.id===active;return(
+        <button key={t.id} type="button" onClick={()=>onChange(t.id)} className="lc-rail-btn"
+          style={{width:64,height:60,borderRadius:"var(--r-md)",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:5,
+            background:on?"var(--aurora-soft)":"transparent",color:on?"var(--iris-400)":"var(--text-tertiary)"}}>
+          <i className={`${on?"ph-fill":"ph"} ph-${t.icon}`} style={{fontSize:24}}></i>
+          <span style={{fontFamily:"var(--font-body)",fontSize:10,fontWeight:on?700:500}}>{t.label}</span>
+        </button>);})}
+      <div style={{flex:1}}></div>
+      <div style={{width:44,height:44,borderRadius:"var(--r-pill)",background:"var(--aurora)",display:"flex",alignItems:"center",justifyContent:"center"}}><i className="ph-fill ph-user" style={{fontSize:20,color:"#fff"}}></i></div>
+    </nav>
+  );
+}
+
+const GUTTER=40, GRIDCOLS="repeat(4, 1fr)", GAP=20;
+
+/* ---- Browse ---- */
+function Browse({ favs, onOpen, onFav }){
+  const [chip,setChip]=React.useState("Tất cả");
+  const D=window.LC_DATA;
+  const filt=(items)=>chip==="Tất cả"?items:items.filter(w=>w.tag===chip);
+  const sections=D.sections.map(s=>({...s,items:filt(s.items)})).filter(s=>s.items.length);
+  return (<div style={{height:"100%",overflowY:"auto"}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:`26px ${GUTTER}px 6px`}}>
+      <span style={{fontFamily:"var(--font-display)",fontSize:30,fontWeight:600,letterSpacing:"-0.02em",background:"var(--aurora)",WebkitBackgroundClip:"text",backgroundClip:"text",WebkitTextFillColor:"transparent"}}>LiveCanvas</span>
+      <div style={{display:"flex",alignItems:"center",gap:10,width:320,height:46,padding:"0 16px",background:"var(--bg-raised)",border:"1px solid var(--border-subtle)",borderRadius:"var(--r-pill)"}}>
+        <i className="ph ph-magnifying-glass" style={{fontSize:18,color:"var(--text-tertiary)"}}></i>
+        <span style={{fontFamily:"var(--font-body)",fontSize:14,color:"var(--text-tertiary)"}}>Tìm hình nền, tag, tác giả…</span>
+      </div>
+    </div>
+    <div style={{display:"flex",gap:10,flexWrap:"wrap",padding:`14px ${GUTTER}px 8px`}}>
+      {D.chips.map(c=><FilterChip key={c} label={c} active={c===chip} onClick={()=>setChip(c)}/>)}
+    </div>
+    {sections.map(s=>(
+      <section key={s.title} style={{padding:`0 ${GUTTER}px`,marginBottom:30}}>
+        <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:16}}>
+          <h2 style={{fontFamily:"var(--font-display)",fontSize:24,fontWeight:600,letterSpacing:"-0.02em",color:"var(--text-primary)",margin:0}}>{s.title}</h2>
+          <span style={{fontFamily:"var(--font-mono)",fontSize:12,color:"var(--text-tertiary)"}}>{s.items.length}</span>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:GRIDCOLS,gap:GAP}}>
+          {s.items.map(w=><WallpaperCard key={w.id} width="100%" preview={w.preview} auraColor={w.aura} title={w.title} author={"@"+w.author}
+            duration={w.duration} premium={w.premium} favorite={favs.has(w.id)} onClick={()=>onOpen(w)} onFavorite={()=>onFav(w.id)}/>)}
+        </div>
+      </section>))}
+    <div style={{height:16}}></div>
+  </div>);
+}
+
+/* ---- Search ---- */
+function Search({ favs, onOpen, onFav }){
+  const [q,setQ]=React.useState("");
+  const D=window.LC_DATA;
+  const results=q.trim()?window.LC_ALL.filter(w=>(w.title+" "+w.tag+" "+w.author).toLowerCase().includes(q.toLowerCase())):[];
+  return (<div style={{height:"100%",overflowY:"auto"}}>
+    <div style={{padding:`26px ${GUTTER}px 4px`}}>
+      <h1 style={{fontFamily:"var(--font-display)",fontSize:30,fontWeight:600,letterSpacing:"-0.02em",color:"var(--text-primary)",margin:"0 0 16px"}}>Tìm kiếm</h1>
+      <div style={{display:"flex",alignItems:"center",gap:10,maxWidth:560,height:50,padding:"0 18px",background:"var(--bg-raised)",border:"1px solid var(--border-subtle)",borderRadius:"var(--r-pill)"}}>
+        <i className="ph ph-magnifying-glass" style={{fontSize:20,color:"var(--text-tertiary)"}}></i>
+        <input autoFocus value={q} onChange={e=>setQ(e.target.value)} placeholder="Tìm hình nền, tag, tác giả…"
+          style={{flex:1,background:"none",border:"none",outline:"none",color:"var(--text-primary)",fontFamily:"var(--font-body)",fontSize:16}}/>
+        {q&&<i className="ph-fill ph-x-circle" onClick={()=>setQ("")} style={{fontSize:20,color:"var(--text-tertiary)",cursor:"pointer"}}></i>}
+      </div>
+    </div>
+    {!q.trim()&&<div style={{padding:`22px ${GUTTER}px`}}>
+      <div style={{fontFamily:"var(--font-mono)",fontSize:12,letterSpacing:"0.08em",textTransform:"uppercase",color:"var(--text-tertiary)",marginBottom:14}}>Gợi ý cho bạn</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:10}}>{D.suggestions.map(s=><FilterChip key={s} label={s} icon="magnifying-glass" onClick={()=>setQ(s.split(" ")[0])}/>)}</div>
+    </div>}
+    {q.trim()&&results.length>0&&<div style={{padding:`14px ${GUTTER}px`}}>
+      <div style={{fontFamily:"var(--font-mono)",fontSize:12,color:"var(--text-tertiary)",marginBottom:16}}>{results.length} kết quả cho “{q}”</div>
+      <div style={{display:"grid",gridTemplateColumns:GRIDCOLS,gap:GAP}}>
+        {results.map(w=><WallpaperCard key={w.id} width="100%" preview={w.preview} auraColor={w.aura} title={w.title} author={"@"+w.author}
+          duration={w.duration} premium={w.premium} favorite={favs.has(w.id)} onClick={()=>onOpen(w)} onFavorite={()=>onFav(w.id)}/>)}
+      </div>
+    </div>}
+    {q.trim()&&results.length===0&&<EmptyState icon="magnifying-glass" title="Không tìm thấy" description={`Không có kết quả cho “${q}”. Thử từ khoá khác.`}/>}
+  </div>);
+}
+
+/* ---- Favorites ---- */
+function Favorites({ favs, onOpen, onFav, onBrowse }){
+  const items=window.LC_ALL.filter(w=>favs.has(w.id));
+  return (<div style={{height:"100%",overflowY:"auto"}}>
+    <div style={{display:"flex",alignItems:"baseline",gap:12,padding:`26px ${GUTTER}px 18px`}}>
+      <h1 style={{fontFamily:"var(--font-display)",fontSize:30,fontWeight:600,letterSpacing:"-0.02em",color:"var(--text-primary)",margin:0}}>Yêu thích</h1>
+      {items.length>0&&<span style={{fontFamily:"var(--font-mono)",fontSize:13,color:"var(--text-tertiary)"}}>{items.length}</span>}
+    </div>
+    {items.length===0?<div style={{paddingTop:60}}><EmptyState icon="heart" title="Chưa có gì ở đây" description="Chạm vào ♥ trên bất kỳ hình nền nào để lưu lại đây." actionLabel="Khám phá hình nền" onAction={onBrowse}/></div>:
+      <div style={{display:"grid",gridTemplateColumns:GRIDCOLS,gap:GAP,padding:`0 ${GUTTER}px 24px`}}>
+        {items.map(w=><WallpaperCard key={w.id} width="100%" preview={w.preview} auraColor={w.aura} title={w.title} author={"@"+w.author}
+          duration={w.duration} premium={w.premium} favorite onClick={()=>onOpen(w)} onFavorite={()=>onFav(w.id)}/>)}
+      </div>}
+  </div>);
+}
+
+/* ---- Collections tab (2-up cover cards) ---- */
+function Collections({ onOpen }){
+  const colls=window.LC_COLLECTIONS;
+  return (<div style={{height:"100%",overflowY:"auto"}}>
+    <h1 style={{fontFamily:"var(--font-display)",fontSize:30,fontWeight:600,letterSpacing:"-0.02em",color:"var(--text-primary)",margin:0,padding:`26px ${GUTTER}px 18px`}}>Bộ sưu tập</h1>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:GAP,padding:`0 ${GUTTER}px 24px`}}>
+      {colls.map(c=>(
+        <button key={c.id} type="button" onClick={()=>onOpen(c)} className="lc-coll-card"
+          style={{position:"relative",height:230,borderRadius:"var(--r-xl)",overflow:"hidden",cursor:"pointer",border:"1px solid var(--border-subtle)",padding:0,boxShadow:`0 16px 40px ${c.aura}`}}>
+          <div className="lc-drift" style={{position:"absolute",inset:"-10%",background:c.cover,backgroundSize:"180% 180%"}}></div>
+          <div style={{position:"absolute",inset:0,background:"linear-gradient(to top, rgba(9,7,14,0.85), rgba(9,7,14,0.05) 55%)"}}></div>
+          <div style={{position:"absolute",top:16,right:16}}>{c.premium&&<PremiumBadge/>}</div>
+          <div style={{position:"absolute",left:22,right:22,bottom:20,textAlign:"left"}}>
+            <div style={{fontFamily:"var(--font-display)",fontSize:28,fontWeight:600,letterSpacing:"-0.02em",color:"#fff"}}>{c.title}</div>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginTop:6}}>
+              <span style={{fontFamily:"var(--font-body)",fontSize:14,color:"rgba(246,243,251,0.8)"}}>@{c.author}</span>
+              <span style={{color:"rgba(246,243,251,0.5)"}}>·</span>
+              <span style={{fontFamily:"var(--font-mono)",fontSize:13,color:"rgba(246,243,251,0.7)"}}>{c.itemIds.length} hình nền</span>
+            </div>
+          </div>
+        </button>))}
+    </div>
+  </div>);
+}
+
+/* ---- Animated preview (video stand-in) ---- */
+function LivePreview({ wall, radius }){
+  return (<div style={{position:"relative",width:"100%",height:"100%",overflow:"hidden",background:"var(--void)",borderRadius:radius}}>
+    <div className="lc-drift" style={{position:"absolute",inset:"-10%",background:wall.preview,backgroundSize:"180% 180%"}}></div>
+    <div className="lc-blob" style={{position:"absolute",width:"70%",height:"40%",left:"15%",top:"22%",background:wall.aura,filter:"blur(60px)",borderRadius:"50%"}}></div>
+    <div style={{position:"absolute",inset:0,background:"linear-gradient(to top, rgba(9,7,14,0.5), transparent 28%, transparent 72%, rgba(9,7,14,0.4))"}}></div>
+  </div>);
+}
+
+function Stat({ icon, value, label }){
+  return (<div style={{flex:1,textAlign:"center"}}>
+    <i className={`ph ph-${icon}`} style={{fontSize:22,color:"var(--iris-400)"}}></i>
+    <div style={{fontFamily:"var(--font-mono)",fontSize:16,fontWeight:700,color:"var(--text-primary)",marginTop:5}}>{value}</div>
+    <div style={{fontFamily:"var(--font-body)",fontSize:12,color:"var(--text-tertiary)",marginTop:2}}>{label}</div>
+  </div>);
+}
+
+/* ---- Two-pane wallpaper detail (tablet pattern) ---- */
+function DetailPane({ wall, favs, subscribed, onFav, onSet, onPremium, onShare, onOpen, onCollection }){
+  const locked=wall.premium&&!subscribed;
+  const coll=window.LC_COLL_OF(wall.id);
+  const related=window.LC_RELATED(wall);
+  const palette=window.LC_PALETTE(wall.preview);
+  const fav=favs.has(wall.id);
+  return (<div style={{display:"flex",width:"100%",height:"100%"}}>
+    {/* left: preview */}
+    <div style={{position:"relative",width:420,flexShrink:0,padding:24}}>
+      <div style={{position:"relative",width:"100%",height:"100%",borderRadius:"var(--r-xl)",overflow:"hidden",boxShadow:`0 20px 60px ${wall.aura}`}}>
+        <LivePreview wall={wall} radius="var(--r-xl)"/>
+        <div style={{position:"absolute",top:16,left:0,right:0,display:"flex",justifyContent:"center"}}><MetaChip live>{wall.duration} · LOOP</MetaChip></div>
+        <div style={{position:"absolute",bottom:18,left:0,right:0,display:"flex",justifyContent:"center",gap:8}}>
+          <IconButton icon="speaker-simple-x" variant="glass" size={42} label="Tắt tiếng"/>
+          <IconButton icon="arrow-clockwise" variant="glass" size={42} label="Phát lại"/>
+        </div>
+      </div>
+    </div>
+    {/* right: info */}
+    <div style={{flex:1,overflowY:"auto",padding:"32px 34px 34px"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+        {wall.premium&&<PremiumBadge/>}
+        <span style={{display:"inline-flex",alignItems:"center",height:24,padding:"0 12px",borderRadius:"var(--r-pill)",background:"var(--bg-raised)",border:"1px solid var(--border-subtle)",fontFamily:"var(--font-body)",fontSize:13,fontWeight:600,color:"var(--text-secondary)"}}>#{wall.tag}</span>
+      </div>
+      <h1 style={{fontFamily:"var(--font-display)",fontSize:44,fontWeight:600,letterSpacing:"-0.02em",color:"var(--text-primary)",margin:0,lineHeight:1.03}}>{wall.title}</h1>
+      <button type="button" onClick={()=>onCollection(coll)} style={{display:"flex",alignItems:"center",gap:12,textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"16px 0 4px"}}>
+        <div style={{width:40,height:40,borderRadius:"var(--r-pill)",background:"var(--aurora)",display:"flex",alignItems:"center",justifyContent:"center"}}><i className="ph-fill ph-user" style={{fontSize:19,color:"#fff"}}></i></div>
+        <div>
+          <div style={{fontFamily:"var(--font-body)",fontSize:15,fontWeight:700,color:"var(--text-primary)"}}>@{wall.author}</div>
+          <div style={{fontFamily:"var(--font-body)",fontSize:13,color:"var(--text-tertiary)"}}>Từ bộ sưu tập · {coll.title}</div>
+        </div>
+        <i className="ph ph-caret-right" style={{fontSize:18,color:"var(--text-tertiary)",marginLeft:4}}></i>
+      </button>
+      <div style={{display:"flex",gap:10,margin:"20px 0 22px"}}>
+        <MetaChip tone="surface" icon="monitor">{wall.res}</MetaChip>
+        <MetaChip tone="surface" icon="clock">{wall.duration}</MetaChip>
+        <MetaChip tone="surface" icon="download-simple">{wall.size}</MetaChip>
+      </div>
+      {locked?
+        <Button variant="aurora" icon="sparkle" onClick={onPremium} style={{minWidth:280}}>Mở khoá với Premium</Button>:
+        <div style={{display:"flex",gap:12}}>
+          <Button variant="secondary" icon="download-simple" onClick={onSet}>Tải xuống</Button>
+          <Button variant="primary" icon="paint-brush-broad" onClick={onSet} style={{background:"#fff",color:"#141018",boxShadow:`0 8px 24px ${wall.aura}`,minWidth:220}}>Đặt làm hình nền</Button>
+          <div style={{flex:1}}></div>
+          <IconButton icon="share-network" variant="solid" onClick={onShare} label="Chia sẻ"/>
+          <IconButton icon="heart" active={fav} variant="solid" onClick={()=>onFav(wall.id)} label="Yêu thích"/>
+        </div>}
+      <div style={{display:"flex",gap:6,margin:"24px 0",padding:"18px 0",background:"var(--bg-surface)",borderRadius:"var(--r-md)",border:"1px solid var(--border-subtle)"}}>
+        <Stat icon="download-simple" value={wall.downloads} label="Lượt tải"/>
+        <div style={{width:1,background:"var(--border-subtle)"}}></div>
+        <Stat icon="heart" value={wall.likes} label="Yêu thích"/>
+        <div style={{width:1,background:"var(--border-subtle)"}}></div>
+        <Stat icon="monitor-play" value={wall.res} label="Độ phân giải"/>
+      </div>
+      <h2 style={{fontFamily:"var(--font-display)",fontSize:20,fontWeight:600,color:"var(--text-primary)",margin:"0 0 10px"}}>Mô tả</h2>
+      <p style={{fontFamily:"var(--font-body)",fontSize:15,lineHeight:1.6,color:"var(--text-secondary)",margin:0,textWrap:"pretty"}}>{wall.desc}</p>
+      <div style={{display:"flex",gap:10,alignItems:"center",margin:"18px 0 28px"}}>
+        <span style={{fontFamily:"var(--font-mono)",fontSize:11,color:"var(--text-tertiary)"}}>PALETTE</span>
+        {palette.map((c,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:6}}>
+          <span style={{width:22,height:22,borderRadius:"var(--r-xs)",background:c,border:"1px solid var(--border-strong)"}}></span>
+          <span style={{fontFamily:"var(--font-mono)",fontSize:11,color:"var(--text-tertiary)"}}>{c.replace("#","")}</span></div>)}
+      </div>
+      <h2 style={{fontFamily:"var(--font-display)",fontSize:20,fontWeight:600,color:"var(--text-primary)",margin:"0 0 14px"}}>Hình nền liên quan</h2>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3, 1fr)",gap:16}}>
+        {related.map(w=><WallpaperCard key={w.id} width="100%" preview={w.preview} auraColor={w.aura} title={w.title} author={"@"+w.author}
+          duration={w.duration} premium={w.premium} favorite={favs.has(w.id)} onClick={()=>onOpen(w)} onFavorite={()=>onFav(w.id)}/>)}
+      </div>
+    </div>
+  </div>);
+}
+
+/* ---- Collection detail (wide panel) ---- */
+function CollectionPane({ coll, favs, subscribed, onOpen, onFav, onShare, onPremium }){
+  const items=coll.itemIds.map(id=>window.LC_BY_ID[id]).filter(Boolean);
+  const locked=coll.premium&&!subscribed;
+  return (<div style={{height:"100%",overflowY:"auto"}}>
+    <div style={{position:"relative",height:280,overflow:"hidden"}}>
+      <div className="lc-drift" style={{position:"absolute",inset:"-10%",background:coll.cover,backgroundSize:"180% 180%"}}></div>
+      <div className="lc-blob" style={{position:"absolute",width:"55%",height:"50%",left:"22%",top:"14%",background:coll.aura,filter:"blur(80px)",borderRadius:"50%"}}></div>
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(to top, var(--bg-app) 2%, rgba(9,7,14,0.2) 50%, rgba(9,7,14,0.3))"}}></div>
+      <div style={{position:"absolute",left:40,right:40,bottom:22}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>{coll.premium&&<PremiumBadge/>}<span style={{fontFamily:"var(--font-mono)",fontSize:11,color:"rgba(246,243,251,0.7)",letterSpacing:"0.1em"}}>BỘ SƯU TẬP</span></div>
+        <h1 style={{fontFamily:"var(--font-display)",fontSize:46,fontWeight:600,letterSpacing:"-0.02em",color:"#fff",margin:0,lineHeight:1.02}}>{coll.title}</h1>
+      </div>
+    </div>
+    <div style={{padding:`22px ${GUTTER}px 8px`}}>
+      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",gap:20,marginBottom:18}}>
+        <div style={{maxWidth:640}}>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+            <div style={{width:36,height:36,borderRadius:"var(--r-pill)",background:"var(--aurora)",display:"flex",alignItems:"center",justifyContent:"center"}}><i className="ph-fill ph-user" style={{fontSize:17,color:"#fff"}}></i></div>
+            <span style={{fontFamily:"var(--font-body)",fontSize:15,fontWeight:700,color:"var(--text-primary)"}}>@{coll.author}</span>
+            <span style={{color:"var(--text-tertiary)"}}>·</span>
+            <span style={{fontFamily:"var(--font-mono)",fontSize:13,color:"var(--text-tertiary)"}}>{items.length} hình nền</span>
+          </div>
+          <p style={{fontFamily:"var(--font-body)",fontSize:15,lineHeight:1.6,color:"var(--text-secondary)",margin:0,textWrap:"pretty"}}>{coll.desc}</p>
+        </div>
+        <div style={{display:"flex",gap:12,flexShrink:0}}>
+          <Button variant="secondary" icon="share-network" onClick={onShare}>Chia sẻ</Button>
+          {locked?<Button variant="aurora" icon="sparkle" onClick={onPremium}>Mở khoá</Button>:<Button variant="primary" icon="download-simple">Tải tất cả</Button>}
+        </div>
+      </div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:GRIDCOLS,gap:GAP,padding:`14px ${GUTTER}px 30px`}}>
+      {items.map(w=><WallpaperCard key={w.id} width="100%" preview={w.preview} auraColor={w.aura} title={w.title} author={"@"+w.author}
+        duration={w.duration} premium={w.premium} favorite={favs.has(w.id)} onClick={()=>onOpen(w)} onFavorite={()=>onFav(w.id)}/>)}
+    </div>
+  </div>);
+}
+
+/* ---- Centered modal shell ---- */
+function Modal({ wide, onClose, onBack, canBack, children }){
+  const w=wide?1000:1000, h="86%";
+  return (<div className="lc-fade" style={{position:"absolute",inset:0,zIndex:20,background:"rgba(7,5,11,0.72)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
+    <div className="lc-modal" onClick={e=>e.stopPropagation()} style={{position:"relative",width:w,maxWidth:"92%",height:h,background:"var(--bg-app)",border:"1px solid var(--border-subtle)",borderRadius:"var(--r-xl)",overflow:"hidden",boxShadow:"var(--shadow-sheet)"}}>
+      <div style={{position:"absolute",zIndex:5,top:16,left:16,display:"flex",gap:8}}>
+        {canBack&&<IconButton icon="arrow-left" variant="glass" onClick={onBack} label="Quay lại"/>}
+      </div>
+      <div style={{position:"absolute",zIndex:5,top:16,right:16}}><IconButton icon="x" variant="glass" onClick={onClose} label="Đóng"/></div>
+      {children}
+    </div>
+  </div>);
+}
+
+/* ---- Centered wrapper for the phone sheets (paywall / set / share / more) ---- */
+function Centered({ onClose, width=460, children }){
+  return (<div className="lc-fade" style={{position:"absolute",inset:0,zIndex:30,background:"rgba(7,5,11,0.72)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={onClose}>
+    <div onClick={e=>e.stopPropagation()} style={{position:"relative",width,maxWidth:"92%",height:"84%",background:"var(--bg-app)",borderRadius:"var(--r-xl)",overflow:"hidden",boxShadow:"var(--shadow-sheet)"}}>{children}</div>
+  </div>);
+}
+
+function Profile({ subscribed, onUpgrade }){
+  const Row=({icon,label,val})=>(<div style={{display:"flex",alignItems:"center",gap:14,padding:"18px 0",borderBottom:"1px solid var(--border-subtle)"}}>
+    <i className={`ph ph-${icon}`} style={{fontSize:22,color:"var(--text-secondary)"}}></i>
+    <span style={{flex:1,fontFamily:"var(--font-body)",fontSize:16,color:"var(--text-primary)"}}>{label}</span>
+    {val&&<span style={{fontFamily:"var(--font-mono)",fontSize:13,color:"var(--text-tertiary)"}}>{val}</span>}
+    <i className="ph ph-caret-right" style={{fontSize:16,color:"var(--text-tertiary)"}}></i></div>);
+  return (<div style={{height:"100%",overflowY:"auto"}}>
+    <h1 style={{fontFamily:"var(--font-display)",fontSize:30,fontWeight:600,letterSpacing:"-0.02em",color:"var(--text-primary)",margin:0,padding:`26px ${GUTTER}px 8px`}}>Bạn</h1>
+    <div style={{maxWidth:620,padding:`0 ${GUTTER}px`}}>
+      <div style={{display:"flex",alignItems:"center",gap:16,padding:"14px 0 22px"}}>
+        <div style={{width:62,height:62,borderRadius:"var(--r-pill)",background:"var(--aurora)",display:"flex",alignItems:"center",justifyContent:"center"}}><i className="ph-fill ph-user" style={{fontSize:28,color:"#fff"}}></i></div>
+        <div><div style={{fontFamily:"var(--font-display)",fontSize:22,fontWeight:600,color:"var(--text-primary)"}}>Khách</div>
+          <div style={{fontFamily:"var(--font-body)",fontSize:14,color:"var(--text-secondary)",display:"flex",alignItems:"center",gap:6,marginTop:2}}>{subscribed?<><PremiumBadge/> đang hoạt động</>:"Gói miễn phí"}</div></div>
+      </div>
+      {!subscribed&&<div style={{padding:24,borderRadius:"var(--r-lg)",background:"var(--aurora-soft)",border:"1px solid var(--border-subtle)",marginBottom:22,display:"flex",alignItems:"center",justifyContent:"space-between",gap:24}}>
+        <div><div style={{fontFamily:"var(--font-display)",fontSize:20,fontWeight:600,color:"#fff",marginBottom:4}}>Nâng cấp Premium</div>
+          <div style={{fontFamily:"var(--font-body)",fontSize:14,color:"var(--text-secondary)"}}>Mở khoá toàn bộ nội dung 4K và tải không giới hạn.</div></div>
+        <Button variant="aurora" icon="sparkle" onClick={onUpgrade} style={{flexShrink:0}}>Xem gói Premium</Button>
+      </div>}
+      <Row icon="download-simple" label="Đã tải xuống" val="0"/>
+      <Row icon="arrow-counter-clockwise" label="Khôi phục giao dịch"/>
+      <Row icon="bell" label="Thông báo"/>
+      <Row icon="info" label="Về LiveCanvas" val="v1.0"/>
+    </div>
+  </div>);
+}
+
+function App(){
+  const [tab,setTab]=React.useState("browse");
+  const [stack,setStack]=React.useState([]); // {kind:'detail',wall}|{kind:'collection',coll}
+  const [favs,setFavs]=React.useState(new Set(["w5","w10"]));
+  const [subscribed,setSubscribed]=React.useState(false);
+  const [overlay,setOverlay]=React.useState(null);
+  const [toast,setToast]=React.useState("");
+  const toastTimer=React.useRef(null);
+  const top=stack[stack.length-1]||null;
+  const wall=top&&top.kind==="detail"?top.wall:null;
+
+  const push=(f)=>setStack(s=>[...s,f]);
+  const closeStack=()=>{setStack([]);setOverlay(null);};
+  const back=()=>setStack(s=>s.slice(0,-1));
+  const openDetail=(w)=>push({kind:"detail",wall:w});
+  const openCollection=(c)=>push({kind:"collection",coll:c});
+  const toggleFav=(id)=>setFavs(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});
+  const fireToast=(t)=>{setToast(t);clearTimeout(toastTimer.current);toastTimer.current=setTimeout(()=>setToast(""),1900);};
+  const goTab=(t)=>{setTab(t);closeStack();};
+
+  const tabs=[
+    {id:"browse",icon:"squares-four",label:"Khám phá"},
+    {id:"search",icon:"magnifying-glass",label:"Tìm"},
+    {id:"collections",icon:"stack",label:"Sưu tập"},
+    {id:"favorites",icon:"heart",label:"Yêu thích"},
+    {id:"profile",icon:"user",label:"Bạn"}
+  ];
+
+  return (<div className="ipad"><div className="screen">
+    <NavRail tabs={tabs} active={tab} onChange={goTab}/>
+    <div style={{position:"relative",flex:1,overflow:"hidden"}}>
+      <StatusBar/>
+      <div style={{position:"absolute",top:34,left:0,right:0,bottom:0}}>
+        {tab==="browse"&&<Browse favs={favs} onOpen={openDetail} onFav={toggleFav}/>}
+        {tab==="search"&&<Search favs={favs} onOpen={openDetail} onFav={toggleFav}/>}
+        {tab==="collections"&&<Collections onOpen={openCollection}/>}
+        {tab==="favorites"&&<Favorites favs={favs} onOpen={openDetail} onFav={toggleFav} onBrowse={()=>goTab("browse")}/>}
+        {tab==="profile"&&<Profile subscribed={subscribed} onUpgrade={()=>setOverlay("paywall")}/>}
+      </div>
+
+      {top&&<Modal onClose={closeStack} onBack={back} canBack={stack.length>1} wide>
+        {top.kind==="detail"&&<DetailPane wall={wall} favs={favs} subscribed={subscribed} onFav={toggleFav}
+          onSet={()=>setOverlay("setwallpaper")} onPremium={()=>setOverlay("paywall")} onShare={()=>setOverlay("share")}
+          onOpen={openDetail} onCollection={openCollection}/>}
+        {top.kind==="collection"&&<CollectionPane coll={top.coll} favs={favs} subscribed={subscribed} onOpen={openDetail} onFav={toggleFav}
+          onShare={()=>setOverlay("share")} onPremium={()=>setOverlay("paywall")}/>}
+      </Modal>}
+
+      {overlay==="setwallpaper"&&wall&&<Centered onClose={()=>setOverlay(null)}><window.SetWallpaper wall={wall} onClose={()=>setOverlay(null)}/></Centered>}
+      {overlay==="paywall"&&<Centered onClose={()=>setOverlay(null)} width={520}><window.Paywall onClose={()=>setOverlay(null)} onBuy={()=>{setSubscribed(true);setOverlay(null);fireToast("Đã kích hoạt Premium");}}/></Centered>}
+      {overlay==="share"&&(wall||(top&&top.kind==="collection"))&&<Centered onClose={()=>setOverlay(null)}><window.ShareSheet wall={wall||{title:top.coll.title,id:top.coll.id,preview:top.coll.cover}} onClose={()=>setOverlay(null)} onToast={fireToast}/></Centered>}
+      {overlay==="more"&&wall&&<Centered onClose={()=>setOverlay(null)}><window.MoreSheet wall={wall} favorite={favs.has(wall.id)} onClose={()=>setOverlay(null)} onFav={()=>toggleFav(wall.id)} onShare={()=>setOverlay("share")} onCollection={()=>openCollection(window.LC_COLL_OF(wall.id))} onToast={fireToast}/></Centered>}
+
+      <window.Toast text={toast}/>
+    </div>
+  </div></div>);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

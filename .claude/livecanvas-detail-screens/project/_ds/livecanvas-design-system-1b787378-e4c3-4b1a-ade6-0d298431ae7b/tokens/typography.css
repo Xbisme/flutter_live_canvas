@@ -1,0 +1,31 @@
+/* LiveCanvas type system
+   Display  : Clash Display  — headlines, brand wordmark, big paywall numbers
+   Body/UI  : Satoshi        — every UI surface, buttons, body copy
+   Utility  : Space Mono     — metadata (duration, resolution, size), counts, tags */
+:root{
+  --font-display:"Clash Display","Satoshi",system-ui,sans-serif;
+  --font-body:"Satoshi",system-ui,-apple-system,sans-serif;
+  --font-mono:"Space Mono",ui-monospace,"SF Mono",Menlo,monospace;
+
+  /* type scale (px) — tuned for a 390px mobile canvas */
+  --fs-display:40px;   /* hero / paywall headline */
+  --fs-h1:28px;        /* screen title */
+  --fs-h2:22px;        /* section / category header */
+  --fs-h3:18px;        /* card title, sheet title */
+  --fs-body:15px;      /* default body */
+  --fs-sm:13px;        /* secondary text, chip labels */
+  --fs-xs:11px;        /* meta, mono tags */
+  --fs-2xs:10px;       /* micro labels */
+
+  --lh-tight:1.05; /* @kind other */
+  --lh-snug:1.2; /* @kind other */
+  --lh-body:1.45; /* @kind other */
+
+  --fw-regular:400; /* @kind other */
+  --fw-medium:500; /* @kind other */
+  --fw-bold:700; /* @kind other */
+  --fw-black:900; /* @kind other */
+
+  --ls-display:-0.02em;  /* tighten display */
+  --ls-wide:0.08em;      /* mono / eyebrow tracking */
+}
