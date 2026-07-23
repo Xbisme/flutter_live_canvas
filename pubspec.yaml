@@ -19,6 +19,8 @@ dependencies:
   go_router: ^17.3.0
   injectable: ^3.0.0
   intl: ^0.20.2
+  livecanvas_api:
+    path: packages/livecanvas_api
 dev_dependencies:
   # bloc_lint 0.4.1 (not 0.4.2): its _fe_analyzer_shared pin (93-99) must match
   # injectable_generator 3.0.x's lean_builder; 0.4.2 pins 100-104 and conflicts.

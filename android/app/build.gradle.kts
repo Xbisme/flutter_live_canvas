@@ -62,11 +62,6 @@ android {
             applicationIdSuffix = ""
             manifestPlaceholders["appName"] = "Livecanvas"
         }
-        create("staging") {
-            dimension = "default"
-            applicationIdSuffix = ".stg"
-            manifestPlaceholders["appName"] = "[STG] Livecanvas"
-        }
         create("development") {
             dimension = "default"
             applicationIdSuffix = ".dev"

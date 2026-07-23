@@ -4,6 +4,9 @@ include:
 analyzer:
   exclude:
     - lib/l10n/gen/*
+    # Generated API client (openapi-generator dart-dio) — regenerated via
+    # scripts/generate_api.sh, never hand-edited (Principle I).
+    - packages/livecanvas_api/**
 linter:
   rules:
     public_member_api_docs: false
