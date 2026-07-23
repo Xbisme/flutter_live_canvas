@@ -4,7 +4,7 @@
 >
 > **Vai trò file này**: pure planning cho track mobile. Trạng thái hiện tại → [`project-context.md`](project-context.md). Ship history → [`changelog.md`](changelog.md).
 >
-> Last updated: 2026-07-23 (Chưa có spec nào merge · contract v0.3.0 — thêm resource Collection · thêm MO-001 bootstrap 2 flavor)
+> Last updated: 2026-07-23 (Chưa có spec nào merge · contract v0.3.2 — synced từ backend, thêm thẻ ảo "All" ở /tags · backend đã implement BE-003 Core Content API thật)
 > Full requirements: `docs/PRD.md` · Nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md)
 
 ---
@@ -24,7 +24,7 @@ Branch: `MO-NNN-feature-name`, folder `specs/MO-NNN-feature-name/`
 ```
 Spec #000: API Contract Freeze                    ← SHARED — phối hợp với repo backend
            (contracts/openapi.yaml +
-            .claude/api-context.md v0.3.0)
+            .claude/api-context.md v0.3.2)
     │
     ▼
 MO-001: Project Bootstrap & Flavors               ← NỀN TẢNG — tạo project trước tiên
@@ -70,7 +70,7 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 
 ### Spec #000: API Contract Freeze
 
-- **Status**: 🟡 In progress (v0.3.0 — thêm resource `Collection`, chờ xác nhận cuối)
+- **Status**: 🟡 In progress (v0.3.2 — synced từ backend: thẻ ảo "All" ở `GET /tags` [`id:0, slug:"all"`, reserved], + error code `SERVER_ERROR`/`METHOD_NOT_ALLOWED`)
 - **Không tạo branch riêng** — review trực tiếp `contracts/openapi.yaml` + `.claude/api-context.md`, phối hợp với repo `livecanvas-backend`.
 - **Thứ tự bắt buộc**: `docs/screen-inventory.md` (màn hình cần gì) → mới tới contract.
 - **Checklist**: xem bản đầy đủ trong `api-context.md` §Quy ước chung; xác nhận schema `Wallpaper` đủ field cho UI list/detail/preview (kèm `collections` cho link Detail→bộ sưu tập); xác nhận UI list dùng cursor pagination đúng cách (lazy build + dispose video controller ngoài viewport); xác nhận UI filter tag dùng `GET /tags` (curated); xác nhận tab "Bộ sưu tập" dùng `GET /collections` + Collection Detail dùng `GET /collections/{id}` (items nhúng sẵn, không phân trang).
@@ -104,7 +104,7 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 - **Status**: ⬜ Not started
 - **Branch**: `MO-003-wallpaper-browse-detail`
 - **Depends on**: MO-002
-- **Scope**: List/grid wallpaper với cursor pagination (`GridView.builder` lazy load, load thêm khi gần cuối scroll, **dispose `VideoPlayerController` ngoài viewport** — Principle II), filter category + tag chips (`GET /tags`), search; **tab "Bộ sưu tập"**: list cover card (`GET /collections`) + màn Collection Detail (`GET /collections/{id}` — items nhúng sẵn, grid, nút "Tải tất cả"/"Mở khoá" theo `is_premium`); màn Wallpaper Detail + preview video full-screen (đọc `wallpaper.collections` để link sang bộ sưu tập).
+- **Scope**: List/grid wallpaper với cursor pagination (`GridView.builder` lazy load, load thêm khi gần cuối scroll, **dispose `VideoPlayerController` ngoài viewport** — Principle II), filter category + tag chips (`GET /tags` — phần tử `[0]` là **thẻ ảo "All"** làm chip mặc định; chọn "All" = list không truyền `tags`), search; **tab "Bộ sưu tập"**: list cover card (`GET /collections`) + màn Collection Detail (`GET /collections/{id}` — items nhúng sẵn, grid, nút "Tải tất cả"/"Mở khoá" theo `is_premium`); màn Wallpaper Detail + preview video full-screen (đọc `wallpaper.collections` để link sang bộ sưu tập).
 - **⚠️ Điểm đồng bộ**: chỉ merge sau khi repo backend xác nhận `BE-002` đã merge — chuyển từ mock sang API thật.
 
 ### MO-004: Favorites & Local Data

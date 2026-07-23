@@ -3,14 +3,14 @@
 > Repo: `livecanvas-mobile` (Flutter — iOS/Android/tablet 1 codebase)
 > Repo liên quan: `livecanvas-backend` (Django, độc lập hoàn toàn — đồng bộ qua `contracts/openapi.yaml` + `.claude/api-context.md`, copy tay giữa 2 repo)
 >
-> Last updated: 2026-07-23 (Repo khởi tạo — chưa có spec nào triển khai · contract v0.3.0)
+> Last updated: 2026-07-23 (Repo khởi tạo — chưa có spec nào triển khai · contract v0.3.2 — synced từ backend, thêm thẻ ảo "All" ở /tags)
 > **Mục đích**: Snapshot tối thiểu để bắt đầu 1 session làm việc trên repo mobile.
 >
 > **Đọc file nào khi nào**:
 > - Bắt đầu session mới → file này + `docs/PRD.md` + `CLAUDE.md` (khi có).
 > - Chuẩn bị họp spec mới → file này + [`sdd-roadmap.md`](sdd-roadmap.md).
 > - **Trước khi đổi/thêm bất kỳ API nào** → [`../docs/screen-inventory.md`](../docs/screen-inventory.md) TRƯỚC TIÊN (màn hình cần gì quyết định API, không phải ngược lại), rồi mới tới `api-context.md`.
-> - Cần biết chi tiết từng endpoint (header/body/response) → [`api-context.md`](api-context.md) + [`../contracts/openapi.yaml`](../contracts/openapi.yaml) — **contract version hiện tại: `v0.3.0`**.
+> - Cần biết chi tiết từng endpoint (header/body/response) → [`api-context.md`](api-context.md) + [`openapi.yaml`](openapi.yaml) — **contract version hiện tại: `v0.3.2`**.
 > - Cần hiểu vì sao spec X ra đời → [`decisions/`](decisions/).
 > - Cần biết spec nào ship khi nào → [`changelog.md`](changelog.md).
 
@@ -28,13 +28,13 @@
 - **Trạng thái**: Repo mới khởi tạo, chưa merge spec nào.
 - **Đã có sẵn**:
   - `docs/screen-inventory.md` — danh sách màn hình + data cần, làm nền cho contract (đã review, 1 giả định còn treo: Onboarding không cần data riêng).
-  - `contracts/openapi.yaml` v0.3.0 + `.claude/api-context.md` v0.3.0 — cursor-based pagination, resource `Tag` curated, `POST /wallpapers/batch` cho Favorites, resource `Collection` curated (tab "Bộ sưu tập" + màn Collection Detail) qua `GET /collections`, `GET /collections/{id}`.
-- **Spec tiếp theo**: `MO-001-project-bootstrap` — tạo project Flutter bằng `very_good_cli` với **đúng 2 flavor `development` + `production`** (gỡ `staging` mà very_good_cli sinh mặc định), gen Dart client từ `openapi.yaml`. Sau đó mới tới MO-002 (foundation/design system). Contract #000 v0.3.0 coi như bản gần chốt, chờ xác nhận cuối.
+  - `.claude/openapi.yaml` v0.3.2 + `.claude/api-context.md` v0.3.2 (synced verbatim từ backend) — cursor-based pagination, resource `Tag` curated (+ **thẻ ảo "All"** `{id:0, slug:"all"}` ở đầu `GET /tags`, reserved slug), `POST /wallpapers/batch` cho Favorites, resource `Collection` curated (tab "Bộ sưu tập" + màn Collection Detail) qua `GET /collections`, `GET /collections/{id}`.
+- **Spec tiếp theo**: `MO-001-project-bootstrap` — tạo project Flutter bằng `very_good_cli` với **đúng 2 flavor `development` + `production`** (gỡ `staging` mà very_good_cli sinh mặc định), gen Dart client từ `openapi.yaml`. Sau đó mới tới MO-002 (foundation/design system). Backend đã merge BE-002 và implement BE-003 (Core Content API thật) — điểm đồng bộ MO-003 sẽ có API thật để chuyển khỏi mock.
 - **Quyết định kỹ thuật đã chốt** (ảnh hưởng UI/state management):
   - Bootstrap: dùng `very_good_cli` tạo project; **đúng 2 flavor `development` + `production`** — KHÔNG có `staging` hay flavor nào khác (gỡ `staging` mà very_good_cli sinh mặc định). Base URL backend lấy theo config từng flavor, không hardcode. Chi tiết + toàn bộ nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.0.0, Principle XII).
   - Pagination: cursor-based — dùng `ListView.builder`/`GridView.builder` lazy build, load trang tiếp khi gần cuối scroll, **dispose `VideoPlayerController` của item ngoài viewport** để tránh tràn RAM (đây là phần client phải tự làm, server chỉ giải quyết 1 nửa).
   - Favorites: chỉ lưu local mảng ID, mỗi lần mở màn gọi `POST /wallpapers/batch` lấy data mới nhất (không cache full data).
-  - Tag: hiển thị dạng filter chips, danh sách lấy từ `GET /tags` (curated, không phân trang).
+  - Tag: hiển thị dạng filter chips, danh sách lấy từ `GET /tags` (curated, không phân trang). Phần tử `[0]` là **thẻ ảo "All"** (`id:0, slug:"all"`) do API sinh → render làm chip mặc định; chọn "All" = gọi `GET /wallpapers` không truyền `tags` (toàn bộ, mới→cũ). Không gửi `tags=all` lên (hoặc nếu gửi, backend bỏ qua).
   - Collection (Bộ sưu tập): tab riêng list cover card từ `GET /collections` (không phân trang); màn Collection Detail gọi `GET /collections/{id}` (nhúng sẵn `items` đúng thứ tự, không cần batch). Wallpaper Detail đọc `wallpaper.collections` để hiện link "Từ bộ sưu tập ·…". Bộ premium: chỉ hiện nút "Mở khoá"; entitlement thật vẫn theo `download-url` từng file, "Tải tất cả" = lặp gọi download-url.
 - **Chưa quyết định**:
   - Tên sản phẩm thật + bundle ID (iOS) / applicationId (Android).
