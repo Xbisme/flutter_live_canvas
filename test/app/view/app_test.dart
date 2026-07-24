@@ -3,7 +3,7 @@ import 'package:livecanvas/app/app.dart';
 import 'package:livecanvas/core/config/app_config.dart';
 import 'package:livecanvas/core/di/injection.dart';
 import 'package:livecanvas/core/router/app_shell.dart';
-import 'package:livecanvas/features/browse/presentation/pages/browse_placeholder_page.dart';
+import 'package:livecanvas/features/browse/presentation/pages/browse_page.dart';
 
 void main() {
   group('App', () {
@@ -16,7 +16,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(AppShell), findsOneWidget);
-      expect(find.byType(BrowsePlaceholderPage), findsOneWidget);
+      expect(find.byType(BrowsePage), findsOneWidget);
     });
   });
 }

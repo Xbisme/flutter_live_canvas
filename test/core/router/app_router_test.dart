@@ -7,8 +7,8 @@ import 'package:livecanvas/app/app.dart';
 import 'package:livecanvas/core/config/app_config.dart';
 import 'package:livecanvas/core/di/injection.dart';
 import 'package:livecanvas/core/widgets/navigation/app_tab_bar.dart';
-import 'package:livecanvas/features/browse/presentation/pages/browse_placeholder_page.dart';
-import 'package:livecanvas/features/collection_detail/presentation/pages/collection_detail_placeholder_page.dart';
+import 'package:livecanvas/features/browse/presentation/pages/browse_page.dart';
+import 'package:livecanvas/features/collection_detail/presentation/pages/collection_detail_page.dart';
 import 'package:livecanvas/features/favorites/presentation/pages/favorites_placeholder_page.dart';
 import 'package:livecanvas/features/profile/presentation/pages/profile_placeholder_page.dart';
 import 'package:livecanvas/l10n/l10n.dart';
@@ -32,7 +32,7 @@ void main() {
     ) async {
       final l10n = await pumpApp(tester);
 
-      expect(find.byType(BrowsePlaceholderPage), findsOneWidget);
+      expect(find.byType(BrowsePage), findsOneWidget);
 
       await tester.tap(find.text(l10n.tabFavorites));
       await tester.pumpAndSettle();
@@ -56,7 +56,7 @@ void main() {
 
       // Browse is visible; Favorites stays mounted (offstage) rather than
       // being disposed — that is how per-tab state survives a tab switch.
-      expect(find.byType(BrowsePlaceholderPage), findsOneWidget);
+      expect(find.byType(BrowsePage), findsOneWidget);
       expect(
         find.byType(FavoritesPlaceholderPage, skipOffstage: false),
         findsOneWidget,
@@ -68,14 +68,14 @@ void main() {
       unawaited(routerOf(tester).push('/collection/c-neon'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(CollectionDetailPlaceholderPage), findsOneWidget);
+      expect(find.byType(CollectionDetailPage), findsOneWidget);
       // Full-screen push covers the tab bar.
       expect(find.byType(AppTabBar), findsNothing);
 
       // Pop via the back affordance returns to the shell + tab bar.
       await tester.tap(find.byType(IconButton).first);
       await tester.pumpAndSettle();
-      expect(find.byType(CollectionDetailPlaceholderPage), findsNothing);
+      expect(find.byType(CollectionDetailPage), findsNothing);
       expect(find.byType(AppTabBar), findsOneWidget);
     });
   });
