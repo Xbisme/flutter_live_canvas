@@ -12,5 +12,32 @@
                 "type": "String"
             }
         }
+    },
+    "tabBrowse": "Explore",
+    "@tabBrowse": { "description": "Browse tab label" },
+    "tabSearch": "Search",
+    "@tabSearch": { "description": "Search tab label" },
+    "tabCollections": "Collections",
+    "@tabCollections": { "description": "Collections tab label" },
+    "tabFavorites": "Favorites",
+    "@tabFavorites": { "description": "Favorites tab label" },
+    "tabProfile": "You",
+    "@tabProfile": { "description": "Profile tab label" },
+    "placeholderComingSoon": "Coming soon",
+    "@placeholderComingSoon": { "description": "Placeholder title for screens with no content yet (MO-002 foundation)" },
+    "placeholderTabBody": "{tab} content arrives in a later update.",
+    "@placeholderTabBody": {
+        "description": "Placeholder body per tab",
+        "placeholders": { "tab": { "type": "String" } }
+    },
+    "wallpaperDetailPlaceholder": "Wallpaper detail #{id}",
+    "@wallpaperDetailPlaceholder": {
+        "description": "Wallpaper Detail placeholder",
+        "placeholders": { "id": { "type": "String" } }
+    },
+    "collectionDetailPlaceholder": "Collection #{id}",
+    "@collectionDetailPlaceholder": {
+        "description": "Collection Detail placeholder",
+        "placeholders": { "id": { "type": "String" } }
     }
 }

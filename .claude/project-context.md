@@ -3,7 +3,7 @@
 > Repo: `livecanvas-mobile` (Flutter — iOS/Android/tablet 1 codebase)
 > Repo liên quan: `livecanvas-backend` (Django, độc lập hoàn toàn — đồng bộ qua `contracts/openapi.yaml` + `.claude/api-context.md`, copy tay giữa 2 repo)
 >
-> Last updated: 2026-07-23 (MO-001 đã implement trên branch `MO-001-project-bootstrap` — chờ PR/merge · contract v0.3.2)
+> Last updated: 2026-07-24 (MO-001 đã MERGE vào `main` qua PR #3 · contract v0.3.2 · tiếp theo: MO-002)
 > **Mục đích**: Snapshot tối thiểu để bắt đầu 1 session làm việc trên repo mobile.
 >
 > **Đọc file nào khi nào**:
@@ -25,18 +25,25 @@
 
 ## Current Focus
 
-- **Trạng thái**: MO-001 (bootstrap) đã implement xong trên branch `MO-001-project-bootstrap`, 4 quality gate xanh local — chờ PR/merge. Backend đã merge BE-001→BE-003 (Core Content API thật, có seed data).
+- **Trạng thái**: MO-001 merged (PR #3). **MO-002 (Foundation/Nav/Design System) đã implement xong** trên branch `MO-002-foundation-navigation` (2026-07-24), 37/37 tasks + 4 CI gate xanh local — chờ PR/merge. Backend đã merge BE-001→BE-003 (Core Content API thật, có seed data). **Tiếp theo: MO-003** (Wallpaper Browse/Collections/Detail) — nền tảng UI đã sẵn, chuyển từ mock Prism sang API thật.
+- **Kết quả MO-002 + deviation đáng nhớ** (chi tiết: `.claude/changelog.md` + `specs/MO-002-foundation-navigation/`):
+  - Tầng theme tập trung **dark-only** `lib/core/theme/` (colors/spacing/typography/elevation/theme/icons) từ token `_ds`; 3 font bundle cục bộ (`scripts/fetch_fonts.sh` — Fontshare + Google Fonts, KHÔNG dùng `google_fonts`).
+  - Icon: **`phosphoricons_flutter 1.0.0`** thay `phosphor_flutter` (blocker Flutter 3.44 đã giải).
+  - 11 shared widget `lib/core/widgets/` + màn `/dev/gallery` dev-only đối chiếu prototype.
+  - Nav `go_router StatefulShellRoute.indexedStack` 5 tab. ⚠️ **Router composition-root ở `lib/app/router/app_router.dart`** (KHÔNG phải `lib/core/router/` như spec gốc) — vì router phải import feature pages, để trong core vi phạm Principle XI. `AppRoutes` constants vẫn ở `lib/core/router/app_routes.dart`.
+  - Mock server **Prism** `scripts/mock_server.sh` (port 4010); dev flavor opt-in qua `--dart-define=USE_MOCK=true` (default vẫn trỏ backend local 8000, không phá workflow MO-001).
+  - **Defer sang MO-003** (YAGNI): `freezed` (chưa có Cubit), `palette_generator` (Aura hue từ ảnh thật — MO-002 nhận `auraColor` tham số).
 - **Kết quả MO-001 + deviation đáng nhớ** (chi tiết: `specs/MO-001-project-bootstrap/`):
   - Project very_good_cli, org `com.livecanvas`, ĐÚNG 2 flavor (staging + scheme Runner mặc định đã gỡ cả iOS/Android/VSCode launch).
   - `AppConfig` per-flavor: development → backend local (`localhost:8000` / Android emulator `10.0.2.2:8000`, dev key `dev-app-key` commit); production → placeholder URL + `--dart-define=APP_KEY`.
   - Client dart-dio + json_serializable sinh vào **`packages/livecanvas_api`** (path package, KHÔNG phải `lib/core/api` như spec gốc — dart-dio sinh package độc lập, không nhét được vào `lib/`); regenerate: `scripts/generate_api.sh` (cần Java; script tự bump sdk constraint ≥3.8 cho null-aware elements).
   - **Version pins do xung khắc solver** (KHÔNG tự ý nâng): `injectable 3.0.0` + `injectable_generator 3.0.2` (codegen bằng **lean_builder**, không phải build_runner; lệnh: `dart run lean_builder build`) + `bloc_lint 0.4.1` (0.4.2 xung khắc `_fe_analyzer_shared`); `bloc_tools` là CLI global, không để trong dev_deps (gây xung khắc).
-  - ⚠️ **`phosphor_flutter` 2.1.0 vỡ với Flutter 3.44** (`IconData` thành final class) — đã gỡ khỏi MO-001; PHẢI chốt hướng xử lý (chờ bản vá / fork / thay icon set) trước khi làm UI thật ở MO-002.
+  - ✅ **Icon (blocker MO-001 đã chốt 2026-07-24)**: `phosphor_flutter` 2.1.0 vỡ với Flutter 3.44 vì `class PhosphorIconData extends IconData` mà [`IconData` bị đánh dấu `final`](https://docs.flutter.dev/release/breaking-changes/icondata-class-marked-final). Package gốc stale 2 năm. → **QUYẾT ĐỊNH: thay bằng `phosphoricons_flutter`** (v1.0.0, verified publisher, Dart 3.x, `typedef PhosphorIconData = IconData;`, 1530+ icon bám phosphor-icons/core v2.0.8 — GIỮ NGUYÊN bộ Phosphor như design handoff, chỉ đổi cách gọi: `ph-user` → `PhosphorIconsRegular.user`). Cài thật ở MO-002. Version chốt lại tại thời điểm plan MO-002 (Principle XVI).
   - i18n: `app_vi.arb` là template mặc định; CI 4 gate tự viết ở `.github/workflows/main.yaml`.
 - **Đã có sẵn**:
   - `docs/screen-inventory.md` — danh sách màn hình + data cần, làm nền cho contract (đã review, 1 giả định còn treo: Onboarding không cần data riêng).
   - `.claude/openapi.yaml` v0.3.2 + `.claude/api-context.md` v0.3.2 (synced verbatim từ backend) — cursor-based pagination, resource `Tag` curated (+ **thẻ ảo "All"** `{id:0, slug:"all"}` ở đầu `GET /tags`, reserved slug), `POST /wallpapers/batch` cho Favorites, resource `Collection` curated (tab "Bộ sưu tập" + màn Collection Detail) qua `GET /collections`, `GET /collections/{id}`.
-- **Spec tiếp theo**: `MO-001-project-bootstrap` — tạo project Flutter bằng `very_good_cli` với **đúng 2 flavor `development` + `production`** (gỡ `staging` mà very_good_cli sinh mặc định), gen Dart client từ `openapi.yaml`. Sau đó mới tới MO-002 (foundation/design system). Backend đã merge BE-002 và implement BE-003 (Core Content API thật) — điểm đồng bộ MO-003 sẽ có API thật để chuyển khỏi mock.
+- **Spec tiếp theo**: `MO-002-foundation-navigation` — port design tokens `_ds` vào `lib/core/theme`, dựng shared widgets (WallpaperCard, TabBar, TopBar, PremiumBadge, Sheet, Toast), navigation `go_router` 5 tab, mock server Prism. Điều kiện: design tokens ĐÃ CÓ; ⚠️ chốt blocker `phosphor_flutter` trước. Backend đã merge BE-002 + implement BE-003 (Core Content API thật) — điểm đồng bộ MO-003 sẽ có API thật để chuyển khỏi mock.
 - **Quyết định kỹ thuật đã chốt** (ảnh hưởng UI/state management):
   - Bootstrap: dùng `very_good_cli` tạo project; **đúng 2 flavor `development` + `production`** — KHÔNG có `staging` hay flavor nào khác (gỡ `staging` mà very_good_cli sinh mặc định). Base URL backend lấy theo config từng flavor, không hardcode. Chi tiết + toàn bộ nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.0.0, Principle XII).
   - Pagination: cursor-based — dùng `ListView.builder`/`GridView.builder` lazy build, load trang tiếp khi gần cuối scroll, **dispose `VideoPlayerController` của item ngoài viewport** để tránh tràn RAM (đây là phần client phải tự làm, server chỉ giải quyết 1 nửa).
