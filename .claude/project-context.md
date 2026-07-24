@@ -3,7 +3,7 @@
 > Repo: `livecanvas-mobile` (Flutter — iOS/Android/tablet 1 codebase)
 > Repo liên quan: `livecanvas-backend` (Django, độc lập hoàn toàn — đồng bộ qua `contracts/openapi.yaml` + `.claude/api-context.md`, copy tay giữa 2 repo)
 >
-> Last updated: 2026-07-24 (MO-001 đã MERGE vào `main` qua PR #3 · contract v0.3.2 · tiếp theo: MO-002)
+> Last updated: 2026-07-24 (MO-001 + MO-002 đã MERGE vào `main` qua PR #3 & #5 · contract v0.3.2 · tiếp theo: MO-003)
 > **Mục đích**: Snapshot tối thiểu để bắt đầu 1 session làm việc trên repo mobile.
 >
 > **Đọc file nào khi nào**:
@@ -25,7 +25,7 @@
 
 ## Current Focus
 
-- **Trạng thái**: MO-001 merged (PR #3). **MO-002 (Foundation/Nav/Design System) đã implement xong** trên branch `MO-002-foundation-navigation` (2026-07-24), 37/37 tasks + 4 CI gate xanh local — chờ PR/merge. Backend đã merge BE-001→BE-003 (Core Content API thật, có seed data). **Tiếp theo: MO-003** (Wallpaper Browse/Collections/Detail) — nền tảng UI đã sẵn, chuyển từ mock Prism sang API thật.
+- **Trạng thái**: MO-001 + MO-002 merged (PR #3, #5). **MO-003 (Wallpaper Browse/Collections/Detail) đã IMPLEMENT XONG** trên branch `MO-003-wallpaper-browse-detail` (2026-07-24) — 4 user story trên API thật, 51 test + 4 CI gate xanh, verify iOS simulator (build + boot + render qua Prism). Chờ PR/merge. Backend đã merge BE-001→BE-003. **Deviation đáng nhớ**: state dùng **native sealed class + Equatable** (KHÔNG freezed — freezed phá lean_builder DI qua analyzer; đã duyệt, xem changelog + `specs/MO-003-*/research.md` R1). Còn chờ device: profiling controller (T055), iPad (T056), backend thật đủ 4 US (T058), Android build. **Tiếp theo: MO-004** (Favorites & Local Data).
 - **Kết quả MO-002 + deviation đáng nhớ** (chi tiết: `.claude/changelog.md` + `specs/MO-002-foundation-navigation/`):
   - Tầng theme tập trung **dark-only** `lib/core/theme/` (colors/spacing/typography/elevation/theme/icons) từ token `_ds`; 3 font bundle cục bộ (`scripts/fetch_fonts.sh` — Fontshare + Google Fonts, KHÔNG dùng `google_fonts`).
   - Icon: **`phosphoricons_flutter 1.0.0`** thay `phosphor_flutter` (blocker Flutter 3.44 đã giải).
@@ -43,7 +43,7 @@
 - **Đã có sẵn**:
   - `docs/screen-inventory.md` — danh sách màn hình + data cần, làm nền cho contract (đã review, 1 giả định còn treo: Onboarding không cần data riêng).
   - `.claude/openapi.yaml` v0.3.2 + `.claude/api-context.md` v0.3.2 (synced verbatim từ backend) — cursor-based pagination, resource `Tag` curated (+ **thẻ ảo "All"** `{id:0, slug:"all"}` ở đầu `GET /tags`, reserved slug), `POST /wallpapers/batch` cho Favorites, resource `Collection` curated (tab "Bộ sưu tập" + màn Collection Detail) qua `GET /collections`, `GET /collections/{id}`.
-- **Spec tiếp theo**: `MO-002-foundation-navigation` — port design tokens `_ds` vào `lib/core/theme`, dựng shared widgets (WallpaperCard, TabBar, TopBar, PremiumBadge, Sheet, Toast), navigation `go_router` 5 tab, mock server Prism. Điều kiện: design tokens ĐÃ CÓ; ⚠️ chốt blocker `phosphor_flutter` trước. Backend đã merge BE-002 + implement BE-003 (Core Content API thật) — điểm đồng bộ MO-003 sẽ có API thật để chuyển khỏi mock.
+- **Spec tiếp theo**: `MO-003-wallpaper-browse-detail` — list/grid wallpaper cursor pagination (`GridView.builder` lazy + dispose `VideoPlayerController` ngoài viewport), filter tag chips (`GET /tags`, `[0]`=thẻ ảo "All"), tab "Bộ sưu tập" (`GET /collections` + Collection Detail `GET /collections/{id}`), Wallpaper Detail + preview video full-screen. Chuyển từ mock Prism sang **API thật** (backend BE-002/BE-003 đã merge). Thêm `freezed` + `palette_generator` (defer từ MO-002). Nền tảng MO-002 (theme, 11 shared widget, nav shell 5 tab) đã sẵn.
 - **Quyết định kỹ thuật đã chốt** (ảnh hưởng UI/state management):
   - Bootstrap: dùng `very_good_cli` tạo project; **đúng 2 flavor `development` + `production`** — KHÔNG có `staging` hay flavor nào khác (gỡ `staging` mà very_good_cli sinh mặc định). Base URL backend lấy theo config từng flavor, không hardcode. Chi tiết + toàn bộ nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md) (v1.0.0, Principle XII).
   - Pagination: cursor-based — dùng `ListView.builder`/`GridView.builder` lazy build, load trang tiếp khi gần cuối scroll, **dispose `VideoPlayerController` của item ngoài viewport** để tránh tràn RAM (đây là phần client phải tự làm, server chỉ giải quyết 1 nửa).
