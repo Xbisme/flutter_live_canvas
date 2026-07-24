@@ -21,6 +21,11 @@ dependencies:
   intl: ^0.20.2
   livecanvas_api:
     path: packages/livecanvas_api
+  # Phosphor icons — phosphoricons_flutter (NOT phosphor_flutter, whose 2.1.0
+  # extends the now-final IconData and breaks on Flutter 3.44). Same Phosphor
+  # set, Dart 3.x safe via `typedef PhosphorIconData = IconData`. Decision
+  # 2026-07-24 (MO-002 research R2).
+  phosphoricons_flutter: ^1.0.0
 dev_dependencies:
   # bloc_lint 0.4.1 (not 0.4.2): its _fe_analyzer_shared pin (93-99) must match
   # injectable_generator 3.0.x's lean_builder; 0.4.2 pins 100-104 and conflicts.
@@ -35,3 +40,36 @@ dev_dependencies:
 flutter:
   generate: true
   uses-material-design: true
+
+  assets:
+    - assets/fonts/README.md
+
+  # Bundled brand fonts (fetched by scripts/fetch_fonts.sh — MO-002 FR-004).
+  # No runtime/network fetch; families referenced only via AppTypography.
+  fonts:
+    - family: ClashDisplay
+      fonts:
+        - asset: assets/fonts/ClashDisplay-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/ClashDisplay-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/ClashDisplay-Semibold.ttf
+          weight: 600
+        - asset: assets/fonts/ClashDisplay-Bold.ttf
+          weight: 700
+    - family: Satoshi
+      fonts:
+        - asset: assets/fonts/Satoshi-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Satoshi-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Satoshi-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Satoshi-Black.ttf
+          weight: 900
+    - family: SpaceMono
+      fonts:
+        - asset: assets/fonts/SpaceMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/SpaceMono-Bold.ttf
+          weight: 700

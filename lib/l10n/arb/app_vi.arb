@@ -12,5 +12,32 @@
                 "type": "String"
             }
         }
+    },
+    "tabBrowse": "Khám phá",
+    "@tabBrowse": { "description": "Nhãn tab Khám phá (Browse)" },
+    "tabSearch": "Tìm",
+    "@tabSearch": { "description": "Nhãn tab Tìm (Search)" },
+    "tabCollections": "Bộ sưu tập",
+    "@tabCollections": { "description": "Nhãn tab Bộ sưu tập (Collections)" },
+    "tabFavorites": "Yêu thích",
+    "@tabFavorites": { "description": "Nhãn tab Yêu thích (Favorites)" },
+    "tabProfile": "Bạn",
+    "@tabProfile": { "description": "Nhãn tab Bạn (Profile)" },
+    "placeholderComingSoon": "Sắp ra mắt",
+    "@placeholderComingSoon": { "description": "Tiêu đề placeholder cho màn chưa có nội dung (MO-002 foundation)" },
+    "placeholderTabBody": "Nội dung {tab} sẽ có ở bản cập nhật sau.",
+    "@placeholderTabBody": {
+        "description": "Thân placeholder mỗi tab",
+        "placeholders": { "tab": { "type": "String" } }
+    },
+    "wallpaperDetailPlaceholder": "Chi tiết hình nền #{id}",
+    "@wallpaperDetailPlaceholder": {
+        "description": "Placeholder màn Wallpaper Detail",
+        "placeholders": { "id": { "type": "String" } }
+    },
+    "collectionDetailPlaceholder": "Bộ sưu tập #{id}",
+    "@collectionDetailPlaceholder": {
+        "description": "Placeholder màn Collection Detail",
+        "placeholders": { "id": { "type": "String" } }
     }
 }

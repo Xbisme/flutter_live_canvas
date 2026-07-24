@@ -19,21 +19,29 @@ class AppConfig {
     required this.appKey,
   });
 
-  /// Development flavor — points at the locally running backend.
+  /// Development flavor — points at the locally running backend by default.
   ///
   /// The Android emulator reaches the host machine via 10.0.2.2; everything
-  /// else (iOS simulator, desktop) uses localhost. Swap to the staging-api
-  /// domain here once the backend deploys one.
-  factory AppConfig.development() => AppConfig(
-    environment: AppEnvironment.development,
-    apiBaseUrl: defaultTargetPlatform == TargetPlatform.android
-        ? 'http://10.0.2.2:8000'
-        : 'http://localhost:8000',
-    // Dev key matches the backend's .env.dev default; committed on
-    // purpose (clarified 2026-07-23) — an app key inside a binary is
-    // hygiene, not a secret.
-    appKey: 'dev-app-key',
-  );
+  /// else (iOS simulator, desktop) uses localhost. Run with
+  /// `--dart-define=USE_MOCK=true` to target the Prism mock server
+  /// (`scripts/mock_server.sh`, port 4010) instead — UI dev without the real
+  /// backend (MO-002 US4 / FR-014).
+  factory AppConfig.development() {
+    const useMock = bool.fromEnvironment('USE_MOCK');
+    const backendPort = 8000;
+    const mockPort = 4010;
+    const port = useMock ? mockPort : backendPort;
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+    final host = isAndroid ? '10.0.2.2' : 'localhost';
+    return AppConfig(
+      environment: AppEnvironment.development,
+      apiBaseUrl: 'http://$host:$port',
+      // Dev key matches the backend's .env.dev default; committed on
+      // purpose (clarified 2026-07-23) — an app key inside a binary is
+      // hygiene, not a secret.
+      appKey: 'dev-app-key',
+    );
+  }
 
   /// Production flavor — real key is injected at build time:
   /// `flutter build ... --dart-define=APP_KEY=<key>`.
