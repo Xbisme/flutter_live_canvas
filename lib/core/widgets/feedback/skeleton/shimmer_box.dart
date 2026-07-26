@@ -29,7 +29,7 @@ class ShimmerBox extends StatelessWidget {
 
   /// Fill the parent's bounds instead of a fixed/aspect size — used as a
   /// per-tile placeholder inside an already-clipped card (e.g. the poster
-  /// slot of a [VideoPreview] while its image loads).
+  /// slot of a `VideoPreview` while its image loads).
   final bool expand;
 
   /// The sweep loops continuously while mounted; ~1.4s reads as "working"
