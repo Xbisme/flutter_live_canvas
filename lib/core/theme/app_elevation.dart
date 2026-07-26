@@ -30,9 +30,14 @@ abstract final class AppElevation {
   static const double blurBar = 18;
   static const double blurSheet = 28;
 
-  /// The signature glow behind a wallpaper tile. [color] = content hue.
+  /// Opacity applied to the per-tile hue so the Aura reads as a soft glow, not
+  /// an opaque slab — palette-derived hues arrive fully opaque.
+  static const double auraOpacity = 0.45;
+
+  /// The signature glow behind a wallpaper tile. [color] = content hue; its
+  /// alpha is normalised to [auraOpacity] so opaque palette colours still glow.
   static BoxShadow aura(Color color) => BoxShadow(
-    color: color,
+    color: color.withValues(alpha: auraOpacity),
     blurRadius: auraBlur,
     spreadRadius: auraSpread,
     offset: const Offset(0, 10),

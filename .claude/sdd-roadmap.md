@@ -4,7 +4,7 @@
 >
 > **Vai trò file này**: pure planning cho track mobile. Trạng thái hiện tại → [`project-context.md`](project-context.md). Ship history → [`changelog.md`](changelog.md).
 >
-> Last updated: 2026-07-24 (MO-001 đã MERGE vào `main` qua PR #3 · contract v0.3.2 — synced từ backend, thêm thẻ ảo "All" ở /tags · backend đã implement BE-003 Core Content API thật · tiếp theo: MO-002)
+> Last updated: 2026-07-24 (MO-001 + MO-002 đã MERGE vào `main` qua PR #3 & #5 · contract v0.3.2 — synced từ backend, thêm thẻ ảo "All" ở /tags · backend đã implement BE-003 Core Content API thật · tiếp theo: MO-003)
 > Full requirements: `docs/PRD.md` · Nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md)
 
 ---
@@ -93,7 +93,7 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 
 ### MO-002: Foundation, Navigation & Design System
 
-- **Status**: 🟡 Implemented trên branch `MO-002-foundation-navigation` (2026-07-24) — 37/37 tasks, 4 CI gate xanh local, chờ PR/merge. Blocker icon đã giải: `phosphoricons_flutter 1.0.0`. Deviation: router composition-root ở `lib/app/router/` (Principle XI). Chi tiết: `.claude/changelog.md`.
+- **Status**: ✅ Merged vào `main` qua PR #5 (2026-07-23) — 37/37 tasks, 4 CI gate xanh. Blocker icon đã giải: `phosphoricons_flutter 1.0.0`. Deviation: router composition-root ở `lib/app/router/` (Principle XI). Chi tiết: `.claude/changelog.md`.
 - **Branch**: `MO-002-foundation-navigation`
 - **Depends on**: MO-001 ✅
 - **Scope**: Port **design tokens** từ handoff `_ds` (`colors/spacing/typography/elevation/fonts`) vào `lib/core/theme`; dựng widget dùng chung (WallpaperCard, TabBar, TopBar, PremiumBadge, Sheet, Toast) đúng prototype; navigation `go_router` với `StatefulShellRoute.indexedStack` cho 5 tab (Khám phá / Tìm / Bộ sưu tập / Yêu thích / Bạn) + push full-screen cho Detail/Collection; mock server **Prism** local từ `openapi.yaml` để phát triển không chờ backend.
@@ -101,7 +101,7 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 
 ### MO-003: Wallpaper Browse, Collections & Detail
 
-- **Status**: 🔜 Next up (MO-002 nền tảng đã có: theme, shared widgets, nav shell, mock server Prism). Điểm đồng bộ: backend BE-002/BE-003 đã merge (API thật) — chuyển từ mock sang API thật.
+- **Status**: 🟡 Implemented trên branch `MO-003-wallpaper-browse-detail` (2026-07-24) — 4 US, 51 test + 4 CI gate xanh, verify iOS simulator (build+boot+render qua Prism). Chờ PR/merge. Deviation: state native sealed class + Equatable (KHÔNG freezed — phá lean_builder qua analyzer; đã duyệt). Còn chờ device: profiling (T055), iPad (T056), backend thật (T058), Android build.
 - **Branch**: `MO-003-wallpaper-browse-detail`
 - **Depends on**: MO-002
 - **Scope**: List/grid wallpaper với cursor pagination (`GridView.builder` lazy load, load thêm khi gần cuối scroll, **dispose `VideoPlayerController` ngoài viewport** — Principle II), filter category + tag chips (`GET /tags` — phần tử `[0]` là **thẻ ảo "All"** làm chip mặc định; chọn "All" = list không truyền `tags`), search; **tab "Bộ sưu tập"**: list cover card (`GET /collections`) + màn Collection Detail (`GET /collections/{id}` — items nhúng sẵn, grid, nút "Tải tất cả"/"Mở khoá" theo `is_premium`); màn Wallpaper Detail + preview video full-screen (đọc `wallpaper.collections` để link sang bộ sưu tập).

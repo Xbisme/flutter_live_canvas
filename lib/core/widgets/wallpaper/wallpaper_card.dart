@@ -25,7 +25,7 @@ class WallpaperCard extends StatelessWidget {
     required this.preview,
     required this.auraColor,
     required this.title,
-    required this.author,
+    this.author,
     this.premium = false,
     this.meta,
     this.isFav = false,
@@ -37,7 +37,10 @@ class WallpaperCard extends StatelessWidget {
   final Widget preview;
   final Color auraColor;
   final String title;
-  final String author;
+
+  /// Attribution handle shown under the title (e.g. `@tokyo`). Hidden when null
+  /// — the `Wallpaper` schema has no author, so tiles pass null (MO-003).
+  final String? author;
   final bool premium;
   final WallpaperMeta? meta;
   final bool isFav;
@@ -96,12 +99,13 @@ class WallpaperCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.h3.copyWith(fontSize: 15),
           ),
-          Text(
-            '@$author',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.small,
-          ),
+          if (author != null && author!.isNotEmpty)
+            Text(
+              '@$author',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.small,
+            ),
         ],
       ),
     );
