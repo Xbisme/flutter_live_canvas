@@ -3,7 +3,7 @@
 > Repo: `livecanvas-mobile` (Flutter — iOS/Android/tablet 1 codebase)
 > Repo liên quan: `livecanvas-backend` (Django, độc lập hoàn toàn — đồng bộ qua `contracts/openapi.yaml` + `.claude/api-context.md`, copy tay giữa 2 repo)
 >
-> Last updated: 2026-07-24 (MO-001 + MO-002 đã MERGE vào `main` qua PR #3 & #5 · contract v0.3.2 · tiếp theo: MO-003)
+> Last updated: 2026-07-26 (MO-001→003 MERGED · MO-004 implemented chờ PR · contract v0.4.0 · tiếp theo: MO-005 hoặc merge MO-004)
 > **Mục đích**: Snapshot tối thiểu để bắt đầu 1 session làm việc trên repo mobile.
 >
 > **Đọc file nào khi nào**:
@@ -25,7 +25,7 @@
 
 ## Current Focus
 
-- **Trạng thái**: MO-001 + MO-002 merged (PR #3, #5). **MO-003 (Wallpaper Browse/Collections/Detail) đã IMPLEMENT XONG** trên branch `MO-003-wallpaper-browse-detail` (2026-07-24) — 4 user story trên API thật, 51 test + 4 CI gate xanh, verify iOS simulator (build + boot + render qua Prism). Chờ PR/merge. Backend đã merge BE-001→BE-003. **Deviation đáng nhớ**: state dùng **native sealed class + Equatable** (KHÔNG freezed — freezed phá lean_builder DI qua analyzer; đã duyệt, xem changelog + `specs/MO-003-*/research.md` R1). Còn chờ device: profiling controller (T055), iPad (T056), backend thật đủ 4 US (T058), Android build. **Tiếp theo: MO-004** (Favorites & Local Data).
+- **Trạng thái**: MO-001 + MO-002 + MO-003 merged (PR #3, #5, #6). **MO-004 (Favorites & Local Data) đã IMPLEMENT XONG** trên branch `MO-004-favorites-local-data` (2026-07-26) — 4 US, 36 test mới (tổng 87) + 4 CI gate xanh; `shared_preferences` lưu ID cục bộ, tầng `core/favorites/` (repo phát stream đồng bộ nút tim xuyên màn). Chờ PR/merge. Deviation: màn Download History tối giản (chưa có design). Còn chờ device: nghiệm thu US1–US4 + SC-002 thủ công. **MO-003 (Wallpaper Browse/Collections/Detail) đã MERGE vào `main` qua PR #6** (2026-07-26) — 4 user story trên API thật, 51 test + 4 CI gate xanh, verify iOS simulator (build + boot + render qua Prism) + nghiệm thu preview/aura trên Android máy thật (T055 xong). Backend đã merge BE-001→BE-004. **Deviation đáng nhớ**: state dùng **native sealed class + Equatable** (KHÔNG freezed — freezed phá lean_builder DI qua analyzer; đã duyệt, xem changelog + `specs/MO-003-*/research.md` R1). Còn chờ device (không chặn merge): iPad responsive (T056), nghiệm thu backend thật đủ 4 US (T058). **Tiếp theo: MO-004** (Favorites & Local Data) — cần regenerate `packages/livecanvas_api` cho contract v0.4.0 trước.
 - **Kết quả MO-002 + deviation đáng nhớ** (chi tiết: `.claude/changelog.md` + `specs/MO-002-foundation-navigation/`):
   - Tầng theme tập trung **dark-only** `lib/core/theme/` (colors/spacing/typography/elevation/theme/icons) từ token `_ds`; 3 font bundle cục bộ (`scripts/fetch_fonts.sh` — Fontshare + Google Fonts, KHÔNG dùng `google_fonts`).
   - Icon: **`phosphoricons_flutter 1.0.0`** thay `phosphor_flutter` (blocker Flutter 3.44 đã giải).

@@ -4,6 +4,7 @@ import 'package:livecanvas/core/catalog/wallpaper_repository.dart';
 import 'package:livecanvas/core/di/injection.dart';
 import 'package:livecanvas/core/domain/app_failure.dart';
 import 'package:livecanvas/core/domain/result.dart';
+import 'package:livecanvas/core/favorites/favorites_repository.dart';
 import 'package:livecanvas/core/widgets/feedback/failure_view.dart';
 import 'package:livecanvas/core/widgets/wallpaper/premium_badge.dart';
 import 'package:livecanvas/features/wallpaper_detail/presentation/cubit/wallpaper_detail_cubit.dart';
@@ -12,6 +13,8 @@ import 'package:livecanvas/l10n/l10n.dart';
 import 'package:livecanvas_api/livecanvas_api.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../helpers/fake_favorites_repository.dart';
+
 class _MockWallpaperRepo extends Mock implements WallpaperRepository {}
 
 void main() {
@@ -19,9 +22,11 @@ void main() {
 
   setUp(() {
     wallpapers = _MockWallpaperRepo();
-    getIt.registerFactory<WallpaperDetailCubit>(
-      () => WallpaperDetailCubit(wallpapers),
-    );
+    getIt
+      ..registerFactory<WallpaperDetailCubit>(
+        () => WallpaperDetailCubit(wallpapers),
+      )
+      ..registerSingleton<FavoritesRepository>(FakeFavoritesRepository());
   });
 
   tearDown(getIt.reset);

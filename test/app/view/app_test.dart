@@ -5,9 +5,14 @@ import 'package:livecanvas/core/di/injection.dart';
 import 'package:livecanvas/core/router/app_shell.dart';
 import 'package:livecanvas/features/browse/presentation/pages/browse_page.dart';
 
+import '../../helpers/mock_shared_prefs.dart';
+
 void main() {
   group('App', () {
-    setUp(() => configureDependencies(AppConfig.development()));
+    setUp(() {
+      useInMemorySharedPreferences();
+      configureDependencies(AppConfig.development());
+    });
 
     tearDown(getIt.reset);
 

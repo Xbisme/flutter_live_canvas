@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecanvas/core/di/injection.dart';
+import 'package:livecanvas/core/favorites/favorites_repository.dart';
 import 'package:livecanvas/core/theme/app_colors.dart';
 import 'package:livecanvas/core/theme/app_icons.dart';
 import 'package:livecanvas/core/theme/app_spacing.dart';
@@ -65,8 +67,58 @@ class _DetailView extends StatelessWidget {
               wallpaper: wallpaper,
             ),
           };
-          return Stack(children: [body, const _BackButton()]);
+          return Stack(
+            children: [
+              body,
+              const _BackButton(),
+              _FavButton(wallpaperId: wallpaperId),
+            ],
+          );
         },
+      ),
+    );
+  }
+}
+
+/// Glass heart in the top-right chrome (design: WallpaperDetail.jsx), bound to
+/// the shared [FavoritesRepository] so it stays in sync with the grids
+/// (FR-004).
+class _FavButton extends StatelessWidget {
+  const _FavButton({required this.wallpaperId});
+
+  final int wallpaperId;
+
+  @override
+  Widget build(BuildContext context) {
+    final repo = getIt<FavoritesRepository>();
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sp2),
+        child: Align(
+          alignment: Alignment.topRight,
+          child: ValueListenableBuilder<Set<int>>(
+            valueListenable: repo.listenable,
+            builder: (context, ids, _) {
+              final isFav = ids.contains(wallpaperId);
+              return DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: AppColors.scrim,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    isFav ? AppIcons.heartFill : AppIcons.heart,
+                    color: isFav ? AppColors.favorite : AppColors.textHi,
+                  ),
+                  onPressed: () {
+                    unawaited(HapticFeedback.selectionClick());
+                    unawaited(repo.toggle(wallpaperId));
+                  },
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }

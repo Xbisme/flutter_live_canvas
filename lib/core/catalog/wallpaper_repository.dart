@@ -19,6 +19,12 @@ abstract interface class WallpaperRepository {
 
   /// A single wallpaper with its `collections` populated (for the detail link).
   Future<Result<Wallpaper>> getById(int id);
+
+  /// Fresh data for many wallpapers by ID via `POST /wallpapers/batch` — used
+  /// by Favorites + Download History (Principle IX). IDs the server can't find
+  /// are silently omitted; callers reconcile by diffing requested vs returned.
+  /// Callers MUST pass 1..100 IDs (chunk larger lists first).
+  Future<Result<List<Wallpaper>>> batch(List<int> ids);
 }
 
 @LazySingleton(as: WallpaperRepository)
@@ -56,6 +62,20 @@ class WallpaperRepositoryImpl implements WallpaperRepository {
       final data = resp.data;
       if (data == null) return const Err(UnknownFailure(message: 'empty body'));
       return Ok(data);
+    } on Object catch (e) {
+      return Err(mapDioError(e));
+    }
+  }
+
+  @override
+  Future<Result<List<Wallpaper>>> batch(List<int> ids) async {
+    try {
+      final resp = await _api.wallpapersBatchPost(
+        wallpaperBatchRequest: WallpaperBatchRequest(ids: ids),
+      );
+      final data = resp.data;
+      if (data == null) return const Err(UnknownFailure(message: 'empty body'));
+      return Ok(data.toList());
     } on Object catch (e) {
       return Err(mapDioError(e));
     }

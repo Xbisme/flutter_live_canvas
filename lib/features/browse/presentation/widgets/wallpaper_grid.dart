@@ -3,14 +3,15 @@ import 'package:livecanvas/core/responsive/breakpoints.dart';
 import 'package:livecanvas/core/theme/app_colors.dart';
 import 'package:livecanvas/core/theme/app_spacing.dart';
 import 'package:livecanvas/core/theme/app_typography.dart';
-import 'package:livecanvas/core/widgets/wallpaper/wallpaper_tile.dart';
+import 'package:livecanvas/core/widgets/wallpaper/favoritable_wallpaper_tile.dart';
 import 'package:livecanvas/l10n/l10n.dart';
 import 'package:livecanvas_api/livecanvas_api.dart';
 
 /// Lazy, cursor-paginated wallpaper grid reused by Browse and Search (research
 /// R7). Prefetches the next page ~600px before the end; the footer shows the
 /// load-more state (skeleton while appending, a retry on failure). Per-tile
-/// video lifecycle is handled inside [WallpaperTile] (Principle II).
+/// video lifecycle + the favourite heart are handled inside
+/// [FavoritableWallpaperTile] (Principle II).
 class WallpaperGrid extends StatefulWidget {
   const WallpaperGrid({
     required this.items,
@@ -70,8 +71,8 @@ class _WallpaperGridState extends State<WallpaperGrid> {
                 AppSpacing.gutter * 2 -
                 AppSpacing.gridGap * (columns - 1)) /
             columns;
-        final cellHeight =
-            columnWidth / AppSpacing.wallRatio + _textBlockHeight;
+        // The tile is a pure 9:16 card (title/author overlay inside it).
+        final cellHeight = columnWidth / AppSpacing.wallRatio;
         return CustomScrollView(
           controller: _controller,
           slivers: [
@@ -89,7 +90,7 @@ class _WallpaperGridState extends State<WallpaperGrid> {
                   // Isolate each tile's raster layer so its blurred Aura glow
                   // is not repainted for the whole grid on every scroll frame.
                   return RepaintBoundary(
-                    child: WallpaperTile(
+                    child: FavoritableWallpaperTile(
                       wallpaper: wallpaper,
                       onTap: () => widget.onTap(wallpaper),
                     ),
@@ -103,9 +104,6 @@ class _WallpaperGridState extends State<WallpaperGrid> {
       },
     );
   }
-
-  /// Room under the preview for the title + author lines in [WallpaperTile].
-  static const _textBlockHeight = 52.0;
 }
 
 class _Footer extends StatelessWidget {

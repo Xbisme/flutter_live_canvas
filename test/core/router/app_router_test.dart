@@ -9,13 +9,18 @@ import 'package:livecanvas/core/di/injection.dart';
 import 'package:livecanvas/core/widgets/navigation/app_tab_bar.dart';
 import 'package:livecanvas/features/browse/presentation/pages/browse_page.dart';
 import 'package:livecanvas/features/collection_detail/presentation/pages/collection_detail_page.dart';
-import 'package:livecanvas/features/favorites/presentation/pages/favorites_placeholder_page.dart';
+import 'package:livecanvas/features/favorites/presentation/pages/favorites_page.dart';
 import 'package:livecanvas/features/profile/presentation/pages/profile_placeholder_page.dart';
 import 'package:livecanvas/l10n/l10n.dart';
 
+import '../../helpers/mock_shared_prefs.dart';
+
 void main() {
   group('AppRouter — 5-tab shell', () {
-    setUp(() => configureDependencies(AppConfig.development()));
+    setUp(() {
+      useInMemorySharedPreferences();
+      configureDependencies(AppConfig.development());
+    });
     tearDown(getIt.reset);
 
     Future<AppLocalizations> pumpApp(WidgetTester tester) async {
@@ -36,7 +41,7 @@ void main() {
 
       await tester.tap(find.text(l10n.tabFavorites));
       await tester.pumpAndSettle();
-      expect(find.byType(FavoritesPlaceholderPage), findsOneWidget);
+      expect(find.byType(FavoritesPage), findsOneWidget);
 
       await tester.tap(find.text(l10n.tabProfile));
       await tester.pumpAndSettle();
@@ -58,7 +63,7 @@ void main() {
       // being disposed — that is how per-tab state survives a tab switch.
       expect(find.byType(BrowsePage), findsOneWidget);
       expect(
-        find.byType(FavoritesPlaceholderPage, skipOffstage: false),
+        find.byType(FavoritesPage, skipOffstage: false),
         findsOneWidget,
       );
     });

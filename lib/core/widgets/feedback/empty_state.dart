@@ -3,8 +3,9 @@ import 'package:livecanvas/core/theme/app_colors.dart';
 import 'package:livecanvas/core/theme/app_spacing.dart';
 import 'package:livecanvas/core/theme/app_typography.dart';
 
-/// Centered empty-state: a Phosphor icon, a title, a message, and an optional
-/// action. Used where a list has no items (Favorites, filtered results).
+/// Centered empty-state (handoff `EmptyState`): a Phosphor glyph in an 88×88
+/// aurora-soft halo, a display title, a body message, and an optional action.
+/// Used where a list has no items (Favorites, filtered results).
 class EmptyState extends StatelessWidget {
   const EmptyState({
     required this.icon,
@@ -23,21 +24,39 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sp8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sp8,
+          vertical: AppSpacing.sp12,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 40, color: AppColors.textTertiary),
-            const SizedBox(height: AppSpacing.sp4),
-            Text(title, style: AppTypography.h3, textAlign: TextAlign.center),
+            Container(
+              width: 88,
+              height: 88,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppColors.auroraSoft,
+                border: Border.all(color: AppColors.borderSubtle),
+              ),
+              child: Icon(icon, size: 40, color: AppColors.iris400),
+            ),
             const SizedBox(height: AppSpacing.sp2),
-            Text(
-              message,
-              style: AppTypography.small,
-              textAlign: TextAlign.center,
+            Text(title, style: AppTypography.h2, textAlign: TextAlign.center),
+            const SizedBox(height: AppSpacing.sp2),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 260),
+              child: Text(
+                message,
+                style: AppTypography.bodyText.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
             if (action != null) ...[
-              const SizedBox(height: AppSpacing.sp5),
+              const SizedBox(height: AppSpacing.sp3),
               action!,
             ],
           ],

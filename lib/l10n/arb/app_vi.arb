@@ -86,5 +86,19 @@
     "searchEmptyTitle": "Không tìm thấy",
     "@searchEmptyTitle": { "description": "Tiêu đề khi tìm không có kết quả" },
     "searchEmptyMessage": "Thử một từ khoá khác nhé.",
-    "@searchEmptyMessage": { "description": "Gợi ý khi tìm không có kết quả" }
+    "@searchEmptyMessage": { "description": "Gợi ý khi tìm không có kết quả" },
+    "favoritesEmptyTitle": "Chưa có gì ở đây",
+    "@favoritesEmptyTitle": { "description": "Tiêu đề khi chưa có hình nền yêu thích" },
+    "favoritesEmptyMessage": "Chạm vào ♥ trên bất kỳ hình nền nào để lưu lại đây.",
+    "@favoritesEmptyMessage": { "description": "Gợi ý cách thêm hình nền yêu thích" },
+    "favoritesEmptyAction": "Khám phá hình nền",
+    "@favoritesEmptyAction": { "description": "Nút CTA đi tới Khám phá từ màn Yêu thích rỗng" },
+    "downloadHistoryTitle": "Lịch sử tải",
+    "@downloadHistoryTitle": { "description": "Tiêu đề màn Lịch sử tải" },
+    "downloadHistoryEmptyTitle": "Chưa tải gì",
+    "@downloadHistoryEmptyTitle": { "description": "Tiêu đề khi lịch sử tải rỗng" },
+    "downloadHistoryEmptyMessage": "Hình nền bạn tải sẽ xuất hiện ở đây.",
+    "@downloadHistoryEmptyMessage": { "description": "Gợi ý khi lịch sử tải rỗng" },
+    "profileDownloadHistory": "Lịch sử tải",
+    "@profileDownloadHistory": { "description": "Mục điều hướng tới Lịch sử tải trong tab Bạn" }
 }

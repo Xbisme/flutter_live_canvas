@@ -3,12 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:livecanvas/core/catalog/wallpaper_repository.dart';
 import 'package:livecanvas/core/di/injection.dart';
 import 'package:livecanvas/core/domain/result.dart';
+import 'package:livecanvas/core/favorites/favorites_repository.dart';
 import 'package:livecanvas/features/browse/presentation/widgets/wallpaper_grid.dart';
 import 'package:livecanvas/features/search/presentation/cubit/search_cubit.dart';
 import 'package:livecanvas/features/search/presentation/pages/search_page.dart';
 import 'package:livecanvas/l10n/l10n.dart';
 import 'package:livecanvas_api/livecanvas_api.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../helpers/fake_favorites_repository.dart';
 
 class _MockWallpaperRepo extends Mock implements WallpaperRepository {}
 
@@ -17,7 +20,9 @@ void main() {
 
   setUp(() {
     wallpapers = _MockWallpaperRepo();
-    getIt.registerFactory<SearchCubit>(() => SearchCubit(wallpapers));
+    getIt
+      ..registerFactory<SearchCubit>(() => SearchCubit(wallpapers))
+      ..registerSingleton<FavoritesRepository>(FakeFavoritesRepository());
   });
 
   tearDown(getIt.reset);

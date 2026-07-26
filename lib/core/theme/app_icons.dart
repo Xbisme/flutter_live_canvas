@@ -29,6 +29,7 @@ abstract final class AppIcons {
   static const IconData dotsThree = PhosphorIconsBold.dotsThree;
   static const IconData play = PhosphorIconsFill.play;
   static const IconData sparkle = PhosphorIconsFill.sparkle;
+  static const IconData diamond = PhosphorIconsFill.diamond;
   static const IconData check = PhosphorIconsBold.check;
   static const IconData flag = PhosphorIconsRegular.flag;
   static const IconData warning = PhosphorIconsRegular.warningCircle;

@@ -33,7 +33,7 @@ void main() {
       );
 
       expect(find.text('Neon Rain'), findsOneWidget);
-      expect(find.text('@studiolux'), findsOneWidget);
+      expect(find.text('studiolux'), findsOneWidget);
       expect(find.text('PRO'), findsOneWidget);
     });
 

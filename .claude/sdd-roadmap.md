@@ -4,7 +4,7 @@
 >
 > **Vai trò file này**: pure planning cho track mobile. Trạng thái hiện tại → [`project-context.md`](project-context.md). Ship history → [`changelog.md`](changelog.md).
 >
-> Last updated: 2026-07-24 (MO-001 + MO-002 đã MERGE vào `main` qua PR #3 & #5 · contract v0.3.2 — synced từ backend, thêm thẻ ảo "All" ở /tags · backend đã implement BE-003 Core Content API thật · tiếp theo: MO-003)
+> Last updated: 2026-07-26 (MO-001 + MO-002 + MO-003 đã MERGE vào `main` qua PR #3 & #5 & #6 · contract v0.4.0 — synced từ backend · backend đã merge BE-001→BE-004 · tiếp theo: MO-004)
 > Full requirements: `docs/PRD.md` · Nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md)
 
 ---
@@ -101,7 +101,7 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 
 ### MO-003: Wallpaper Browse, Collections & Detail
 
-- **Status**: 🟡 Implemented trên branch `MO-003-wallpaper-browse-detail` (2026-07-24) — 4 US, 51 test + 4 CI gate xanh, verify iOS simulator (build+boot+render qua Prism). Chờ PR/merge. Deviation: state native sealed class + Equatable (KHÔNG freezed — phá lean_builder qua analyzer; đã duyệt). Còn chờ device: profiling (T055), iPad (T056), backend thật (T058), Android build.
+- **Status**: ✅ Merged vào `main` qua PR #6 (2026-07-26) — 4 US, 51 test + 4 CI gate xanh, verify iOS simulator (build+boot+render qua Prism) + nghiệm thu preview/aura Android máy thật (T055 xong). Deviation: state native sealed class + Equatable (KHÔNG freezed — phá lean_builder qua analyzer; đã duyệt). Còn chờ device (không chặn merge): iPad (T056), nghiệm thu backend thật (T058).
 - **Branch**: `MO-003-wallpaper-browse-detail`
 - **Depends on**: MO-002
 - **Scope**: List/grid wallpaper với cursor pagination (`GridView.builder` lazy load, load thêm khi gần cuối scroll, **dispose `VideoPlayerController` ngoài viewport** — Principle II), filter category + tag chips (`GET /tags` — phần tử `[0]` là **thẻ ảo "All"** làm chip mặc định; chọn "All" = list không truyền `tags`), search; **tab "Bộ sưu tập"**: list cover card (`GET /collections`) + màn Collection Detail (`GET /collections/{id}` — items nhúng sẵn, grid, nút "Tải tất cả"/"Mở khoá" theo `is_premium`); màn Wallpaper Detail + preview video full-screen (đọc `wallpaper.collections` để link sang bộ sưu tập).
@@ -109,7 +109,7 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 
 ### MO-004: Favorites & Local Data
 
-- **Status**: ⬜ Not started
+- **Status**: 🟡 Implemented trên branch `MO-004-favorites-local-data` (2026-07-26) — 4 US, 36 test mới (tổng 87) + 4 CI gate xanh. `shared_preferences` cho ID cục bộ; tầng `core/favorites/` dùng chung (repo stream đồng bộ tim xuyên màn). Chờ PR/merge. Deviation: màn Download History tối giản (chưa có design). Còn chờ device: nghiệm thu US1–US4 + SC-002 (<100ms) thủ công (T036).
 - **Branch**: `MO-004-favorites-local-data`
 - **Depends on**: MO-003
 - **Scope**: Favorite lưu local (chỉ mảng ID — Principle IX), mỗi lần mở màn gọi `POST /wallpapers/batch` để lấy data mới nhất (không cache full data); reconcile khi ID bị xóa (bỏ favorite, không lỗi); lịch sử tải local.

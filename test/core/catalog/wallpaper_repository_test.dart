@@ -101,4 +101,75 @@ void main() {
       expect((result as Err).failure, isA<NotFoundFailure>());
     });
   });
+
+  group('batch', () {
+    setUpAll(() {
+      registerFallbackValue(WallpaperBatchRequest(ids: const []));
+    });
+
+    When<Future<Response<List<Wallpaper>>>> whenBatch() => when(
+      () => api.wallpapersBatchPost(
+        wallpaperBatchRequest: any(named: 'wallpaperBatchRequest'),
+        cancelToken: any(named: 'cancelToken'),
+        headers: any(named: 'headers'),
+        extra: any(named: 'extra'),
+        validateStatus: any(named: 'validateStatus'),
+        onSendProgress: any(named: 'onSendProgress'),
+        onReceiveProgress: any(named: 'onReceiveProgress'),
+      ),
+    );
+
+    test('forwards ids and returns Ok on success', () async {
+      final wallpapers = <Wallpaper>[Wallpaper(id: 1), Wallpaper(id: 2)];
+      whenBatch().thenAnswer((_) async => _resp(wallpapers));
+
+      final result = await repo.batch(const [1, 2]);
+
+      expect(result, isA<Ok<List<Wallpaper>>>());
+      expect((result as Ok).value, hasLength(2));
+      final captured =
+          verify(
+                () => api.wallpapersBatchPost(
+                  wallpaperBatchRequest: captureAny(
+                    named: 'wallpaperBatchRequest',
+                  ),
+                  cancelToken: any(named: 'cancelToken'),
+                  headers: any(named: 'headers'),
+                  extra: any(named: 'extra'),
+                  validateStatus: any(named: 'validateStatus'),
+                  onSendProgress: any(named: 'onSendProgress'),
+                  onReceiveProgress: any(named: 'onReceiveProgress'),
+                ),
+              ).captured.single
+              as WallpaperBatchRequest;
+      expect(captured.ids, const [1, 2]);
+    });
+
+    test('DioException → Err(mapped failure)', () async {
+      whenBatch().thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: '/'),
+          type: DioExceptionType.connectionTimeout,
+        ),
+      );
+
+      final result = await repo.batch(const [1]);
+
+      expect(result, isA<Err<List<Wallpaper>>>());
+      expect((result as Err).failure, isA<TimeoutFailure>());
+    });
+
+    test('null body → Err(UnknownFailure)', () async {
+      whenBatch().thenAnswer(
+        (_) async => Response<List<Wallpaper>>(
+          requestOptions: RequestOptions(path: '/'),
+        ),
+      );
+
+      final result = await repo.batch(const [1]);
+
+      expect(result, isA<Err<List<Wallpaper>>>());
+      expect((result as Err).failure, isA<UnknownFailure>());
+    });
+  });
 }

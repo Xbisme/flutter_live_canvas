@@ -14,8 +14,8 @@ import 'package:livecanvas/core/widgets/feedback/failure_view.dart';
 import 'package:livecanvas/core/widgets/feedback/skeleton/shimmer_box.dart';
 import 'package:livecanvas/core/widgets/feedback/skeleton/wallpaper_grid_skeleton.dart';
 import 'package:livecanvas/core/widgets/feedback/toast.dart';
+import 'package:livecanvas/core/widgets/wallpaper/favoritable_wallpaper_tile.dart';
 import 'package:livecanvas/core/widgets/wallpaper/premium_badge.dart';
-import 'package:livecanvas/core/widgets/wallpaper/wallpaper_tile.dart';
 import 'package:livecanvas/features/collection_detail/presentation/cubit/collection_detail_cubit.dart';
 import 'package:livecanvas/features/collection_detail/presentation/cubit/collection_detail_state.dart';
 import 'package:livecanvas/l10n/l10n.dart';
@@ -131,7 +131,7 @@ class _Content extends StatelessWidget {
                 AppSpacing.gutter * 2 -
                 AppSpacing.gridGap * (columns - 1)) /
             columns;
-        final cellHeight = columnWidth / AppSpacing.wallRatio + 52.0;
+        final cellHeight = columnWidth / AppSpacing.wallRatio;
         return CustomScrollView(
           slivers: [
             SliverToBoxAdapter(child: _Header(collection: collection)),
@@ -146,7 +146,7 @@ class _Content extends StatelessWidget {
                 ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final wallpaper = items[index];
-                  return WallpaperTile(
+                  return FavoritableWallpaperTile(
                     wallpaper: wallpaper,
                     onTap: () => context.push('/wallpaper/${wallpaper.id}'),
                   );

@@ -14,10 +14,22 @@ import 'package:livecanvas_api/livecanvas_api.dart';
 /// source of scroll jank. The Aura is decorative, so an exact content colour
 /// isn't worth that cost.
 class WallpaperTile extends StatelessWidget {
-  const WallpaperTile({required this.wallpaper, this.onTap, super.key});
+  const WallpaperTile({
+    required this.wallpaper,
+    this.onTap,
+    this.isFav = false,
+    this.onFav,
+    super.key,
+  });
 
   final Wallpaper wallpaper;
   final VoidCallback? onTap;
+
+  /// Favourite state + toggle, forwarded to the shared [WallpaperCard] heart.
+  /// Wired from `FavoritesRepository` (MO-004); default off keeps older callers
+  /// compiling unchanged.
+  final bool isFav;
+  final VoidCallback? onFav;
 
   /// On-brand aura hues (aurora triad + tints) cycled by id — no decode cost.
   static const List<Color> _auraHues = [
@@ -45,6 +57,8 @@ class WallpaperTile extends StatelessWidget {
           ? null
           : WallpaperMeta(duration: '${duration.round()}s'),
       onTap: onTap,
+      isFav: isFav,
+      onFav: onFav,
       preview: VideoPreview(
         videoUrl: w.previewVideoUrl ?? '',
         posterUrl: w.thumbnailUrl ?? '',

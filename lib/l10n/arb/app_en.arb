@@ -86,5 +86,19 @@
     "searchEmptyTitle": "No results",
     "@searchEmptyTitle": { "description": "Title when search returns nothing" },
     "searchEmptyMessage": "Try a different keyword.",
-    "@searchEmptyMessage": { "description": "Hint when search returns nothing" }
+    "@searchEmptyMessage": { "description": "Hint when search returns nothing" },
+    "favoritesEmptyTitle": "Nothing here yet",
+    "@favoritesEmptyTitle": { "description": "Title when there are no favorites" },
+    "favoritesEmptyMessage": "Tap ♥ on any wallpaper to save it here.",
+    "@favoritesEmptyMessage": { "description": "Hint on how to add favorites" },
+    "favoritesEmptyAction": "Explore wallpapers",
+    "@favoritesEmptyAction": { "description": "CTA to Browse from the empty Favorites screen" },
+    "downloadHistoryTitle": "Download history",
+    "@downloadHistoryTitle": { "description": "Download history screen title" },
+    "downloadHistoryEmptyTitle": "No downloads yet",
+    "@downloadHistoryEmptyTitle": { "description": "Title when download history is empty" },
+    "downloadHistoryEmptyMessage": "Wallpapers you download will appear here.",
+    "@downloadHistoryEmptyMessage": { "description": "Hint when download history is empty" },
+    "profileDownloadHistory": "Download history",
+    "@profileDownloadHistory": { "description": "Navigation item to Download history in the You tab" }
 }
