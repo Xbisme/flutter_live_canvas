@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+- **Contract Sync v0.4.0** (2026-07-23, từ `livecanvas-backend` branch `BE-004-admin-upload-pipeline`):
+  copy nguyên văn `openapi.yaml` (→ `.claude/` + `contracts/`), `api-context.md`, `screen-inventory.md`.
+  Đổi chính so v0.3.2: thêm `POST /admin/auth/login|refresh` (admin JWT — không ảnh hưởng app end-user);
+  **`GET /wallpapers/{id}/download-url` hết mock** — free trả presigned URL thật hết hạn ≤5 phút
+  (⚠️ domain S3/R2 KHÁC domain CDN của thumbnail/preview — client không hardcode/so sánh domain);
+  premium vẫn 402 tới BE-005; backend đã có media tự host thật → MO-002 có thể test download end-to-end.
+  Cần regenerate `packages/livecanvas_api` từ contract mới (`scripts/generate_api.sh`).
+
 - **MO-003 — Wallpaper Browse, Collections & Detail** (implemented 2026-07-24, branch `MO-003-wallpaper-browse-detail`, chờ PR):
   4 user story trên API thật (contract v0.3.2, `PublicApi`): **US1 Khám phá** (lưới cursor-pagination + tag chips single-select "Tất cả" + pull-to-refresh + skeleton shimmer + video tile bounded), **US2 Wallpaper Detail** (preview full-screen, link bộ sưu tập, premium display-only), **US3 Bộ sưu tập + Collection Detail** (cover card list + hero/accent + grid items), **US4 Tìm** (debounce 350ms/≥2 ký tự + seq-guard). Nền mới: `Result<T>`/`AppFailure` sealed + `dio_error_mapper` + `failure_l10n` (Principle IV); tầng **catalog dùng chung** `lib/core/catalog/` (3 repository trả Result, bọc PublicApi — core không phụ thuộc features, Principle XI); shared widget `VideoPreview` (visibility_detector → init/dispose controller theo viewport, Principle II), `ShimmerBox`+skeleton, `WallpaperTile` (aura hue từ palette_generator), `FailureView`. **51 test** (unit mapper/repo, bloc_test 5 Cubit, widget 4 màn) + 4 CI gate xanh (format · analyze 0 · test · bloc lint 0). Verify iOS simulator: build OK (video_player link SPM), app boot render Browse grid data thật qua Prism mock (wordmark/chips/WallpaperCard+Aura+PRO), FailureView khi mất backend.
   - **Deviation Principle III (duyệt bởi project lead)**: state models dùng **native sealed class Dart 3 + Equatable** thay `@freezed`. Lý do: `freezed` (mọi bản stable) ép `analyzer <11` → phá `lean_builder 0.1.10` (DI codegen, cần analyzer 12); bản freezed khớp analyzer 12 chỉ có pre-release `3.2.6-dev.1` (lệch Principle XVI). Native sealed class giữ đúng tinh thần III (immutable sealed 4-state), bỏ hẳn build_runner → toàn bộ toolchain stable, hết xung đột. Đề xuất PATCH constitution III ("`@freezed` hoặc native sealed class"). Chi tiết: `specs/MO-003-*/research.md` R1 + `plan.md` §Complexity Tracking.
