@@ -86,9 +86,13 @@ class _WallpaperGridState extends State<WallpaperGrid> {
                 ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final wallpaper = widget.items[index];
-                  return WallpaperTile(
-                    wallpaper: wallpaper,
-                    onTap: () => widget.onTap(wallpaper),
+                  // Isolate each tile's raster layer so its blurred Aura glow
+                  // is not repainted for the whole grid on every scroll frame.
+                  return RepaintBoundary(
+                    child: WallpaperTile(
+                      wallpaper: wallpaper,
+                      onTap: () => widget.onTap(wallpaper),
+                    ),
                   );
                 }, childCount: widget.items.length),
               ),

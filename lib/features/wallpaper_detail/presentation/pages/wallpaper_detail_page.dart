@@ -117,7 +117,7 @@ class _Content extends StatelessWidget {
           child: VideoPreview(
             videoUrl: wallpaper.previewVideoUrl ?? '',
             posterUrl: wallpaper.thumbnailUrl ?? '',
-            detectorKey: 'detail-${wallpaper.id}',
+            autoPlay: true,
           ),
         ),
         Padding(

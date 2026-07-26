@@ -15,7 +15,6 @@ import 'package:livecanvas/features/browse/presentation/widgets/wallpaper_grid.d
 import 'package:livecanvas/l10n/l10n.dart';
 import 'package:livecanvas_api/livecanvas_api.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 class _MockWallpaperRepo extends Mock implements WallpaperRepository {}
 
@@ -26,7 +25,6 @@ void main() {
   late _MockTagRepo tags;
 
   setUp(() {
-    VisibilityDetectorController.instance.updateInterval = Duration.zero;
     wallpapers = _MockWallpaperRepo();
     tags = _MockTagRepo();
     when(() => tags.list()).thenAnswer(

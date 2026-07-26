@@ -11,7 +11,6 @@ import 'package:livecanvas/features/wallpaper_detail/presentation/pages/wallpape
 import 'package:livecanvas/l10n/l10n.dart';
 import 'package:livecanvas_api/livecanvas_api.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 class _MockWallpaperRepo extends Mock implements WallpaperRepository {}
 
@@ -19,7 +18,6 @@ void main() {
   late _MockWallpaperRepo wallpapers;
 
   setUp(() {
-    VisibilityDetectorController.instance.updateInterval = Duration.zero;
     wallpapers = _MockWallpaperRepo();
     getIt.registerFactory<WallpaperDetailCubit>(
       () => WallpaperDetailCubit(wallpapers),

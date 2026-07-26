@@ -15,6 +15,7 @@ class ShimmerBox extends StatelessWidget {
     this.height,
     this.radius = AppSpacing.rMd,
     this.aspectRatio,
+    this.expand = false,
     super.key,
   });
 
@@ -26,23 +27,35 @@ class ShimmerBox extends StatelessWidget {
   /// (e.g. `AppSpacing.wallRatio` for wallpaper tiles).
   final double? aspectRatio;
 
+  /// Fill the parent's bounds instead of a fixed/aspect size — used as a
+  /// per-tile placeholder inside an already-clipped card (e.g. the poster
+  /// slot of a [VideoPreview] while its image loads).
+  final bool expand;
+
+  /// The sweep loops continuously while mounted; ~1.4s reads as "working"
+  /// without feeling frantic on the dark palette.
+  static const Duration _period = Duration(milliseconds: 1400);
+
   @override
   Widget build(BuildContext context) {
     final box = DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.onyx2,
+        color: AppColors.shimmerBase,
         borderRadius: BorderRadius.circular(radius),
       ),
-      child: SizedBox(width: width, height: height),
+      child: expand
+          ? const SizedBox.expand()
+          : SizedBox(width: width, height: height),
     );
 
-    final sized = aspectRatio != null
+    final sized = (aspectRatio != null && !expand)
         ? AspectRatio(aspectRatio: aspectRatio!, child: box)
         : box;
 
     return Shimmer.fromColors(
-      baseColor: AppColors.onyx2,
-      highlightColor: AppColors.onyx3,
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
+      period: _period,
       child: sized,
     );
   }

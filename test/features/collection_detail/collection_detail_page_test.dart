@@ -9,7 +9,6 @@ import 'package:livecanvas/features/collection_detail/presentation/pages/collect
 import 'package:livecanvas/l10n/l10n.dart';
 import 'package:livecanvas_api/livecanvas_api.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:visibility_detector/visibility_detector.dart';
 
 class _MockCollectionRepo extends Mock implements CollectionRepository {}
 
@@ -17,7 +16,6 @@ void main() {
   late _MockCollectionRepo repo;
 
   setUp(() {
-    VisibilityDetectorController.instance.updateInterval = Duration.zero;
     repo = _MockCollectionRepo();
     getIt.registerFactory<CollectionDetailCubit>(
       () => CollectionDetailCubit(repo),

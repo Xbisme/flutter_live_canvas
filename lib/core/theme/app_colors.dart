@@ -17,6 +17,10 @@ abstract final class AppColors {
   static const lineStrong = Color(0x29FFFFFF); // rgba(255,255,255,.16)
   static const scrim = Color(0xB809070E); // rgba(9,7,14,.72)
 
+  // ---- Skeleton shimmer: an iris-tinted band sweeping the raised surface ----
+  static const Color shimmerBase = onyx2; // resting block colour
+  static const Color shimmerHighlight = Color(0xFF3D3264); // onyx3 + iris500
+
   // ---- Text ----
   static const textHi = Color(0xFFF6F3FB); // primary
   static const textMid = Color(0xFFADA4BE); // secondary

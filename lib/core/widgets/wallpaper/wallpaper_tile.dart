@@ -1,66 +1,41 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:livecanvas/core/theme/app_colors.dart';
 import 'package:livecanvas/core/widgets/wallpaper/video_preview.dart';
 import 'package:livecanvas/core/widgets/wallpaper/wallpaper_card.dart';
 import 'package:livecanvas_api/livecanvas_api.dart';
-import 'package:palette_generator/palette_generator.dart';
 
 /// A single wallpaper in a grid: a lifecycle-managed [VideoPreview] inside the
-/// shared [WallpaperCard], with an "Aura" glow whose hue is derived from the
-/// thumbnail via `palette_generator` (research R4). Falls back to the brand
-/// accent until (or if) the palette resolves.
-class WallpaperTile extends StatefulWidget {
+/// shared [WallpaperCard], with an "Aura" glow.
+///
+/// The glow hue is picked deterministically from the brand triad by wallpaper
+/// id — cheap and stable. It used to be derived from the thumbnail via
+/// `palette_generator`, but that decoded + quantized an image on the UI thread
+/// for every tile (and decoded the thumbnail a second time), which was a real
+/// source of scroll jank. The Aura is decorative, so an exact content colour
+/// isn't worth that cost.
+class WallpaperTile extends StatelessWidget {
   const WallpaperTile({required this.wallpaper, this.onTap, super.key});
 
   final Wallpaper wallpaper;
   final VoidCallback? onTap;
 
-  @override
-  State<WallpaperTile> createState() => _WallpaperTileState();
-}
+  /// On-brand aura hues (aurora triad + tints) cycled by id — no decode cost.
+  static const List<Color> _auraHues = [
+    AppColors.iris500,
+    AppColors.blush500,
+    AppColors.aqua500,
+    AppColors.iris400,
+    AppColors.blush400,
+  ];
 
-class _WallpaperTileState extends State<WallpaperTile> {
-  /// Derived aura hues cached by id so recycled tiles don't recompute.
-  static final Map<int, Color> _auraCache = {};
-
-  Color _aura = AppColors.accent;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_resolveAura());
-  }
-
-  Future<void> _resolveAura() async {
-    final id = widget.wallpaper.id;
-    final thumb = widget.wallpaper.thumbnailUrl;
-    if (id != null && _auraCache.containsKey(id)) {
-      _aura = _auraCache[id]!;
-      return;
-    }
-    if (thumb == null || thumb.isEmpty) return;
-    try {
-      final palette = await PaletteGenerator.fromImageProvider(
-        NetworkImage(thumb),
-        size: const Size(64, 64),
-        maximumColorCount: 8,
-      );
-      final color =
-          palette.vibrantColor?.color ??
-          palette.dominantColor?.color ??
-          AppColors.accent;
-      if (id != null) _auraCache[id] = color;
-      if (mounted) setState(() => _aura = color);
-    } on Object {
-      // Keep the fallback accent — aura is decorative (spec assumption).
-    }
+  Color get _aura {
+    final seed = wallpaper.id ?? wallpaper.title?.hashCode ?? 0;
+    return _auraHues[seed.abs() % _auraHues.length];
   }
 
   @override
   Widget build(BuildContext context) {
-    final w = widget.wallpaper;
+    final w = wallpaper;
     final duration = w.durationSeconds;
     return WallpaperCard(
       auraColor: _aura,
@@ -69,11 +44,10 @@ class _WallpaperTileState extends State<WallpaperTile> {
       meta: duration == null
           ? null
           : WallpaperMeta(duration: '${duration.round()}s'),
-      onTap: widget.onTap,
+      onTap: onTap,
       preview: VideoPreview(
         videoUrl: w.previewVideoUrl ?? '',
         posterUrl: w.thumbnailUrl ?? '',
-        detectorKey: '${w.id ?? w.hashCode}',
       ),
     );
   }
