@@ -19,12 +19,16 @@ final class WallpaperDetailLoading extends WallpaperDetailState {
 }
 
 final class WallpaperDetailLoaded extends WallpaperDetailState {
-  const WallpaperDetailLoaded(this.wallpaper);
+  const WallpaperDetailLoaded(this.wallpaper, {this.related = const []});
 
   final Wallpaper wallpaper;
 
+  /// Wallpapers sharing this one's first tag (fills in after the detail loads;
+  /// empty when none / not yet fetched).
+  final List<Wallpaper> related;
+
   @override
-  List<Object?> get props => [wallpaper];
+  List<Object?> get props => [wallpaper, related];
 }
 
 final class WallpaperDetailError extends WallpaperDetailState {

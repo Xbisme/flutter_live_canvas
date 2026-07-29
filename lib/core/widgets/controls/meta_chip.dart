@@ -3,24 +3,41 @@ import 'package:livecanvas/core/theme/app_colors.dart';
 import 'package:livecanvas/core/theme/app_spacing.dart';
 import 'package:livecanvas/core/theme/app_typography.dart';
 
+/// Tone of a [MetaChip]: [glass] sits over content (blurred dark), [surface]
+/// sits on dark UI (raised, bordered).
+enum MetaChipTone { glass, surface }
+
 /// Small mono metadata pill (duration / resolution / size) — the handoff
-/// `MetaChip`, glass tone. When [live] it shows a pulsing aqua dot before the
-/// text (the "live loop" indicator used on wallpaper tiles).
+/// `MetaChip`. When [live] it shows a pulsing aqua dot; an optional [icon] sits
+/// before the text (used by the detail spec chips).
 class MetaChip extends StatelessWidget {
-  const MetaChip({required this.text, this.live = false, super.key});
+  const MetaChip({
+    required this.text,
+    this.live = false,
+    this.icon,
+    this.tone = MetaChipTone.glass,
+    super.key,
+  });
 
   final String text;
   final bool live;
+  final IconData? icon;
+  final MetaChipTone tone;
 
   @override
   Widget build(BuildContext context) {
+    final isGlass = tone == MetaChipTone.glass;
     return Container(
       height: 22,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sp2),
       decoration: BoxDecoration(
-        color: const Color(0x8C0D0A13), // rgba(13,10,19,0.55)
+        color: isGlass
+            ? const Color(0x8C0D0A13) // rgba(13,10,19,0.55)
+            : AppColors.bgRaised,
         borderRadius: BorderRadius.circular(AppSpacing.rSm),
-        border: Border.all(color: const Color(0x1FFFFFFF)), // white 0.12
+        border: Border.all(
+          color: isGlass ? const Color(0x1FFFFFFF) : AppColors.borderSubtle,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -28,10 +45,19 @@ class MetaChip extends StatelessWidget {
           if (live) ...[
             const _LiveDot(),
             const SizedBox(width: 5),
+          ] else if (icon != null) ...[
+            Icon(
+              icon,
+              size: 13,
+              color: isGlass ? AppColors.textHi : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 5),
           ],
           Text(
             text,
-            style: AppTypography.monoMeta.copyWith(color: AppColors.textHi),
+            style: AppTypography.monoMeta.copyWith(
+              color: isGlass ? AppColors.textHi : AppColors.textSecondary,
+            ),
           ),
         ],
       ),

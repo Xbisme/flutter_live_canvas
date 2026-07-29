@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecanvas/core/di/injection.dart';
+import 'package:livecanvas/core/router/app_routes.dart';
 import 'package:livecanvas/core/theme/app_colors.dart';
 import 'package:livecanvas/core/theme/app_icons.dart';
 import 'package:livecanvas/core/theme/app_spacing.dart';
@@ -42,7 +43,13 @@ class _BrowseView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgApp,
-      appBar: const TopBar(wordmark: true),
+      appBar: TopBar(
+        wordmark: true,
+        trailing: IconButton(
+          icon: const Icon(AppIcons.search, color: AppColors.textPrimary),
+          onPressed: () => context.go(AppRoutes.search),
+        ),
+      ),
       body: BlocBuilder<BrowseCubit, BrowseState>(
         builder: (context, state) {
           return switch (state) {

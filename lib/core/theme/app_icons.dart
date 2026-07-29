@@ -21,6 +21,12 @@ abstract final class AppIcons {
   // Common content / control icons used across screens.
   static const IconData caretRight = PhosphorIconsBold.caretRight;
   static const IconData caretLeft = PhosphorIconsBold.caretLeft;
+  static const IconData arrowLeft = PhosphorIconsRegular.arrowLeft;
+  static const IconData dotsThreeVertical = PhosphorIconsBold.dotsThreeVertical;
+  static const IconData monitor = PhosphorIconsRegular.monitor;
+  static const IconData monitorPlay = PhosphorIconsRegular.monitorPlay;
+  static const IconData clock = PhosphorIconsRegular.clock;
+  static const IconData paintBrush = PhosphorIconsRegular.paintBrushBroad;
   static const IconData close = PhosphorIconsBold.x;
   static const IconData heart = PhosphorIconsRegular.heart;
   static const IconData heartFill = PhosphorIconsFill.heart;

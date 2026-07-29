@@ -3,7 +3,7 @@
 > Repo: `livecanvas-mobile` (Flutter — iOS/Android/tablet 1 codebase)
 > Repo liên quan: `livecanvas-backend` (Django, độc lập hoàn toàn — đồng bộ qua `contracts/openapi.yaml` + `.claude/api-context.md`, copy tay giữa 2 repo)
 >
-> Last updated: 2026-07-26 (MO-001→003 MERGED · MO-004 implemented chờ PR · contract v0.4.0 · tiếp theo: MO-005 hoặc merge MO-004)
+> Last updated: 2026-07-26 (MO-001→003 MERGED · MO-004 implemented chờ PR · contract **v0.5.0** — synced từ backend BE-005: entitlement premium hoạt động thật · tiếp theo: MO-005 hoặc merge MO-004)
 > **Mục đích**: Snapshot tối thiểu để bắt đầu 1 session làm việc trên repo mobile.
 >
 > **Đọc file nào khi nào**:

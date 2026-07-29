@@ -35,6 +35,46 @@ void main() {
   );
 
   blocTest<WallpaperDetailCubit, WallpaperDetailState>(
+    'grafts related wallpapers sharing the first tag (excluding self)',
+    setUp: () {
+      when(() => wallpapers.getById(5)).thenAnswer(
+        (_) async => Ok(
+          Wallpaper(
+            id: 5,
+            title: 'Neon',
+            tags: [Tag(id: 1, slug: 'neon', name: 'Neon')],
+          ),
+        ),
+      );
+      when(
+        () => wallpapers.list(
+          cursor: any(named: 'cursor'),
+          limit: any(named: 'limit'),
+          tags: 'neon',
+          search: any(named: 'search'),
+        ),
+      ).thenAnswer(
+        (_) async => Ok(
+          WallpaperCursorPage(
+            items: [Wallpaper(id: 5), Wallpaper(id: 6), Wallpaper(id: 7)],
+          ),
+        ),
+      );
+    },
+    build: create,
+    act: (c) => c.load(5),
+    expect: () => [
+      isA<WallpaperDetailLoading>(),
+      isA<WallpaperDetailLoaded>().having((s) => s.related, 'related', isEmpty),
+      isA<WallpaperDetailLoaded>().having(
+        (s) => s.related.map((w) => w.id).toList(),
+        'related ids',
+        [6, 7],
+      ),
+    ],
+  );
+
+  blocTest<WallpaperDetailCubit, WallpaperDetailState>(
     'load emits [Loading, Error(NotFound)] when removed',
     setUp: () => when(
       () => wallpapers.getById(9),

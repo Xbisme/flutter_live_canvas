@@ -22,6 +22,15 @@ void main() {
 
   setUp(() {
     wallpapers = _MockWallpaperRepo();
+    // Related-wallpapers fetch (by tag) — default to an empty page.
+    when(
+      () => wallpapers.list(
+        cursor: any(named: 'cursor'),
+        limit: any(named: 'limit'),
+        tags: any(named: 'tags'),
+        search: any(named: 'search'),
+      ),
+    ).thenAnswer((_) async => Ok(WallpaperCursorPage(items: const [])));
     getIt
       ..registerFactory<WallpaperDetailCubit>(
         () => WallpaperDetailCubit(wallpapers),

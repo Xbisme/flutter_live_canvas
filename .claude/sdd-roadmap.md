@@ -4,7 +4,7 @@
 >
 > **Vai trò file này**: pure planning cho track mobile. Trạng thái hiện tại → [`project-context.md`](project-context.md). Ship history → [`changelog.md`](changelog.md).
 >
-> Last updated: 2026-07-26 (MO-001 + MO-002 + MO-003 đã MERGE vào `main` qua PR #3 & #5 & #6 · contract v0.4.0 — synced từ backend · backend đã merge BE-001→BE-004 · tiếp theo: MO-004)
+> Last updated: 2026-07-26 (MO-001 + MO-002 + MO-003 đã MERGE vào `main` qua PR #3 & #5 & #6 · MO-004 implemented chờ PR · contract **v0.5.0** — synced từ backend BE-005 · backend đã merge BE-001→BE-004, BE-005 đang trên branch · tiếp theo: MO-005)
 > Full requirements: `docs/PRD.md` · Nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md)
 
 ---
@@ -54,8 +54,8 @@ Local Data           (Android WallpaperService, iOS
     └───────┬────────┘
             ▼
 MO-006: IAP & Paywall                             ⇄ Điểm đồng bộ: cần repo backend đã
-(in_app_purchase, paywall UI,                          merge BE-004 (verify-receipt thật)
- gọi /iap/verify-receipt, gate                         trước khi merge
+(in_app_purchase, paywall UI,                          merge BE-005 (verify-receipt +
+ gọi /iap/verify-receipt, gate                         entitlement thật) trước khi merge
  nội dung premium theo entitlement)
     │
     ▼
@@ -126,8 +126,8 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 - **Status**: ⬜ Not started
 - **Branch**: `MO-006-iap-paywall`
 - **Depends on**: MO-004, MO-005
-- **Scope**: `in_app_purchase` integration, paywall UI, gọi `/iap/verify-receipt`, gate nội dung premium theo response entitlement từ backend (**không tự quyết định ở client** — Principle V; entitlement thật ở `download-url`, "Tải tất cả" của bộ premium = lặp gọi download-url); `transaction_id` lưu secure storage, không log.
-- **⚠️ Điểm đồng bộ**: chỉ merge sau khi repo backend xác nhận `BE-004` đã merge và hoạt động thật (không mock).
+- **Scope**: `in_app_purchase` integration, paywall UI, gọi `/iap/verify-receipt`, gate nội dung premium theo response entitlement từ backend (**không tự quyết định ở client** — Principle V; entitlement thật ở `download-url`, "Tải tất cả" của bộ premium = lặp gọi download-url); `transaction_id` lưu secure storage, không log. Từ contract v0.5.0: `transaction_id` phải **gửi kèm mọi `download-url` premium**; giữ nguyên id đã lưu qua các kỳ renewal (entitlement theo original transaction id); coi `in_grace_period` và `auto_renew=false` (còn trong kỳ) là **vẫn còn quyền**; `402 ENTITLEMENT_REQUIRED` → Paywall; refresh trạng thái qua `GET /iap/subscription-status`.
+- **⚠️ Điểm đồng bộ**: chỉ merge sau khi repo backend xác nhận `BE-005` đã merge và hoạt động thật (không mock) — contract v0.5.0 đã sync, backend còn đang trên branch `BE-005-iap-verify-entitlement`.
 
 ### MO-007: Polish & Store Submission
 

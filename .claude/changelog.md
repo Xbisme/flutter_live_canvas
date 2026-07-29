@@ -4,6 +4,22 @@
 
 ## [Unreleased]
 
+- **Contract v0.6.0 — mobile-driven (2026-07-27)**: design pass MO-004 phát hiện màn Wallpaper Detail cần **`Wallpaper.description`** (mục "Mô tả") mà schema chưa có. Theo Contract Sync (Principle I): sửa `screen-inventory.md` (#7) → `openapi.yaml` (`.claude/` + `contracts/`, thêm `description: string, nullable`, bump `v0.5.0→v0.6.0`) → `api-context.md`; copy verbatim sang repo backend; **báo backend** qua backend `.claude/sdd-roadmap.md` **BE-008** + `project-context.md` (backend chưa implement → trả `null`, client ẩn mục "Mô tả" khi null). Related-wallpapers KHÔNG thêm endpoint (client suy theo `?tags=<tag đầu>`). **Chưa regenerate `packages/livecanvas_api`** cho v0.6.0 — làm khi backend ship `description` thật, rồi bật mục "Mô tả" ở Detail.
+
+- **Contract Sync v0.5.0** (2026-07-26, từ `livecanvas-backend` branch `BE-005-iap-verify-entitlement`):
+  copy nguyên văn `openapi.yaml` (→ `.claude/` + `contracts/`), `api-context.md`, `screen-inventory.md`.
+  Đổi chính so v0.4.0 — **IAP verify + entitlement đi vào hoạt động thật**:
+  - `GET /wallpapers/{id}/download-url` với wallpaper **premium** THÔI trả `402` vô điều kiện — backend nay tra entitlement thật từ `transaction_id` (query): entitled → `200` presigned ≤5 phút; thiếu/hết hạn/không entitled → `402 ENTITLEMENT_REQUIRED`. Free giữ nguyên (bỏ qua `transaction_id`).
+  - Kích hoạt `POST /iap/verify-receipt`, `GET /iap/subscription-status`, `POST /iap/webhook/apple|google` (webhook là server-to-server, app không gọi).
+  - **Client cần lưu bền `transaction_id`** sau verify thành công và gửi kèm ở mọi `download-url` của wallpaper premium (kể cả từng item khi "Tải tất cả" bộ premium).
+  - Entitlement định danh theo **original transaction id** → ổn định qua mọi kỳ renewal, KHÔNG cần cập nhật id đã lưu sau gia hạn.
+  - **Còn quyền tải** khi `status ∈ {active, in_grace_period}` và chưa quá `expires_at`. `in_grace_period` vẫn tải được; tắt auto-renew mà còn trong kỳ → `active` + `auto_renew=false` (đừng coi là mất quyền — client không tự suy diễn gate, cứ để `download-url` quyết).
+  - `404` được đánh giá **trước** gate entitlement → 404 = wallpaper không khả dụng, không phải thiếu quyền.
+  - Restore máy mới: verify lại receipt là đủ; `device_id` chỉ để backend phát hiện lạm dụng, KHÔNG chặn.
+  - **Không error code mới** (`ENTITLEMENT_REQUIRED`, `RECEIPT_INVALID`, `RECEIPT_CONFLICT`, `STORE_API_UNAVAILABLE` đã có trong catalog từ trước).
+  - **Không cần regenerate `packages/livecanvas_api`**: v0.5.0 chỉ đổi mô tả/semantics, không đổi path/schema — client sinh sẵn đã có `iapVerifyReceiptPost`, `iapSubscriptionStatusGet` và param `transactionId` (optional) ở `download-url`. Regenerate chỉ để làm mới doc-comment.
+  - Ảnh hưởng spec sắp tới: MO-005 (download/set wallpaper) + màn Paywall #9 nay có backend thật để test end-to-end premium.
+
 - **MO-004 — Favorites & Local Data** (implemented 2026-07-26, branch `MO-004-favorites-local-data`, chờ PR):
   4 user story chỉ dùng persistence cục bộ + `POST /wallpapers/batch` có sẵn (Principle IX — **chỉ lưu mảng ID**, không cache full data):
   **US1 Toggle** (nút tim ở mọi lưới + Wallpaper Detail, đồng bộ tức thời <100ms + haptic),
@@ -23,7 +39,15 @@
     - **`EmptyState`**: thêm **halo 88×88** nền `aurora-soft` + viền, icon 40 màu `iris-400`, title Clash 22, message body 15 `text-secondary` maxWidth 260.
     - **`PremiumBadge`**: pill `r-pill` + icon **kim cương** (`PhosphorIconsFill.diamond`) + glow, chữ 10/700 ls 0.1em (thay pill vuông `rXs` chữ trơn).
     - **`MetaChip`**: thêm **chấm "live" aqua** (glow) + glass tone. Author bỏ prefix `@` cho khớp bundle.
-    - Vẫn còn (chưa làm, cần quyết định riêng): redesign từng màn Browse (sections + top-bar search), Search (suggestions/clear/count), Collection Detail (hero overlay + meta), **Wallpaper Detail** (sheet trượt, chrome glass share/more, stats/description/related), TabBar/TopBar glass + type scale.
+  - **Design fidelity pass — per-screen (2026-07-26)**:
+    - **Wallpaper Detail** viết lại: hero 468 + chrome glass nổi (back/share/heart/more qua `GlassIconButton` mới), **info sheet đè -28 + bo góc `rXl` + shadow + grab handle**, hàng PRO+tag, title Clash 32, **card bộ sưu tập** (cover 52×68 + eyebrow), meta chips (res/duration/size, tone surface + icon), nút Download(ghost)+Set(light trắng), **khối stats** (downloads/likes/resolution từ schema), **mục "Hình nền liên quan"** (fetch `list(tags=<tag đầu>)` loại chính nó, ≤6, lấp nền sau khi load — không có endpoint related riêng nên suy theo tag). Bỏ description/palette (schema không có field).
+      - **iOS platform-view fix (giữ video sống + overlap đúng design)**: lỗi ban đầu (content bị che + mảng đen) do đặt `video_player` trong `Sliver` + `Transform.translate` → platform view iOS định vị/clip sai. **Sửa: bố cục `Stack`** — video hero là **lớp nền cố định (sticky)** `Positioned` (không nằm trong scroll), sheet cuộn đè lên qua `SingleChildScrollView` + spacer trong suốt (hero lộ qua bo góc = parallax). iOS composite Flutter opaque đè lên platform view OK khi platform view có rect ổn định → **giữ được video tự chạy + hiệu ứng sheet trượt đè đúng prototype** (`position: sticky`).
+    - **Collection Detail** viết lại: hero 300 (cover + blob accent blur + fade) với overlay PRO+eyebrow+title 34; hàng author (avatar aurora + @author + · + count); actions đúng locked(unlock aurora)/unlocked(Share ghost + Tải tất cả).
+    - **Collections list**: cover 168 **đè title(24)/@author/count** trên scrim + **aura drop-shadow** theo accent; đếm ở TopBar.
+    - **TabBar** → **glass** (blur 18 + `rgba(18,16,26,0.72)` + borderTop) + label Satoshi 10 (active 700/inactive 500). **TopBar** → phẳng `bg-app` (bỏ glass sai spec), wordmark Clash 22/600, title 28/600.
+    - **Search**: nút xoá ✕ khi có text + viền field + **dòng đếm kết quả** (mono). **Browse**: nút search ở TopBar → chuyển tab Tìm.
+    - Mở rộng `AppButton` (icon + biến thể `light` trắng + glow, chữ 15/700), thêm `GlassIconButton`, `MetaChip` tone surface+icon, icons (arrowLeft/dotsThreeVertical/monitor/clock/paintBrush/monitorPlay/diamond).
+    - **Còn lại (giới hạn dữ liệu)**: Browse dạng **section có tiêu đề** cần backend trả section curated (API hiện là cursor phẳng + tag chips) → giữ lưới phẳng + chip; Search **suggestions chips** (có thể lấy từ `GET /tags`) chưa làm.
   - **Deps mới** (pub.dev 2026-07-26, Principle XVI): `shared_preferences ^2.5.5` (flutter.dev verified; API `SharedPreferencesAsync`); dev-dep `shared_preferences_platform_interface ^2.4.2` (in-memory backend cho test DI thật). State giữ **native sealed class + Equatable** (deviation MO-003, đã duyệt).
   - **Còn chờ device (không chặn merge)**: nghiệm thu iOS sim + Android máy thật US1–US4, kiểm SC-002 (<100ms) thủ công (T036).
   - **Deviation ghi nhận**: màn Download History dựng **tối giản, chưa có design handoff** (tái dùng grid/TopBar/EmptyState/FailureView) — thay bằng thiết kế thật khi có (có thể MO-005). Duyệt: hướng "kho + màn tối giản" do project lead chọn ở Clarifications.

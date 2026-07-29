@@ -59,7 +59,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('Neon Nights'), findsOneWidget);
-    expect(find.text('Tải tất cả'), findsOneWidget);
+    // Premium collection → single unlock CTA (design: locked state).
+    expect(find.text('Mở khoá bộ sưu tập'), findsOneWidget);
     expect(find.byType(WallpaperTile), findsOneWidget);
   });
 }

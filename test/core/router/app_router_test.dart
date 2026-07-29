@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecanvas/app/app.dart';
 import 'package:livecanvas/core/config/app_config.dart';
 import 'package:livecanvas/core/di/injection.dart';
+import 'package:livecanvas/core/theme/app_icons.dart';
 import 'package:livecanvas/core/widgets/navigation/app_tab_bar.dart';
 import 'package:livecanvas/features/browse/presentation/pages/browse_page.dart';
 import 'package:livecanvas/features/collection_detail/presentation/pages/collection_detail_page.dart';
@@ -77,8 +77,8 @@ void main() {
       // Full-screen push covers the tab bar.
       expect(find.byType(AppTabBar), findsNothing);
 
-      // Pop via the back affordance returns to the shell + tab bar.
-      await tester.tap(find.byType(IconButton).first);
+      // Pop via the glass back button returns to the shell + tab bar.
+      await tester.tap(find.byIcon(AppIcons.arrowLeft).first);
       await tester.pumpAndSettle();
       expect(find.byType(CollectionDetailPage), findsNothing);
       expect(find.byType(AppTabBar), findsOneWidget);
