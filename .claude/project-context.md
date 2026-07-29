@@ -3,14 +3,14 @@
 > Repo: `livecanvas-mobile` (Flutter — iOS/Android/tablet 1 codebase)
 > Repo liên quan: `livecanvas-backend` (Django, độc lập hoàn toàn — đồng bộ qua `contracts/openapi.yaml` + `.claude/api-context.md`, copy tay giữa 2 repo)
 >
-> Last updated: 2026-07-24 (MO-001 + MO-002 đã MERGE vào `main` qua PR #3 & #5 · contract v0.3.2 · tiếp theo: MO-003)
+> Last updated: 2026-07-26 (MO-001→003 MERGED · MO-004 implemented chờ PR · contract **v0.7.0** — synced từ backend BE-008: `GET /home` (Browse dạng section) + `Wallpaper.description` thật; **BẮT BUỘC regenerate client** · tiếp theo: MO-005 hoặc merge MO-004)
 > **Mục đích**: Snapshot tối thiểu để bắt đầu 1 session làm việc trên repo mobile.
 >
 > **Đọc file nào khi nào**:
 > - Bắt đầu session mới → file này + `docs/PRD.md` + `CLAUDE.md` (khi có).
 > - Chuẩn bị họp spec mới → file này + [`sdd-roadmap.md`](sdd-roadmap.md).
 > - **Trước khi đổi/thêm bất kỳ API nào** → [`../docs/screen-inventory.md`](../docs/screen-inventory.md) TRƯỚC TIÊN (màn hình cần gì quyết định API, không phải ngược lại), rồi mới tới `api-context.md`.
-> - Cần biết chi tiết từng endpoint (header/body/response) → [`api-context.md`](api-context.md) + [`openapi.yaml`](openapi.yaml) — **contract version hiện tại: `v0.3.2`**.
+> - Cần biết chi tiết từng endpoint (header/body/response) → [`api-context.md`](api-context.md) + [`openapi.yaml`](openapi.yaml) — **contract version hiện tại: `v0.7.0`** (v0.5.0 entitlement thật · v0.6.0 khai `Wallpaper.description` · v0.7.0 `GET /home` + description có giá trị thật → **phải regenerate client**).
 > - Cần hiểu vì sao spec X ra đời → [`decisions/`](decisions/).
 > - Cần biết spec nào ship khi nào → [`changelog.md`](changelog.md).
 
@@ -25,7 +25,7 @@
 
 ## Current Focus
 
-- **Trạng thái**: MO-001 + MO-002 merged (PR #3, #5). **MO-003 (Wallpaper Browse/Collections/Detail) đã IMPLEMENT XONG** trên branch `MO-003-wallpaper-browse-detail` (2026-07-24) — 4 user story trên API thật, 51 test + 4 CI gate xanh, verify iOS simulator (build + boot + render qua Prism). Chờ PR/merge. Backend đã merge BE-001→BE-003. **Deviation đáng nhớ**: state dùng **native sealed class + Equatable** (KHÔNG freezed — freezed phá lean_builder DI qua analyzer; đã duyệt, xem changelog + `specs/MO-003-*/research.md` R1). Còn chờ device: profiling controller (T055), iPad (T056), backend thật đủ 4 US (T058), Android build. **Tiếp theo: MO-004** (Favorites & Local Data).
+- **Trạng thái**: MO-001 + MO-002 + MO-003 merged (PR #3, #5, #6). **MO-004 (Favorites & Local Data) DONE — 37/37 task, nghiệm thu device xong (2026-07-29)**, chờ PR/merge. Gồm: 4 US favorites/history (`shared_preferences`, `core/favorites/` repo `ValueListenable` đồng bộ tim xuyên màn) + 2 bugfix máy thật + **design fidelity pass** (component dùng chung + Detail/Collection/Browse/TabBar/TopBar bám prototype) + **contract v0.7.0**: regenerate client, **Browse dạng section** (`GET /home`) + mục **"Mô tả"** Detail (`Wallpaper.description`). **91 test** + 4 CI gate xanh. Deviation: native sealed class (đã duyệt); Download History tối giản. **MO-003 (Wallpaper Browse/Collections/Detail) đã MERGE vào `main` qua PR #6** (2026-07-26) — 4 user story trên API thật, 51 test + 4 CI gate xanh, verify iOS simulator (build + boot + render qua Prism) + nghiệm thu preview/aura trên Android máy thật (T055 xong). Backend đã merge BE-001→BE-004. **Deviation đáng nhớ**: state dùng **native sealed class + Equatable** (KHÔNG freezed — freezed phá lean_builder DI qua analyzer; đã duyệt, xem changelog + `specs/MO-003-*/research.md` R1). Còn chờ device (không chặn merge): iPad responsive (T056), nghiệm thu backend thật đủ 4 US (T058). **Tiếp theo: MO-004** (Favorites & Local Data) — cần regenerate `packages/livecanvas_api` cho contract v0.4.0 trước.
 - **Kết quả MO-002 + deviation đáng nhớ** (chi tiết: `.claude/changelog.md` + `specs/MO-002-foundation-navigation/`):
   - Tầng theme tập trung **dark-only** `lib/core/theme/` (colors/spacing/typography/elevation/theme/icons) từ token `_ds`; 3 font bundle cục bộ (`scripts/fetch_fonts.sh` — Fontshare + Google Fonts, KHÔNG dùng `google_fonts`).
   - Icon: **`phosphoricons_flutter 1.0.0`** thay `phosphor_flutter` (blocker Flutter 3.44 đã giải).

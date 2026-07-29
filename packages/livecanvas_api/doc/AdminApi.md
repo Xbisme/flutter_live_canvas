@@ -9,6 +9,8 @@ All URIs are relative to *https://api.example.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**adminAuthLoginPost**](AdminApi.md#adminauthloginpost) | **POST** /admin/auth/login | Đổi credential Django staff user lấy cặp JWT admin (access 30&#39; / refresh 7d)
+[**adminAuthRefreshPost**](AdminApi.md#adminauthrefreshpost) | **POST** /admin/auth/refresh | Rotate refresh token — trả access + refresh MỚI, refresh cũ bị blacklist
 [**adminCollectionsGet**](AdminApi.md#admincollectionsget) | **GET** /admin/collections | Danh sách bộ sưu tập (meta + wallpaper_count, không nhúng items, không phân trang)
 [**adminCollectionsIdDelete**](AdminApi.md#admincollectionsiddelete) | **DELETE** /admin/collections/{id} | Xóa bộ sưu tập (không xóa wallpaper thành viên)
 [**adminCollectionsIdPatch**](AdminApi.md#admincollectionsidpatch) | **PATCH** /admin/collections/{id} | Sửa meta hoặc thêm/bớt/sắp xếp wallpaper (wallpaper_ids thay thế toàn bộ danh sách)
@@ -19,8 +21,91 @@ Method | HTTP request | Description
 [**adminUploadsPresignPost**](AdminApi.md#adminuploadspresignpost) | **POST** /admin/uploads/presign | 
 [**adminWallpapersGet**](AdminApi.md#adminwallpapersget) | **GET** /admin/wallpapers | 
 [**adminWallpapersIdDelete**](AdminApi.md#adminwallpapersiddelete) | **DELETE** /admin/wallpapers/{id} | 
+[**adminWallpapersIdPatch**](AdminApi.md#adminwallpapersidpatch) | **PATCH** /admin/wallpapers/{id} | (v0.7.0) Sửa mô tả của wallpaper đã tồn tại. CHỈ nhận &#x60;description&#x60; — không sửa được bất kỳ thuộc tính nào khác (media/status/tag/category/collection giữ luồng riêng); field lạ trong body bị bỏ qua. Chuỗi rỗng hoặc toàn khoảng trắng → lưu thành &#x60;null&#x60;. 
 [**adminWallpapersPost**](AdminApi.md#adminwallpaperspost) | **POST** /admin/wallpapers | Tạo wallpaper — tag_ids phải trỏ tới tag đã tồn tại (curated, xem /admin/tags)
 
+
+# **adminAuthLoginPost**
+> AdminTokenResponse adminAuthLoginPost(adminLoginRequest)
+
+Đổi credential Django staff user lấy cặp JWT admin (access 30' / refresh 7d)
+
+### Example
+```dart
+import 'package:livecanvas_api/api.dart';
+
+final api = LivecanvasApi().getAdminApi();
+final AdminLoginRequest adminLoginRequest = ; // AdminLoginRequest | 
+
+try {
+    final response = api.adminAuthLoginPost(adminLoginRequest);
+    print(response);
+} catch on DioException (e) {
+    print('Exception when calling AdminApi->adminAuthLoginPost: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **adminLoginRequest** | [**AdminLoginRequest**](AdminLoginRequest.md)|  | 
+
+### Return type
+
+[**AdminTokenResponse**](AdminTokenResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **adminAuthRefreshPost**
+> AdminTokenResponse adminAuthRefreshPost(adminRefreshRequest)
+
+Rotate refresh token — trả access + refresh MỚI, refresh cũ bị blacklist
+
+### Example
+```dart
+import 'package:livecanvas_api/api.dart';
+
+final api = LivecanvasApi().getAdminApi();
+final AdminRefreshRequest adminRefreshRequest = ; // AdminRefreshRequest | 
+
+try {
+    final response = api.adminAuthRefreshPost(adminRefreshRequest);
+    print(response);
+} catch on DioException (e) {
+    print('Exception when calling AdminApi->adminAuthRefreshPost: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **adminRefreshRequest** | [**AdminRefreshRequest**](AdminRefreshRequest.md)|  | 
+
+### Return type
+
+[**AdminTokenResponse**](AdminTokenResponse.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **adminCollectionsGet**
 > List<Collection> adminCollectionsGet()
@@ -424,6 +509,49 @@ void (empty response body)
 
  - **Content-Type**: Not defined
  - **Accept**: Not defined
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **adminWallpapersIdPatch**
+> Wallpaper adminWallpapersIdPatch(id, adminWallpapersIdPatchRequest)
+
+(v0.7.0) Sửa mô tả của wallpaper đã tồn tại. CHỈ nhận `description` — không sửa được bất kỳ thuộc tính nào khác (media/status/tag/category/collection giữ luồng riêng); field lạ trong body bị bỏ qua. Chuỗi rỗng hoặc toàn khoảng trắng → lưu thành `null`. 
+
+### Example
+```dart
+import 'package:livecanvas_api/api.dart';
+
+final api = LivecanvasApi().getAdminApi();
+final int id = 56; // int | 
+final AdminWallpapersIdPatchRequest adminWallpapersIdPatchRequest = ; // AdminWallpapersIdPatchRequest | 
+
+try {
+    final response = api.adminWallpapersIdPatch(id, adminWallpapersIdPatchRequest);
+    print(response);
+} catch on DioException (e) {
+    print('Exception when calling AdminApi->adminWallpapersIdPatch: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **id** | **int**|  | 
+ **adminWallpapersIdPatchRequest** | [**AdminWallpapersIdPatchRequest**](AdminWallpapersIdPatchRequest.md)|  | 
+
+### Return type
+
+[**Wallpaper**](Wallpaper.md)
+
+### Authorization
+
+[AdminBearer](../README.md#AdminBearer)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

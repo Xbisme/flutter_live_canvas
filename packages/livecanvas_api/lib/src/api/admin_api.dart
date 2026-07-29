@@ -11,9 +11,14 @@ import 'package:dio/dio.dart';
 
 import 'package:livecanvas_api/src/model/admin_collection_create_request.dart';
 import 'package:livecanvas_api/src/model/admin_collection_update_request.dart';
+import 'package:livecanvas_api/src/model/admin_login_request.dart';
+import 'package:livecanvas_api/src/model/admin_refresh_request.dart';
 import 'package:livecanvas_api/src/model/admin_tag_create_request.dart';
+import 'package:livecanvas_api/src/model/admin_token_response.dart';
 import 'package:livecanvas_api/src/model/admin_wallpaper_create_request.dart';
+import 'package:livecanvas_api/src/model/admin_wallpapers_id_patch_request.dart';
 import 'package:livecanvas_api/src/model/collection.dart';
+import 'package:livecanvas_api/src/model/error_response.dart';
 import 'package:livecanvas_api/src/model/presigned_upload_request.dart';
 import 'package:livecanvas_api/src/model/presigned_upload_response.dart';
 import 'package:livecanvas_api/src/model/tag.dart';
@@ -24,6 +29,180 @@ class AdminApi {
   final Dio _dio;
 
   const AdminApi(this._dio);
+
+  /// Đổi credential Django staff user lấy cặp JWT admin (access 30&#39; / refresh 7d)
+  ///
+  ///
+  /// Parameters:
+  /// * [adminLoginRequest]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AdminTokenResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AdminTokenResponse>> adminAuthLoginPost({
+    required AdminLoginRequest adminLoginRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/admin/auth/login';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{...?headers},
+      extra: <String, dynamic>{'secure': <Map<String, String>>[], ...?extra},
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      _bodyData = jsonEncode(adminLoginRequest);
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _options.compose(_dio.options, _path),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AdminTokenResponse? _responseData;
+
+    try {
+      final rawData = _response.data;
+      _responseData = rawData == null
+          ? null
+          : deserialize<AdminTokenResponse, AdminTokenResponse>(
+              rawData,
+              'AdminTokenResponse',
+              growable: true,
+            );
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AdminTokenResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Rotate refresh token — trả access + refresh MỚI, refresh cũ bị blacklist
+  ///
+  ///
+  /// Parameters:
+  /// * [adminRefreshRequest]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [AdminTokenResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<AdminTokenResponse>> adminAuthRefreshPost({
+    required AdminRefreshRequest adminRefreshRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/admin/auth/refresh';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{...?headers},
+      extra: <String, dynamic>{'secure': <Map<String, String>>[], ...?extra},
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      _bodyData = jsonEncode(adminRefreshRequest);
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _options.compose(_dio.options, _path),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    AdminTokenResponse? _responseData;
+
+    try {
+      final rawData = _response.data;
+      _responseData = rawData == null
+          ? null
+          : deserialize<AdminTokenResponse, AdminTokenResponse>(
+              rawData,
+              'AdminTokenResponse',
+              growable: true,
+            );
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<AdminTokenResponse>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
 
   /// Danh sách bộ sưu tập (meta + wallpaper_count, không nhúng items, không phân trang)
   ///
@@ -784,6 +963,105 @@ class AdminApi {
     );
 
     return _response;
+  }
+
+  /// (v0.7.0) Sửa mô tả của wallpaper đã tồn tại. CHỈ nhận &#x60;description&#x60; — không sửa được bất kỳ thuộc tính nào khác (media/status/tag/category/collection giữ luồng riêng); field lạ trong body bị bỏ qua. Chuỗi rỗng hoặc toàn khoảng trắng → lưu thành &#x60;null&#x60;.
+  ///
+  ///
+  /// Parameters:
+  /// * [id]
+  /// * [adminWallpapersIdPatchRequest]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [Wallpaper] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<Wallpaper>> adminWallpapersIdPatch({
+    required int id,
+    required AdminWallpapersIdPatchRequest adminWallpapersIdPatchRequest,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/admin/wallpapers/{id}'.replaceAll(
+      '{'
+      r'id'
+      '}',
+      id.toString(),
+    );
+    final _options = Options(
+      method: r'PATCH',
+      headers: <String, dynamic>{...?headers},
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {'type': 'http', 'scheme': 'bearer', 'name': 'AdminBearer'},
+        ],
+        ...?extra,
+      },
+      contentType: 'application/json',
+      validateStatus: validateStatus,
+    );
+
+    dynamic _bodyData;
+
+    try {
+      _bodyData = jsonEncode(adminWallpapersIdPatchRequest);
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _options.compose(_dio.options, _path),
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    final _response = await _dio.request<Object>(
+      _path,
+      data: _bodyData,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    Wallpaper? _responseData;
+
+    try {
+      final rawData = _response.data;
+      _responseData = rawData == null
+          ? null
+          : deserialize<Wallpaper, Wallpaper>(
+              rawData,
+              'Wallpaper',
+              growable: true,
+            );
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<Wallpaper>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
   }
 
   /// Tạo wallpaper — tag_ids phải trỏ tới tag đã tồn tại (curated, xem /admin/tags)

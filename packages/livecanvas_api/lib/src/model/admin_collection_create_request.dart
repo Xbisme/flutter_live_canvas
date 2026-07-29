@@ -30,6 +30,10 @@ class AdminCollectionCreateRequest {
 
     this.isPremium = false,
 
+    this.showOnHome = false,
+
+    this.homePosition = 0,
+
     this.wallpaperIds,
   });
 
@@ -60,6 +64,25 @@ class AdminCollectionCreateRequest {
   )
   final bool? isPremium;
 
+  /// (v0.7.0) Cho collection này hiện thành section ở màn Browse (`GET /home`). Mặc định tắt. Bật quá 10 collection vẫn hợp lệ — trần chỉ áp lúc đọc.
+  @JsonKey(
+    defaultValue: false,
+    name: r'show_on_home',
+    required: false,
+    includeIfNull: false,
+  )
+  final bool? showOnHome;
+
+  /// (v0.7.0) Vị trí section trên Browse, tăng dần. KHÔNG unique — trùng vị trí thì tie-break theo id. Vô nghĩa khi `show_on_home=false`.
+  // minimum: 0
+  @JsonKey(
+    defaultValue: 0,
+    name: r'home_position',
+    required: false,
+    includeIfNull: false,
+  )
+  final int? homePosition;
+
   /// Danh sách wallpaper có thứ tự — phải trỏ tới wallpaper đã tồn tại
   @JsonKey(name: r'wallpaper_ids', required: false, includeIfNull: false)
   final List<int>? wallpaperIds;
@@ -75,6 +98,8 @@ class AdminCollectionCreateRequest {
           other.coverUploadKey == coverUploadKey &&
           other.accentColor == accentColor &&
           other.isPremium == isPremium &&
+          other.showOnHome == showOnHome &&
+          other.homePosition == homePosition &&
           other.wallpaperIds == wallpaperIds;
 
   @override
@@ -86,6 +111,8 @@ class AdminCollectionCreateRequest {
       (coverUploadKey == null ? 0 : coverUploadKey.hashCode) +
       (accentColor == null ? 0 : accentColor.hashCode) +
       isPremium.hashCode +
+      showOnHome.hashCode +
+      homePosition.hashCode +
       wallpaperIds.hashCode;
 
   factory AdminCollectionCreateRequest.fromJson(Map<String, dynamic> json) =>

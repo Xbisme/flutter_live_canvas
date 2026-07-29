@@ -6,6 +6,20 @@ void main() {
   final instance = LivecanvasApi().getAdminApi();
 
   group(AdminApi, () {
+    // Đổi credential Django staff user lấy cặp JWT admin (access 30' / refresh 7d)
+    //
+    //Future<AdminTokenResponse> adminAuthLoginPost(AdminLoginRequest adminLoginRequest) async
+    test('test adminAuthLoginPost', () async {
+      // TODO
+    });
+
+    // Rotate refresh token — trả access + refresh MỚI, refresh cũ bị blacklist
+    //
+    //Future<AdminTokenResponse> adminAuthRefreshPost(AdminRefreshRequest adminRefreshRequest) async
+    test('test adminAuthRefreshPost', () async {
+      // TODO
+    });
+
     // Danh sách bộ sưu tập (meta + wallpaper_count, không nhúng items, không phân trang)
     //
     //Future<List<Collection>> adminCollectionsGet() async
@@ -67,6 +81,13 @@ void main() {
 
     //Future adminWallpapersIdDelete(int id) async
     test('test adminWallpapersIdDelete', () async {
+      // TODO
+    });
+
+    // (v0.7.0) Sửa mô tả của wallpaper đã tồn tại. CHỈ nhận `description` — không sửa được bất kỳ thuộc tính nào khác (media/status/tag/category/collection giữ luồng riêng); field lạ trong body bị bỏ qua. Chuỗi rỗng hoặc toàn khoảng trắng → lưu thành `null`.
+    //
+    //Future<Wallpaper> adminWallpapersIdPatch(int id, AdminWallpapersIdPatchRequest adminWallpapersIdPatchRequest) async
+    test('test adminWallpapersIdPatch', () async {
       // TODO
     });
 

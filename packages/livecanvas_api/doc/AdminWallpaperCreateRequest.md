@@ -9,6 +9,7 @@ import 'package:livecanvas_api/api.dart';
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **title** | **String** |  | 
+**description** | **String** | (v0.7.0) Mô tả ngắn, optional. Chuỗi rỗng hoặc toàn khoảng trắng được chuẩn hoá thành `null` để client ẩn mục \"Mô tả\" chỉ bằng phép kiểm tra null.  | [optional] 
 **categoryId** | **int** |  | 
 **tagIds** | **List&lt;int&gt;** | Curated — phải là ID tag đã tồn tại, tạo tag mới qua /admin/tags trước | [optional] 
 **orientation** | **String** |  | 

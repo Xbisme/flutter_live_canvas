@@ -18,6 +18,7 @@ AdminWallpaperCreateRequest _$AdminWallpaperCreateRequestFromJson(
     );
     final val = AdminWallpaperCreateRequest(
       title: $checkedConvert('title', (v) => v as String),
+      description: $checkedConvert('description', (v) => v as String?),
       categoryId: $checkedConvert('category_id', (v) => (v as num).toInt()),
       tagIds: $checkedConvert(
         'tag_ids',
@@ -49,6 +50,7 @@ Map<String, dynamic> _$AdminWallpaperCreateRequestToJson(
   AdminWallpaperCreateRequest instance,
 ) => <String, dynamic>{
   'title': instance.title,
+  'description': ?instance.description,
   'category_id': instance.categoryId,
   'tag_ids': ?instance.tagIds,
   'orientation':

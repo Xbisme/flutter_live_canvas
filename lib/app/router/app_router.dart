@@ -6,7 +6,8 @@ import 'package:livecanvas/features/browse/presentation/pages/browse_page.dart';
 import 'package:livecanvas/features/collection_detail/presentation/pages/collection_detail_page.dart';
 import 'package:livecanvas/features/collections/presentation/pages/collections_page.dart';
 import 'package:livecanvas/features/dev_gallery/presentation/pages/dev_gallery_page.dart';
-import 'package:livecanvas/features/favorites/presentation/pages/favorites_placeholder_page.dart';
+import 'package:livecanvas/features/download_history/presentation/pages/download_history_page.dart';
+import 'package:livecanvas/features/favorites/presentation/pages/favorites_page.dart';
 import 'package:livecanvas/features/profile/presentation/pages/profile_placeholder_page.dart';
 import 'package:livecanvas/features/search/presentation/pages/search_page.dart';
 import 'package:livecanvas/features/wallpaper_detail/presentation/pages/wallpaper_detail_page.dart';
@@ -56,7 +57,7 @@ GoRouter buildAppRouter() => GoRouter(
           routes: [
             GoRoute(
               path: AppRoutes.favorites,
-              builder: (context, state) => const FavoritesPlaceholderPage(),
+              builder: (context, state) => const FavoritesPage(),
             ),
           ],
         ),
@@ -82,6 +83,11 @@ GoRouter buildAppRouter() => GoRouter(
       parentNavigatorKey: _rootKey,
       builder: (context, state) =>
           CollectionDetailPage(id: state.pathParameters['id'] ?? ''),
+    ),
+    GoRoute(
+      path: AppRoutes.downloadHistory,
+      parentNavigatorKey: _rootKey,
+      builder: (context, state) => const DownloadHistoryPage(),
     ),
     GoRoute(
       path: AppRoutes.devGallery,

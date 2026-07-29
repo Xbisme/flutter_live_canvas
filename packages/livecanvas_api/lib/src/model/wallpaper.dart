@@ -23,6 +23,8 @@ class Wallpaper {
 
     this.title,
 
+    this.description,
+
     this.category,
 
     this.tags,
@@ -59,6 +61,10 @@ class Wallpaper {
 
   @JsonKey(name: r'title', required: false, includeIfNull: false)
   final String? title;
+
+  /// (v0.6.0) Mô tả ngắn của wallpaper — hiển thị ở mục \"Mô tả\" màn Wallpaper Detail. Nullable; BACKEND CHƯA IMPLEMENT (trả null tới khi ship — xem info.description v0.6.0). Client ẩn mục khi null.
+  @JsonKey(name: r'description', required: false, includeIfNull: false)
+  final String? description;
 
   @JsonKey(name: r'category', required: false, includeIfNull: false)
   final Category? category;
@@ -113,6 +119,7 @@ class Wallpaper {
       other is Wallpaper &&
           other.id == id &&
           other.title == title &&
+          other.description == description &&
           other.category == category &&
           other.tags == tags &&
           other.orientation == orientation &&
@@ -133,6 +140,7 @@ class Wallpaper {
   int get hashCode =>
       id.hashCode +
       title.hashCode +
+      (description == null ? 0 : description.hashCode) +
       category.hashCode +
       tags.hashCode +
       orientation.hashCode +

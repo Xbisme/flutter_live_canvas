@@ -38,8 +38,19 @@ class _SearchViewState extends State<_SearchView> {
   final _controller = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Rebuild so the clear (✕) button appears/disappears with the text.
+    _controller.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() => setState(() {});
+
+  @override
   void dispose() {
-    _controller.dispose();
+    _controller
+      ..removeListener(_onTextChanged)
+      ..dispose();
     super.dispose();
   }
 
@@ -47,6 +58,11 @@ class _SearchViewState extends State<_SearchView> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cubit = context.read<SearchCubit>();
+    final hasText = _controller.text.isNotEmpty;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppSpacing.rPill),
+      borderSide: const BorderSide(color: AppColors.borderSubtle),
+    );
     return Scaffold(
       backgroundColor: AppColors.bgApp,
       body: SafeArea(
@@ -69,12 +85,24 @@ class _SearchViewState extends State<_SearchView> {
                     AppIcons.search,
                     color: AppColors.textTertiary,
                   ),
+                  suffixIcon: hasText
+                      ? IconButton(
+                          icon: const Icon(
+                            AppIcons.close,
+                            color: AppColors.textTertiary,
+                            size: 18,
+                          ),
+                          onPressed: () {
+                            _controller.clear();
+                            cubit.queryChanged('');
+                          },
+                        )
+                      : null,
                   filled: true,
                   fillColor: AppColors.bgRaised,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.rPill),
-                    borderSide: BorderSide.none,
-                  ),
+                  border: border,
+                  enabledBorder: border,
+                  focusedBorder: border,
                 ),
               ),
             ),
@@ -113,13 +141,33 @@ class _Results extends StatelessWidget {
             failure: failure,
             onRetry: () => cubit.queryChanged(controller.text),
           ),
-          SearchLoaded() => WallpaperGrid(
-            items: state.items,
-            hasMore: state.hasMore,
-            isLoadingMore: state.isLoadingMore,
-            loadMoreFailed: state.loadMoreFailed,
-            onLoadMore: cubit.loadMore,
-            onTap: (wallpaper) => context.push('/wallpaper/${wallpaper.id}'),
+          SearchLoaded() => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.gutter,
+                  0,
+                  AppSpacing.gutter,
+                  AppSpacing.sp2,
+                ),
+                child: Text(
+                  l10n.searchResultCount(state.items.length, controller.text),
+                  style: AppTypography.monoMeta,
+                ),
+              ),
+              Expanded(
+                child: WallpaperGrid(
+                  items: state.items,
+                  hasMore: state.hasMore,
+                  isLoadingMore: state.isLoadingMore,
+                  loadMoreFailed: state.loadMoreFailed,
+                  onLoadMore: cubit.loadMore,
+                  onTap: (wallpaper) =>
+                      context.push('/wallpaper/${wallpaper.id}'),
+                ),
+              ),
+            ],
           ),
         };
       },

@@ -1,5 +1,8 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:livecanvas/core/theme/app_colors.dart';
+import 'package:livecanvas/core/theme/app_elevation.dart';
 import 'package:livecanvas/core/theme/app_spacing.dart';
 import 'package:livecanvas/core/theme/app_typography.dart';
 
@@ -33,26 +36,34 @@ class AppTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.bgSurface,
-        border: Border(top: BorderSide(color: AppColors.borderSubtle)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: AppSpacing.tabbarH,
-          child: Row(
-            children: [
-              for (var i = 0; i < items.length; i++)
-                Expanded(
-                  child: _TabButton(
-                    item: items[i],
-                    selected: i == currentIndex,
-                    onTap: () => onTap(i),
-                  ),
-                ),
-            ],
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: AppElevation.blurBar,
+          sigmaY: AppElevation.blurBar,
+        ),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            color: Color(0xB812101A), // rgba(18,16,26,0.72)
+            border: Border(top: BorderSide(color: AppColors.borderSubtle)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: AppSpacing.tabbarH,
+              child: Row(
+                children: [
+                  for (var i = 0; i < items.length; i++)
+                    Expanded(
+                      child: _TabButton(
+                        item: items[i],
+                        selected: i == currentIndex,
+                        onTap: () => onTap(i),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -81,12 +92,15 @@ class _TabButton extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(selected ? item.activeIcon : item.icon, size: 24, color: color),
-          const SizedBox(height: AppSpacing.sp1),
+          const SizedBox(height: 3),
           Text(
             item.label,
-            style: AppTypography.eyebrow.copyWith(
+            style: TextStyle(
+              fontFamily: AppTypography.bodyFamily,
+              fontSize: 10,
+              height: 1.2,
+              fontWeight: selected ? AppTypography.bold : AppTypography.medium,
               color: color,
-              letterSpacing: 0,
             ),
           ),
         ],

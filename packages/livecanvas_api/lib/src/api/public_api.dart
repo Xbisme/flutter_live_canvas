@@ -14,6 +14,7 @@ import 'package:livecanvas_api/src/model/collection.dart';
 import 'package:livecanvas_api/src/model/collection_detail.dart';
 import 'package:livecanvas_api/src/model/download_url_response.dart';
 import 'package:livecanvas_api/src/model/error_response.dart';
+import 'package:livecanvas_api/src/model/home_response.dart';
 import 'package:livecanvas_api/src/model/tag.dart';
 import 'package:livecanvas_api/src/model/wallpaper.dart';
 import 'package:livecanvas_api/src/model/wallpaper_batch_request.dart';
@@ -104,7 +105,7 @@ class PublicApi {
     );
   }
 
-  /// Danh sách bộ sưu tập curated (không phân trang — chỉ meta, không nhúng items)
+  /// Danh sách bộ sưu tập curated (không phân trang — chỉ meta, không nhúng items). v0.7.0 KHÔNG đổi payload này: &#x60;show_on_home&#x60;/&#x60;home_position&#x60; là input phía admin, không xuất hiện ở đây.
   ///
   ///
   /// Parameters:
@@ -260,6 +261,86 @@ class PublicApi {
     }
 
     return Response<CollectionDetail>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// (v0.7.0) Màn Browse dạng section curated. KHÔNG phân trang, bounded cứng: tối đa 10 section × tối đa 10 wallpaper/section. Trần áp LÚC ĐỌC — admin bật dư thì phần dư bị bỏ qua im lặng (không lỗi, không chặn admin lúc ghi). Section sắp theo &#x60;home_position&#x60; tăng dần, trùng vị trí thì tie-break theo id nên thứ tự ổn định giữa các request. Chỉ chứa wallpaper published; section không còn wallpaper nào hiển thị được thì bị bỏ hẳn khỏi mảng VÀ không chiếm slot (section kế tiếp lấp vào). Chưa bật collection nào → &#x60;sections: []&#x60; + 200 (KHÔNG phải 404). \&quot;Xem tất cả\&quot; của 1 section &#x3D; gọi &#x60;GET /collections/{collection_id}&#x60; đã có. Không nhận và không đọc &#x60;transaction_id&#x60; — premium chỉ hiển thị badge, gate vẫn ở &#x60;download-url&#x60;.
+  ///
+  ///
+  /// Parameters:
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [HomeResponse] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<HomeResponse>> homeGet({
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/home';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{...?headers},
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'apiKey',
+            'name': 'AppApiKey',
+            'keyName': 'X-App-Key',
+            'where': 'header',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    HomeResponse? _responseData;
+
+    try {
+      final rawData = _response.data;
+      _responseData = rawData == null
+          ? null
+          : deserialize<HomeResponse, HomeResponse>(
+              rawData,
+              'HomeResponse',
+              growable: true,
+            );
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<HomeResponse>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
@@ -549,12 +630,12 @@ class PublicApi {
     );
   }
 
-  /// wallpapersIdDownloadUrlGet
+  /// Presigned URL thật — hết hạn ≤5 phút, chỉ 1 object. Domain là S3/R2 endpoint, KHÁC domain CDN của thumbnail/preview. Free → 200 luôn. Premium (v0.5.0): cần &#x60;transaction_id&#x60; resolve tới entitlement đang active/in_grace_period → 200; thiếu/hết hạn/không entitled → 402. Wallpaper processing/failed/đã xóa → 404 (đánh giá trước gate entitlement).
   ///
   ///
   /// Parameters:
   /// * [id]
-  /// * [transactionId] - Bắt buộc nếu wallpaper.is_premium = true
+  /// * [transactionId] - Bắt buộc nếu wallpaper.is_premium = true (bỏ qua nếu free)
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request

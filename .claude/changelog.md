@@ -4,21 +4,94 @@
 
 ## [Unreleased]
 
+- **MO — Browse sections + Mô tả Detail (implement v0.7.0, 2026-07-29)**: sau khi backend ship BE-008, regenerate `packages/livecanvas_api` (thêm `homeGet`, `HomeSection`, `HomeResponse`, `Wallpaper.description`; kèm 3 quote-fix YAML cho description có dấu phẩy trong flow-mapping — `home_position`/admin token — để `openapi-generator` validate được). Dựng:
+  - **`HomeRepository`** (`core/catalog/`, bọc `PublicApi.homeGet` → `Result<List<HomeSection>>`).
+  - **Browse dạng section**: chip **"Tất cả"** → `GET /home` render các **`SectionGrid`** (title Clash 22 + đếm mono + lưới 2 cột, tap title → Collection Detail); chọn **tag cụ thể** → lưới phẳng `GET /wallpapers?tags=` (cursor pagination giữ nguyên). `BrowseState.BrowseLoaded` thêm `sections` + `isSectionsView`; `sections: []` → EmptyState (không phải lỗi). Bỏ ghi chú design-pass "giữ lưới phẳng vì thiếu data".
+  - **Wallpaper Detail — mục "Mô tả"**: hiện `wallpaper.description` (ẩn khi null/rỗng) giữa khối stats và "Hình nền liên quan", bám `SectionLabel` design.
+  - Tests cập nhật: `browse_cubit_test`/`browse_page_test` theo model sections (mock `HomeRepository`). **91 test** + 4 gate xanh.
+
+- **Contract Sync v0.7.0** (2026-07-29, từ `livecanvas-backend` branch `BE-008-mobile-driven-content`):
+  copy nguyên văn `openapi.yaml` (→ `.claude/` + `contracts/`), `api-context.md`, `screen-inventory.md`.
+  **⚠️ KHÁC v0.5.0/v0.6.0: bump này ĐỔI PATH + SCHEMA → BẮT BUỘC chạy `scripts/generate_api.sh`** trước khi code MO tiếp theo.
+  Backend đã **implement xong và test xanh** (237 test, ruff sạch, không migration drift) — không còn là khai báo trước:
+  - **`GET /home` (mới)** — cả màn Browse trong **1 lần gọi**, không phân trang, không query param. Trả `{ "sections": [...] }`; mỗi section = `{ key, title, collection_id, cover_url, accent_color, is_premium, items }`.
+    - `key` = **slug của collection** (định danh ổn định cho analytics/scroll-state; đổi title không đổi key). `collection_id` là target "Xem tất cả" → `GET /collections/{id}` đã có.
+    - **Bounded cứng ≤10 section × ≤10 wallpaper/section** (đã ghi `maxItems` trong contract để client cỡ UI). Trần áp phía server lúc đọc — client không phải tự cắt.
+    - Section rỗng bị **bỏ hẳn** khỏi mảng (không có row tiêu đề trống). Chưa bật gì → `{"sections": []}` + **200**, KHÔNG phải 404 → đừng map thành error state.
+    - Thứ tự **ổn định giữa các request** kể cả khi admin đặt trùng vị trí → cache/scroll-state an toàn.
+    - `items[*]` dùng **đúng schema `Wallpaper`** như `GET /wallpapers` (có test khẳng định key trùng khít) → tái dùng thẳng model + `WallpaperCard` sẵn có, `collections` rỗng như mọi list.
+    - **Không nhận `transaction_id`**, không chứa download URL nào. Section premium vẫn xem thoải mái, chỉ hiện badge — gate vẫn ở `download-url`.
+  - **`Wallpaper.description` nay có giá trị thật** (v0.6.0 mới chỉ khai báo, backend luôn trả `null`). Rỗng/whitespace được backend chuẩn hoá thành `null` → **giữ nguyên logic ẩn mục "Mô tả" bằng null check**, không cần so sánh chuỗi rỗng. Lưu ý: catalog 397 item hiện tại vẫn `null` tới khi admin điền.
+  - `PATCH /admin/wallpapers/{id}` (admin-only, app không gọi) để điền mô tả cho wallpaper cũ.
+  - `GET /collections` **KHÔNG đổi payload** — `show_on_home`/`home_position` chỉ là input phía admin.
+  - **Không error code mới**; client viết theo v0.6.0 vẫn chạy nguyên (backward compatible).
+  - **Việc mobile**: regenerate client → dựng Browse dạng section (bỏ ghi chú "giữ lưới phẳng vì thiếu data" ở design pass MO-004) → bật mục "Mô tả" ở Wallpaper Detail. Đề xuất giữ lưới phẳng `GET /wallpapers?tags=` khi user chọn tag, section chỉ hiện ở chip "Tất cả" (backend không ràng buộc, tuỳ client).
+
+- **Backend trả lời 2 ask (2026-07-27)**: backend gộp cả `Wallpaper.description` lẫn **Browse sections** vào **`BE-008 Mobile-Driven Content`** và **đẩy lên làm spec kế tiếp** (chạy ngay sau BE-005, trước BE-006 Security). Chốt hướng section: **tái dùng `Collection`** (thêm `show_on_home` + `home_position`, KHÔNG resource mới) + endpoint public mới **`GET /home`** trả `{ sections: [{ key, title, collection_id, cover_url, accent_color, is_premium, items: Wallpaper[] }] }`, **không phân trang**, bounded **≤10 wallpaper/section**; "Xem tất cả" → `GET /collections/{id}` đã có. Section chỉ hiện khi chip tag = "Tất cả" (đề xuất, chốt khi backend plan). Sẽ bump **contract v0.7.0** → **lần này BẮT BUỘC regenerate `packages/livecanvas_api`** (đổi schema + path, khác v0.5.0/v0.6.0). Việc mobile khi backend ship: bật mục "Mô tả" ở Detail + dựng Browse dạng section (bỏ giới hạn "giữ lưới phẳng" ghi ở design pass MO-004).
+
+- **Contract v0.6.0 — mobile-driven (2026-07-27)**: design pass MO-004 phát hiện màn Wallpaper Detail cần **`Wallpaper.description`** (mục "Mô tả") mà schema chưa có. Theo Contract Sync (Principle I): sửa `screen-inventory.md` (#7) → `openapi.yaml` (`.claude/` + `contracts/`, thêm `description: string, nullable`, bump `v0.5.0→v0.6.0`) → `api-context.md`; copy verbatim sang repo backend; **báo backend** qua backend `.claude/sdd-roadmap.md` **BE-008** + `project-context.md` (backend chưa implement → trả `null`, client ẩn mục "Mô tả" khi null). Related-wallpapers KHÔNG thêm endpoint (client suy theo `?tags=<tag đầu>`). **Chưa regenerate `packages/livecanvas_api`** cho v0.6.0 — làm khi backend ship `description` thật, rồi bật mục "Mô tả" ở Detail.
+
+- **Contract Sync v0.5.0** (2026-07-26, từ `livecanvas-backend` branch `BE-005-iap-verify-entitlement`):
+  copy nguyên văn `openapi.yaml` (→ `.claude/` + `contracts/`), `api-context.md`, `screen-inventory.md`.
+  Đổi chính so v0.4.0 — **IAP verify + entitlement đi vào hoạt động thật**:
+  - `GET /wallpapers/{id}/download-url` với wallpaper **premium** THÔI trả `402` vô điều kiện — backend nay tra entitlement thật từ `transaction_id` (query): entitled → `200` presigned ≤5 phút; thiếu/hết hạn/không entitled → `402 ENTITLEMENT_REQUIRED`. Free giữ nguyên (bỏ qua `transaction_id`).
+  - Kích hoạt `POST /iap/verify-receipt`, `GET /iap/subscription-status`, `POST /iap/webhook/apple|google` (webhook là server-to-server, app không gọi).
+  - **Client cần lưu bền `transaction_id`** sau verify thành công và gửi kèm ở mọi `download-url` của wallpaper premium (kể cả từng item khi "Tải tất cả" bộ premium).
+  - Entitlement định danh theo **original transaction id** → ổn định qua mọi kỳ renewal, KHÔNG cần cập nhật id đã lưu sau gia hạn.
+  - **Còn quyền tải** khi `status ∈ {active, in_grace_period}` và chưa quá `expires_at`. `in_grace_period` vẫn tải được; tắt auto-renew mà còn trong kỳ → `active` + `auto_renew=false` (đừng coi là mất quyền — client không tự suy diễn gate, cứ để `download-url` quyết).
+  - `404` được đánh giá **trước** gate entitlement → 404 = wallpaper không khả dụng, không phải thiếu quyền.
+  - Restore máy mới: verify lại receipt là đủ; `device_id` chỉ để backend phát hiện lạm dụng, KHÔNG chặn.
+  - **Không error code mới** (`ENTITLEMENT_REQUIRED`, `RECEIPT_INVALID`, `RECEIPT_CONFLICT`, `STORE_API_UNAVAILABLE` đã có trong catalog từ trước).
+  - **Không cần regenerate `packages/livecanvas_api`**: v0.5.0 chỉ đổi mô tả/semantics, không đổi path/schema — client sinh sẵn đã có `iapVerifyReceiptPost`, `iapSubscriptionStatusGet` và param `transactionId` (optional) ở `download-url`. Regenerate chỉ để làm mới doc-comment.
+  - Ảnh hưởng spec sắp tới: MO-005 (download/set wallpaper) + màn Paywall #9 nay có backend thật để test end-to-end premium.
+
+- **MO-004 — Favorites & Local Data** (implemented 2026-07-26, branch `MO-004-favorites-local-data`, chờ PR):
+  4 user story chỉ dùng persistence cục bộ + `POST /wallpapers/batch` có sẵn (Principle IX — **chỉ lưu mảng ID**, không cache full data):
+  **US1 Toggle** (nút tim ở mọi lưới + Wallpaper Detail, đồng bộ tức thời <100ms + haptic),
+  **US2 Màn Yêu thích** (batch data tươi, chunk ≤100, empty/FailureView),
+  **US3 Reconcile** (drop ID admin xóa khi batch thành công; KHÔNG drop khi lỗi mạng — FR-011),
+  **US4 Lịch sử tải** (kho + màn tối giản; điểm ghi do MO-005 nối, MO-004 test qua seed).
+  Nền mới: tầng **`lib/core/favorites/`** dùng chung (giống `core/catalog/`, Principle XI) —
+  `FavoritesRepository` (in-memory `Set<int>` phát qua **`ValueListenable<Set<int>>`** đồng bộ xuyên màn, KHÔNG cubit-to-cubit — Principle III) trên `FavoritesStore`;
+  `DownloadHistoryRepository`/`Store` (`{id, downloadedAt}` JSON, unique-per-id, mới-trước) + model `DownloadHistoryEntry`.
+  Thêm `WallpaperRepository.batch(List<int>)` (bọc `wallpapersBatchPost` có sẵn — **KHÔNG cần regenerate client cho MO-004**).
+  Widget mới `FavoritableWallpaperTile` (`ValueListenableBuilder` → đọc set hiện tại đồng bộ + rebuild mọi thay đổi; tái dùng nút tim `WallpaperCard` sẵn có); `FavoritesPage` thay placeholder (bám `Favorites.jsx`), `DownloadHistoryPage` tối giản dưới tab "Bạn" (`AppRoutes.downloadHistory` pushed).
+  **38 test mới (tổng 89)** + 4 CI gate xanh (format · analyze 0 · 89 test · bloc lint 0).
+  - **Bugfix 1 nghiệm thu máy thật (2026-07-26)**: nút tim ban đầu dùng `Stream<Set<int>>` broadcast (async* `yield initial; yield* controller`) + `StreamBuilder` — trên device gặp **race bất đồng bộ**: thích tile thứ 2 (khác id) không cập nhật (event rơi vào khe hở giữa yield đầu và subscribe controller, cộng stream tạo mới mỗi build). **Sửa: chuyển sang `ValueNotifier`/`ValueListenableBuilder`** (đọc value đồng bộ, notify mọi thay đổi, không khe hở). Test hồi quy `favorite_multi_tile_test`.
+  - **Bugfix 2 (2026-07-26)**: màn Favorites chỉ hiện item có lúc `load()` chạy lần đầu (page sống trong `indexedStack`, `load()` chỉ gọi 1 lần) — thích thêm ở tab khác không xuất hiện. `_onIdsChanged` cũ chỉ xử lý **bỏ** item, không xử lý **thêm**. **Sửa: khi set id có id mới chưa hiển thị → `load()` lại (lấy data mới); chỉ bớt → lọc tại chỗ.** Test hồi quy trong `favorites_cubit_test`.
+  - **Design fidelity pass — component dùng chung (2026-07-26)**: sau audit đối chiếu prototype, sửa các component dùng chung để bám handoff (nâng đồng loạt mọi màn lưới + Favorites):
+    - **`WallpaperCard`**: title/author chuyển vào **đè trong tile** trên scrim gradient đáy (`rgba(9,7,14,0.78)→0`, title body 13/700 trắng, author 10/0.72) thay vì text dưới tile; nút tim **glass 36px** (bg `rgba(20,16,30,0.44)` + viền trắng 0.14, active = blush fill + glow); **viền**: free 1px `border-subtle`, premium **ring gradient aurora** 1.5px; chip live + PRO ở hàng trên. Tile giờ là 9:16 thuần → bỏ text-block `+52` ở 4 grid (Browse/Collection Detail/Favorites/Download History).
+    - **`EmptyState`**: thêm **halo 88×88** nền `aurora-soft` + viền, icon 40 màu `iris-400`, title Clash 22, message body 15 `text-secondary` maxWidth 260.
+    - **`PremiumBadge`**: pill `r-pill` + icon **kim cương** (`PhosphorIconsFill.diamond`) + glow, chữ 10/700 ls 0.1em (thay pill vuông `rXs` chữ trơn).
+    - **`MetaChip`**: thêm **chấm "live" aqua** (glow) + glass tone. Author bỏ prefix `@` cho khớp bundle.
+  - **Design fidelity pass — per-screen (2026-07-26)**:
+    - **Wallpaper Detail** viết lại: hero 468 + chrome glass nổi (back/share/heart/more qua `GlassIconButton` mới), **info sheet đè -28 + bo góc `rXl` + shadow + grab handle**, hàng PRO+tag, title Clash 32, **card bộ sưu tập** (cover 52×68 + eyebrow), meta chips (res/duration/size, tone surface + icon), nút Download(ghost)+Set(light trắng), **khối stats** (downloads/likes/resolution từ schema), **mục "Hình nền liên quan"** (fetch `list(tags=<tag đầu>)` loại chính nó, ≤6, lấp nền sau khi load — không có endpoint related riêng nên suy theo tag). Bỏ description/palette (schema không có field).
+      - **iOS platform-view fix (giữ video sống + overlap đúng design)**: lỗi ban đầu (content bị che + mảng đen) do đặt `video_player` trong `Sliver` + `Transform.translate` → platform view iOS định vị/clip sai. **Sửa: bố cục `Stack`** — video hero là **lớp nền cố định (sticky)** `Positioned` (không nằm trong scroll), sheet cuộn đè lên qua `SingleChildScrollView` + spacer trong suốt (hero lộ qua bo góc = parallax). iOS composite Flutter opaque đè lên platform view OK khi platform view có rect ổn định → **giữ được video tự chạy + hiệu ứng sheet trượt đè đúng prototype** (`position: sticky`).
+    - **Collection Detail** viết lại: hero 300 (cover + blob accent blur + fade) với overlay PRO+eyebrow+title 34; hàng author (avatar aurora + @author + · + count); actions đúng locked(unlock aurora)/unlocked(Share ghost + Tải tất cả).
+    - **Collections list**: cover 168 **đè title(24)/@author/count** trên scrim + **aura drop-shadow** theo accent; đếm ở TopBar.
+    - **TabBar** → **glass** (blur 18 + `rgba(18,16,26,0.72)` + borderTop) + label Satoshi 10 (active 700/inactive 500). **TopBar** → phẳng `bg-app` (bỏ glass sai spec), wordmark Clash 22/600, title 28/600.
+    - **Search**: nút xoá ✕ khi có text + viền field + **dòng đếm kết quả** (mono). **Browse**: nút search ở TopBar → chuyển tab Tìm.
+    - Mở rộng `AppButton` (icon + biến thể `light` trắng + glow, chữ 15/700), thêm `GlassIconButton`, `MetaChip` tone surface+icon, icons (arrowLeft/dotsThreeVertical/monitor/clock/paintBrush/monitorPlay/diamond).
+    - **Còn lại (giới hạn dữ liệu)**: Browse dạng **section có tiêu đề** cần backend trả section curated (API hiện là cursor phẳng + tag chips) → giữ lưới phẳng + chip; Search **suggestions chips** (có thể lấy từ `GET /tags`) chưa làm.
+  - **Deps mới** (pub.dev 2026-07-26, Principle XVI): `shared_preferences ^2.5.5` (flutter.dev verified; API `SharedPreferencesAsync`); dev-dep `shared_preferences_platform_interface ^2.4.2` (in-memory backend cho test DI thật). State giữ **native sealed class + Equatable** (deviation MO-003, đã duyệt).
+  - **Còn chờ device (không chặn merge)**: nghiệm thu iOS sim + Android máy thật US1–US4, kiểm SC-002 (<100ms) thủ công (T036).
+  - **Deviation ghi nhận**: màn Download History dựng **tối giản, chưa có design handoff** (tái dùng grid/TopBar/EmptyState/FailureView) — thay bằng thiết kế thật khi có (có thể MO-005). Duyệt: hướng "kho + màn tối giản" do project lead chọn ở Clarifications.
+
 - **Contract Sync v0.4.0** (2026-07-23, từ `livecanvas-backend` branch `BE-004-admin-upload-pipeline`):
   copy nguyên văn `openapi.yaml` (→ `.claude/` + `contracts/`), `api-context.md`, `screen-inventory.md`.
   Đổi chính so v0.3.2: thêm `POST /admin/auth/login|refresh` (admin JWT — không ảnh hưởng app end-user);
   **`GET /wallpapers/{id}/download-url` hết mock** — free trả presigned URL thật hết hạn ≤5 phút
   (⚠️ domain S3/R2 KHÁC domain CDN của thumbnail/preview — client không hardcode/so sánh domain);
   premium vẫn 402 tới BE-005; backend đã có media tự host thật → MO-002 có thể test download end-to-end.
-  Cần regenerate `packages/livecanvas_api` từ contract mới (`scripts/generate_api.sh`).
+  Cần regenerate `packages/livecanvas_api` từ contract mới (`scripts/generate_api.sh`) — **chưa chạy, làm trước khi bắt đầu MO-004**.
 
-- **MO-003 — Wallpaper Browse, Collections & Detail** (implemented 2026-07-24, branch `MO-003-wallpaper-browse-detail`, chờ PR):
+## Shipped
+
+- **MO-003 — Wallpaper Browse, Collections & Detail** (merged 2026-07-26 vào `main` qua PR #6, branch `MO-003-wallpaper-browse-detail`):
   4 user story trên API thật (contract v0.3.2, `PublicApi`): **US1 Khám phá** (lưới cursor-pagination + tag chips single-select "Tất cả" + pull-to-refresh + skeleton shimmer + video tile bounded), **US2 Wallpaper Detail** (preview full-screen, link bộ sưu tập, premium display-only), **US3 Bộ sưu tập + Collection Detail** (cover card list + hero/accent + grid items), **US4 Tìm** (debounce 350ms/≥2 ký tự + seq-guard). Nền mới: `Result<T>`/`AppFailure` sealed + `dio_error_mapper` + `failure_l10n` (Principle IV); tầng **catalog dùng chung** `lib/core/catalog/` (3 repository trả Result, bọc PublicApi — core không phụ thuộc features, Principle XI); shared widget `VideoPreview` (poster tĩnh; video chạy khi hover/chạm-giữ rồi dispose khi rời — ≤1 decoder sống, Principle II; xem sub-bullet Hiệu năng), `ShimmerBox`+skeleton, `WallpaperTile` (aura hue chọn theo id từ bộ màu brand), `FailureView`. **51 test** (unit mapper/repo, bloc_test 5 Cubit, widget 4 màn) + 4 CI gate xanh (format · analyze 0 · test · bloc lint 0). Verify iOS simulator: build OK (video_player link SPM), app boot render Browse grid data thật qua Prism mock (wordmark/chips/WallpaperCard+Aura+PRO), FailureView khi mất backend.
   - **Deviation Principle III (duyệt bởi project lead)**: state models dùng **native sealed class Dart 3 + Equatable** thay `@freezed`. Lý do: `freezed` (mọi bản stable) ép `analyzer <11` → phá `lean_builder 0.1.10` (DI codegen, cần analyzer 12); bản freezed khớp analyzer 12 chỉ có pre-release `3.2.6-dev.1` (lệch Principle XVI). Native sealed class giữ đúng tinh thần III (immutable sealed 4-state), bỏ hẳn build_runner → toàn bộ toolchain stable, hết xung đột. Đề xuất PATCH constitution III ("`@freezed` hoặc native sealed class"). Chi tiết: `specs/MO-003-*/research.md` R1 + `plan.md` §Complexity Tracking.
   - **Deps mới** (pub.dev 2026-07-24, Principle XVI): `video_player ^2.13.0`, `shimmer ^3.0.0`, `equatable ^2.1.0` (`visibility_detector` + `palette_generator` đã **gỡ** 2026-07-26 sau khi đổi cơ chế preview/aura — xem sub-bullet Hiệu năng). `analyzer` pin `>=10.0.0 <10.2.0`? **KHÔNG** — giữ analyzer 12 (native, lean_builder OK). Còn chờ device: iPad responsive (T056), nghiệm thu backend thật đủ 4 US (T058).
   - **Hiệu năng preview + nghiệm thu Android máy thật (2026-07-26)**: bỏ auto-play theo viewport (`visibility_detector`) — trên máy thật Android, chạy nhiều decoder H.264 đồng thời bị OS reclaim (chỉ clip init sau cùng chạy, còn lại đóng băng). Chuyển sang **hover/chạm-giữ mới chạy** (như YouTube), tap để mở Detail, `autoPlay:true` cho Detail → ≤1 decoder sống, hết giật khi cuộn (T055 xong). Bỏ `PaletteGenerator` (decode+quantize ảnh trên UI thread mỗi tile, còn decode ảnh 2 lần — nguồn giật thật) → aura hue chọn theo id từ bộ màu brand. Thêm `cacheWidth` cho poster (decode đúng size hiển thị) + `RepaintBoundary`/tile + aura glow hạ alpha. **Bật kết nối máy thật**: `AppConfig` thêm override `--dart-define=API_HOST`, Android debug bật `usesCleartextTraffic`; backend dev bind `0.0.0.0:8000` + `ALLOWED_HOSTS=["*"]` + middleware dev rewrite host media (`localhost:9000` → host client) để phone/emulator LAN tải được thumb/preview.
-
-## Shipped
 
 - **MO-002 — Foundation, Navigation & Design System** (merged 2026-07-23 vào `main` qua PR #5, branch `MO-002-foundation-navigation`):
   Tầng theme tập trung dark-only từ token `_ds` (`lib/core/theme/`: colors/spacing/typography/elevation/theme/icons) + 3 font bundle cục bộ (Clash Display/Satoshi/Space Mono qua `scripts/fetch_fonts.sh`); icon đổi `phosphor_flutter`→`phosphoricons_flutter 1.0.0` (né IconData-final Flutter 3.44); 11 shared widget `lib/core/widgets/` (WallpaperCard+Aura glow, TabBar, TopBar wordmark aurora, PremiumBadge PRO không-khoá, Button/IconButton/FilterChip/MetaChip/EmptyState/AppSheet/Toast) trung thực prototype; nav `go_router StatefulShellRoute.indexedStack` 5 tab giữ state + route top-level Detail/Collection placeholder + màn `/dev/gallery` dev-only; mock server Prism (`scripts/mock_server.sh`, dev flavor opt-in `--dart-define=USE_MOCK=true`, port 4010). **Deviation**: router composition-root tách sang `lib/app/router/` (không phải `lib/core/router/`) để giữ Principle XI (core không import features) — `AppRoutes` constants vẫn ở core. Verify: 4 CI gate xanh (format · analyze 0 · 17 test · bloc lint 0); Prism trả schema-valid `/wallpapers`,`/tags`(có thẻ ảo "All"),`/collections` với `X-App-Key`.

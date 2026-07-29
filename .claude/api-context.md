@@ -4,7 +4,19 @@
 >
 > File này tồn tại độc lập ở CẢ 2 REPO (`livecanvas-backend`, `livecanvas-mobile`). Khi API đổi, sửa cả `openapi.yaml` lẫn `api-context.md` ở repo đang implement, rồi copy nguyên văn sang repo còn lại (xem "Contract Sync" trong `dev-workflow.md`).
 >
-> Last updated: 2026-07-23 · Contract version: **`v0.4.0`**
+> Last updated: 2026-07-29 · Contract version: **`v0.7.0`**
+>
+> **Đổi so với v0.6.0 (BE-008)** — ⚠️ **bump này ĐỔI PATH + SCHEMA, khác v0.5.0/v0.6.0: mobile BẮT BUỘC regenerate client** (`scripts/generate_api.sh`).
+> - **Màn Browse có section curated**: thêm `GET /home` (app tier) trả **cả màn trong 1 lần gọi**, KHÔNG phân trang, bounded cứng **≤10 section × ≤10 wallpaper/section**. Section **KHÔNG phải resource mới** — là `Collection` được admin bật `show_on_home` + `home_position`.
+> - Trần áp **lúc đọc**: admin bật dư thì phần dư bị bỏ qua im lặng (không lỗi ở cả lúc ghi lẫn lúc đọc). Section rỗng (hết wallpaper hiển thị được) **bị bỏ hẳn và không chiếm slot**. Chưa bật gì → `sections: []` + 200, không phải 404. Trùng `home_position` → thứ tự vẫn **ổn định giữa các request** (tie-break theo id).
+> - **`Wallpaper.description` nay trả giá trị thật** (v0.6.0 mới chỉ khai báo, backend luôn trả `null`). Rỗng/whitespace được chuẩn hoá thành `null` — client vẫn ẩn mục "Mô tả" chỉ bằng phép kiểm tra null.
+> - Thêm **`PATCH /admin/wallpapers/{id}`** chỉ sửa `description` (điền mô tả cho catalog cũ). Admin bật section qua `show_on_home`/`home_position` trong body `POST|PATCH /admin/collections`.
+> - **Payload công khai `GET /collections` KHÔNG đổi** — 2 field home chỉ là input phía admin.
+> - **Không error code mới.** Additive → client viết theo v0.6.0 vẫn chạy nguyên.
+>
+> **Đổi so với v0.5.0 (mobile-driven)**: thêm field **`Wallpaper.description`** (`string`, nullable) cho mục "Mô tả" màn Wallpaper Detail (screen-inventory #7) — khai báo trước ở v0.6.0, backend implement thật ở v0.7.0. **Related wallpapers KHÔNG thêm endpoint** — client suy theo `GET /wallpapers?tags=<tag đầu tiên của wallpaper>` (loại chính nó, ≤6). Palette là suy diễn phía client, không cần backend.
+>
+> **Đổi so với v0.4.0 (BE-005)**: IAP verify + entitlement đi vào hoạt động thật. `GET /wallpapers/{id}/download-url` với wallpaper **premium** THÔI trả `402` vô điều kiện — nay kiểm tra entitlement thật từ `transaction_id` đã verify: entitled (`status ∈ {active, in_grace_period}`, chưa quá `expires_at`) → `200` presigned ≤5 phút; thiếu/hết hạn/không entitled → `402 ENTITLEMENT_REQUIRED`. Free giữ nguyên (bỏ qua `transaction_id`). Kích hoạt `POST /iap/verify-receipt`, `GET /iap/subscription-status`, `POST /iap/webhook/apple|google`. Entitlement **định danh theo original transaction id** (ổn định qua mọi kỳ renewal — mọi `transaction_id` trong chuỗi resolve về 1 entitlement); tắt auto-renew mà còn trong kỳ → `status=active, auto_renew=false`; `device_id` chỉ để phát hiện lạm dụng (restore trên máy mới tự do). **Không error code mới** (các mã IAP đã có sẵn trong catalog từ trước).
 >
 > **Đổi so với v0.3.2 (BE-004)**: thêm **admin auth surface** — `POST /admin/auth/login` (credential Django staff → JWT access 30 phút + refresh 7 ngày) và `POST /admin/auth/refresh` (rotate: trả cặp token MỚI, refresh cũ bị blacklist). `GET /wallpapers/{id}/download-url` **hết mock**: wallpaper free → presigned URL thật hết hạn ≤5 phút (⚠️ domain S3/R2 endpoint, KHÁC domain CDN của `thumbnail_url`/`preview_video_url` — client không hardcode/so sánh domain); premium giữ nguyên `402` cho tới BE-005; wallpaper `processing`/`failed`/đã xóa → `404`. `POST /admin/wallpapers`: `422 FILE_REJECTED` bắn **đồng bộ** tại register khi file vượt 500 MB (HEAD check); lỗi nội dung file phát hiện bất đồng bộ → `status=failed` (không 422). **Không error code mới**. Bỏ server "Staging" khỏi openapi (kỷ luật 2-flavor).
 >
@@ -98,9 +110,37 @@ Format chung:
 - **Reserved**: slug `all` không được dùng cho tag thật (admin/seed cấm tạo); trong filter `?tags=` slug `all` bị bỏ qua (coi như không ràng buộc).
 - **401**: `INVALID_APP_KEY`
 
+### `GET /home` *(v0.7.0)*
+- Header: `X-App-Key`
+- **Cả màn Browse trong 1 lần gọi** — không phân trang, không query param nào. Section = 1 `Collection` được admin bật `show_on_home`; **không có resource mới**.
+- **Bounded cứng: tối đa 10 section × tối đa 10 wallpaper/section.** Trần áp **lúc đọc** — admin bật dư thì phần dư bị bỏ qua im lặng (không lỗi ở cả 2 phía).
+- Thứ tự section theo `home_position` tăng dần; **trùng vị trí vẫn ổn định giữa các request** (tie-break theo id) — client cache/scroll-state không bị nhảy.
+- Chỉ chứa wallpaper `published`. Section không còn wallpaper nào hiển thị được thì **bị bỏ hẳn và KHÔNG chiếm slot** — section kế tiếp lấp vào. Chưa bật collection nào → `sections: []` + **200** (KHÔNG phải 404).
+- `key` = slug của collection, dùng làm định danh ổn định phía client (đổi `title` không đổi `key`). `collection_id` là target của "Xem tất cả" → `GET /collections/{id}` đã có (trong section KHÔNG có phân trang).
+- **Không nhận và không đọc `transaction_id`**: section premium chỉ hiển thị badge, gate entitlement vẫn duy nhất ở `download-url`. Response không chứa download URL nào.
+- Mỗi phần tử `items` dùng **đúng schema `Wallpaper` như mọi list khác** (`collections` rỗng) — client dùng chung 1 model.
+- **200**:
+```json
+{
+  "sections": [
+    {
+      "key": "neon-nights",
+      "title": "Neon về đêm",
+      "collection_id": 1,
+      "cover_url": "https://cdn.example.com/collections/neon-nights.jpg",
+      "accent_color": "#FF6F9C",
+      "is_premium": false,
+      "items": [ { "id": 5, "title": "Shibuya 2099", "description": null, "...": "..." } ]
+    }
+  ]
+}
+```
+- **401**: `INVALID_APP_KEY`
+
 ### `GET /collections`
 - Header: `X-App-Key`
 - Danh sách bộ sưu tập curated (tab "Bộ sưu tập") — **không phân trang**, chỉ meta + `wallpaper_count`, KHÔNG nhúng items.
+- **v0.7.0 KHÔNG đổi payload này**: `show_on_home`/`home_position` chỉ là input phía admin, không xuất hiện ở đây.
 - **200**:
 ```json
 [
@@ -145,6 +185,7 @@ Format chung:
     {
       "id": 101,
       "title": "Neon City Loop",
+      "description": null,
       "category": { "id": 3, "slug": "urban", "name": "Đô thị", "icon_url": "...", "wallpaper_count": 20 },
       "tags": [{ "id": 12, "slug": "neon", "name": "Neon", "wallpaper_count": 87 }],
       "orientation": "portrait",
@@ -188,21 +229,25 @@ Format chung:
 ### `GET /wallpapers/{id}/download-url`
 - Header: `X-App-Key` · Path: `id` · Query: `transaction_id` (bắt buộc nếu premium)
 - **200** (v0.4.0 — presigned thật): `{ "download_url": "https://<s3-r2-endpoint>/masters/<uuid>.mp4?X-Amz-Signature=...", "expires_at": "..." }` — hết hạn **≤ 5 phút**, chỉ 1 object. ⚠️ Domain là **S3/R2 endpoint**, KHÁC domain CDN của thumbnail/preview — client không hardcode/so sánh domain.
-- **402**: `ENTITLEMENT_REQUIRED` (mọi wallpaper premium — gate mở ở BE-005) · **404**: `NOT_FOUND` (không tồn tại, `processing`, `failed`, hoặc đã xóa) · **401**: `INVALID_APP_KEY`
+- **402**: `ENTITLEMENT_REQUIRED` — wallpaper premium mà `transaction_id` thiếu / hết hạn / không resolve tới entitlement đang active|in_grace_period (v0.5.0). Free bỏ qua check. · **404**: `NOT_FOUND` (không tồn tại, `processing`, `failed`, hoặc đã xóa — đánh giá **trước** gate entitlement) · **401**: `INVALID_APP_KEY`
 
 ---
 
 ## IAP Endpoints
 
+> **Entitlement model (v0.5.0)**: entitlement định danh theo **original transaction id** của store (ổn định qua mọi kỳ renewal); mọi `transaction_id` trong chuỗi renewal đều resolve về đúng 1 entitlement, nên verify/status/download tra bằng `transaction_id` kỳ nào cũng ra. `status` ∈ `active | in_grace_period | expired | canceled | refunded`. **Còn quyền tải** khi `status ∈ {active, in_grace_period}` và chưa quá `expires_at`. Tắt auto-renew mà còn trong kỳ → `active` + `auto_renew=false` (không phải `canceled`). `device_id` chỉ ghi nhận để phát hiện lạm dụng, KHÔNG chặn — restore trên máy mới verify lại bình thường.
+
 ### `POST /iap/verify-receipt`
-- Header: `X-App-Key`
-- **Body**: `{ "platform": "ios", "receipt_data": "...", "transaction_id": "1000000123456789", "product_id": "premium_monthly", "device_id": "device-uuid-abc123" }`
-- **200**: `{ "transaction_id": "...", "product_id": "premium_monthly", "status": "active", "expires_at": "2026-08-22T00:00:00Z", "auto_renew": true }`
-- **400**: `RECEIPT_INVALID` · **409**: `RECEIPT_CONFLICT` · **503**: `STORE_API_UNAVAILABLE` · **401**: `INVALID_APP_KEY`
+- Header: `X-App-Key` (app tier)
+- **Body**: `{ "platform": "ios", "receipt_data": "...", "transaction_id": "1000000123456789", "product_id": "premium_monthly", "device_id": "device-uuid-abc123" }` (`platform` ∈ `ios|android`)
+- Backend verify trực tiếp với App Store Server API / Google Play Developer API, upsert entitlement (idempotent theo original transaction id).
+- **200**: `{ "transaction_id": "...", "product_id": "premium_monthly", "status": "active", "expires_at": "2026-08-22T00:00:00Z", "auto_renew": true }` (schema `SubscriptionStatus`)
+- **400**: `RECEIPT_INVALID` (store từ chối) · **409**: `RECEIPT_CONFLICT` (`transaction_id` đã gắn subscription/tài khoản store khác — KHÔNG phải chỉ khác device) · **503**: `STORE_API_UNAVAILABLE` (store timeout/5xx, retryable) · **401**: `INVALID_APP_KEY`
 
 ### `GET /iap/subscription-status`
-- Header: `X-App-Key` · Query: `transaction_id` (bắt buộc)
-- **200**: cùng schema `SubscriptionStatus` · **404**: `NOT_FOUND` · **401**: `INVALID_APP_KEY`
+- Header: `X-App-Key` · Query: `transaction_id` (bắt buộc; chấp nhận bất kỳ id trong chuỗi renewal)
+- Read-only — KHÔNG mutate/gia hạn entitlement.
+- **200**: schema `SubscriptionStatus` · **404**: `NOT_FOUND` (không có entitlement nào) · **401**: `INVALID_APP_KEY`
 
 ### `POST /iap/webhook/apple`
 - Không `X-App-Key` — verify chữ ký JWS trong `signedPayload`
@@ -242,6 +287,7 @@ Format chung:
 ```json
 {
   "title": "Neon City Loop",
+  "description": "Đèn neon phản chiếu trên mặt đường sau mưa.",
   "category_id": 3,
   "tag_ids": [12, 15],
   "orientation": "portrait",
@@ -252,6 +298,7 @@ Format chung:
 }
 ```
   - `tag_ids` **curated** — phải trỏ tới tag đã tồn tại; muốn tag mới, gọi `POST /admin/tags` trước.
+  - `description` (v0.7.0) **optional**; chuỗi rỗng hoặc toàn khoảng trắng được chuẩn hoá thành `null`.
 - **201**: object `Wallpaper`, các field media (`thumbnail_url`, `resolution`...) = `null` vì đang xử lý bất đồng bộ
 - **400**: `VALIDATION_ERROR` (thiếu field, `category_id` không tồn tại, `upload_key` đã dùng hoặc object chưa upload), `TAG_NOT_FOUND` (tag_ids sai)
 - **422**: `FILE_REJECTED` — bắn **đồng bộ** khi HEAD thấy file vượt 500 MB. Lỗi nội dung (sai định dạng thật; malware scan từ BE-006) phát hiện **bất đồng bộ** trong pipeline → `status=failed` + `failure_reason` (xem qua `GET /admin/wallpapers?status=failed`), không 422 lúc đó.
@@ -262,6 +309,15 @@ Format chung:
 - Query: `cursor`, `limit`, `status` (`processing`|`published`|`failed`)
 - **200**: `WallpaperCursorPage` (bao gồm cả wallpaper chưa publish); item tầng admin kèm thêm `status` và `failure_reason` (lý do khi `failed` — chỉ hiển thị ở tier admin, không bao giờ xuất hiện ở public tier)
 - **401**: `UNAUTHORIZED_ADMIN` · **403**: `FORBIDDEN_ADMIN_ROLE`
+
+### `PATCH /admin/wallpapers/{id}` *(v0.7.0)*
+- Header: `Authorization: Bearer <admin_jwt>` · Path: `id`
+- Sửa mô tả của wallpaper **đã tồn tại** (toàn bộ catalog cũ được tạo trước khi có field này nên chỉ đường này mới điền được cho chúng).
+- **Body**: `{ "description": "Đèn neon phản chiếu trên mặt đường sau mưa." }`
+  - **CHỈ nhận `description`** — mọi field khác trong body bị **bỏ qua**, không sửa được media/status/tag/category/collection (những thứ đó giữ luồng riêng).
+  - `null`, chuỗi rỗng, hoặc toàn khoảng trắng → lưu `null` (client ẩn mục "Mô tả").
+- **200**: object `Wallpaper` sau khi sửa
+- **404**: `NOT_FOUND` (không tồn tại hoặc đã xóa mềm) · **401**: `UNAUTHORIZED_ADMIN` · **403**: `FORBIDDEN_ADMIN_ROLE`
 
 ### `DELETE /admin/wallpapers/{id}`
 - Header: `Authorization: Bearer <admin_jwt>` · Path: `id`
@@ -298,10 +354,13 @@ Format chung:
   "cover_upload_key": "uploads/tmp-cover-xyz.jpg",
   "accent_color": "#FF6F9C",
   "is_premium": false,
+  "show_on_home": true,
+  "home_position": 0,
   "wallpaper_ids": [5, 6, 7, 8, 1, 3]
 }
 ```
   - `wallpaper_ids` là **danh sách có thứ tự** (thứ tự này = thứ tự hiển thị trong bộ), phải trỏ tới wallpaper đã tồn tại.
+  - `show_on_home` (v0.7.0, default `false`) + `home_position` (default `0`) quyết định bộ này có thành **section ở màn Browse** (`GET /home`) và đứng thứ mấy. Bật quá 10 bộ **vẫn hợp lệ** — trần chỉ áp lúc đọc. Hai field này là **input phía admin**, KHÔNG xuất hiện trong response `Collection`.
 - **201**: object `Collection` (chưa nhúng items)
 - **400**: `VALIDATION_ERROR` (thiếu field), `WALLPAPER_NOT_FOUND` (`wallpaper_ids` sai)
 - **409**: `COLLECTION_SLUG_CONFLICT` (slug trùng)
@@ -319,6 +378,7 @@ Format chung:
 ```json
 { "title": "Neon về đêm (2026)", "wallpaper_ids": [8, 5, 7, 6] }
 ```
+- Bật/tắt hoặc đổi chỗ section ở màn Browse (v0.7.0): `{ "show_on_home": true, "home_position": 2 }` — tắt bằng `{ "show_on_home": false }`, bộ sưu tập và trang riêng của nó không bị ảnh hưởng.
 - **200**: object `Collection` sau khi cập nhật
 - **400**: `VALIDATION_ERROR`, `WALLPAPER_NOT_FOUND`
 - **404**: `NOT_FOUND` · **409**: `COLLECTION_SLUG_CONFLICT` (nếu đổi `slug` sang slug đã tồn tại)

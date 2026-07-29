@@ -3,12 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:livecanvas/core/catalog/collection_repository.dart';
 import 'package:livecanvas/core/di/injection.dart';
 import 'package:livecanvas/core/domain/result.dart';
+import 'package:livecanvas/core/favorites/favorites_repository.dart';
 import 'package:livecanvas/core/widgets/wallpaper/wallpaper_tile.dart';
 import 'package:livecanvas/features/collection_detail/presentation/cubit/collection_detail_cubit.dart';
 import 'package:livecanvas/features/collection_detail/presentation/pages/collection_detail_page.dart';
 import 'package:livecanvas/l10n/l10n.dart';
 import 'package:livecanvas_api/livecanvas_api.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../helpers/fake_favorites_repository.dart';
 
 class _MockCollectionRepo extends Mock implements CollectionRepository {}
 
@@ -17,9 +20,11 @@ void main() {
 
   setUp(() {
     repo = _MockCollectionRepo();
-    getIt.registerFactory<CollectionDetailCubit>(
-      () => CollectionDetailCubit(repo),
-    );
+    getIt
+      ..registerFactory<CollectionDetailCubit>(
+        () => CollectionDetailCubit(repo),
+      )
+      ..registerSingleton<FavoritesRepository>(FakeFavoritesRepository());
   });
 
   tearDown(getIt.reset);
@@ -54,7 +59,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('Neon Nights'), findsOneWidget);
-    expect(find.text('Tải tất cả'), findsOneWidget);
+    // Premium collection → single unlock CTA (design: locked state).
+    expect(find.text('Mở khoá bộ sưu tập'), findsOneWidget);
     expect(find.byType(WallpaperTile), findsOneWidget);
   });
 }

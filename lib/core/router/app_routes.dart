@@ -13,6 +13,9 @@ abstract final class AppRoutes {
   static const wallpaperDetail = '/wallpaper/:id';
   static const collectionDetail = '/collection/:id';
 
+  /// Local download history (US4) — pushed over the shell from the You tab.
+  static const downloadHistory = '/download-history';
+
   /// Dev-only widget gallery (FR-006a) — not part of the user-facing flow.
   static const devGallery = '/dev/gallery';
 }

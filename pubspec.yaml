@@ -27,6 +27,10 @@ dependencies:
   # set, Dart 3.x safe via `typedef PhosphorIconData = IconData`. Decision
   # 2026-07-24 (MO-002 research R2).
   phosphoricons_flutter: ^1.0.0
+  # Local, non-sensitive key-value store for favorite IDs + download history
+  # (Principle IX). flutter.dev verified; modern SharedPreferencesAsync API.
+  # MO-004.
+  shared_preferences: ^2.5.5
   shimmer: ^3.0.0
   video_player: ^2.13.0
 dev_dependencies:
@@ -38,6 +42,9 @@ dev_dependencies:
     sdk: flutter
   injectable_generator: ^3.0.2
   mocktail: ^1.0.5
+  # Test-only: install an in-memory SharedPreferencesAsync backend for tests
+  # that build the real DI graph (MO-004 local-data store).
+  shared_preferences_platform_interface: ^2.4.2
   very_good_analysis: ^10.3.0
 
 flutter:

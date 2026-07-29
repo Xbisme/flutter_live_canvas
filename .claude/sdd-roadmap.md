@@ -4,7 +4,7 @@
 >
 > **Vai trò file này**: pure planning cho track mobile. Trạng thái hiện tại → [`project-context.md`](project-context.md). Ship history → [`changelog.md`](changelog.md).
 >
-> Last updated: 2026-07-24 (MO-001 + MO-002 đã MERGE vào `main` qua PR #3 & #5 · contract v0.3.2 — synced từ backend, thêm thẻ ảo "All" ở /tags · backend đã implement BE-003 Core Content API thật · tiếp theo: MO-003)
+> Last updated: 2026-07-26 (MO-001 + MO-002 + MO-003 đã MERGE vào `main` qua PR #3 & #5 & #6 · MO-004 implemented chờ PR · contract **v0.7.0** — synced từ backend BE-008 (đã implement + test xanh; BẮT BUỘC regenerate client) · backend đã merge BE-001→BE-004, BE-005 đang trên branch · tiếp theo: MO-005)
 > Full requirements: `docs/PRD.md` · Nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md)
 
 ---
@@ -54,13 +54,13 @@ Local Data           (Android WallpaperService, iOS
     └───────┬────────┘
             ▼
 MO-006: IAP & Paywall                             ⇄ Điểm đồng bộ: cần repo backend đã
-(in_app_purchase, paywall UI,                          merge BE-004 (verify-receipt thật)
- gọi /iap/verify-receipt, gate                         trước khi merge
+(in_app_purchase, paywall UI,                          merge BE-005 (verify-receipt +
+ gọi /iap/verify-receipt, gate                         entitlement thật) trước khi merge
  nội dung premium theo entitlement)
     │
     ▼
 MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cần repo backend đã
-(App icon, store metadata, TestFlight +                deploy production (BE-006) trước khi
+(App icon, store metadata, TestFlight +                deploy production (BE-007) trước khi
  Internal testing, submit store)                       submit
 ```
 
@@ -101,7 +101,7 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 
 ### MO-003: Wallpaper Browse, Collections & Detail
 
-- **Status**: 🟡 Implemented trên branch `MO-003-wallpaper-browse-detail` (2026-07-24) — 4 US, 51 test + 4 CI gate xanh, verify iOS simulator (build+boot+render qua Prism). Chờ PR/merge. Deviation: state native sealed class + Equatable (KHÔNG freezed — phá lean_builder qua analyzer; đã duyệt). Còn chờ device: profiling (T055), iPad (T056), backend thật (T058), Android build.
+- **Status**: ✅ Merged vào `main` qua PR #6 (2026-07-26) — 4 US, 51 test + 4 CI gate xanh, verify iOS simulator (build+boot+render qua Prism) + nghiệm thu preview/aura Android máy thật (T055 xong). Deviation: state native sealed class + Equatable (KHÔNG freezed — phá lean_builder qua analyzer; đã duyệt). Còn chờ device (không chặn merge): iPad (T056), nghiệm thu backend thật (T058).
 - **Branch**: `MO-003-wallpaper-browse-detail`
 - **Depends on**: MO-002
 - **Scope**: List/grid wallpaper với cursor pagination (`GridView.builder` lazy load, load thêm khi gần cuối scroll, **dispose `VideoPlayerController` ngoài viewport** — Principle II), filter category + tag chips (`GET /tags` — phần tử `[0]` là **thẻ ảo "All"** làm chip mặc định; chọn "All" = list không truyền `tags`), search; **tab "Bộ sưu tập"**: list cover card (`GET /collections`) + màn Collection Detail (`GET /collections/{id}` — items nhúng sẵn, grid, nút "Tải tất cả"/"Mở khoá" theo `is_premium`); màn Wallpaper Detail + preview video full-screen (đọc `wallpaper.collections` để link sang bộ sưu tập).
@@ -109,7 +109,7 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 
 ### MO-004: Favorites & Local Data
 
-- **Status**: ⬜ Not started
+- **Status**: 🟢 Implemented + **nghiệm thu device xong** (37/37 task, 2026-07-29) trên branch `MO-004-favorites-local-data` — chờ PR/merge. 4 US favorites/history (`shared_preferences` ID cục bộ; `core/favorites/` repo `ValueListenable` đồng bộ tim xuyên màn) + **2 bugfix máy thật** (tim đồng bộ, favorites refresh) + **design fidelity pass** (component dùng chung + Detail/Collection/Browse/chrome bám prototype) + **v0.7.0**: regenerate client, **Browse dạng section** (`GET /home`, chip "Tất cả") + mục **"Mô tả"** Detail (`Wallpaper.description`). **91 test** + 4 CI gate xanh. Deviation: state native sealed class + Equatable (đã duyệt); Download History tối giản (chưa có design).
 - **Branch**: `MO-004-favorites-local-data`
 - **Depends on**: MO-003
 - **Scope**: Favorite lưu local (chỉ mảng ID — Principle IX), mỗi lần mở màn gọi `POST /wallpapers/batch` để lấy data mới nhất (không cache full data); reconcile khi ID bị xóa (bỏ favorite, không lỗi); lịch sử tải local.
@@ -126,8 +126,8 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 - **Status**: ⬜ Not started
 - **Branch**: `MO-006-iap-paywall`
 - **Depends on**: MO-004, MO-005
-- **Scope**: `in_app_purchase` integration, paywall UI, gọi `/iap/verify-receipt`, gate nội dung premium theo response entitlement từ backend (**không tự quyết định ở client** — Principle V; entitlement thật ở `download-url`, "Tải tất cả" của bộ premium = lặp gọi download-url); `transaction_id` lưu secure storage, không log.
-- **⚠️ Điểm đồng bộ**: chỉ merge sau khi repo backend xác nhận `BE-004` đã merge và hoạt động thật (không mock).
+- **Scope**: `in_app_purchase` integration, paywall UI, gọi `/iap/verify-receipt`, gate nội dung premium theo response entitlement từ backend (**không tự quyết định ở client** — Principle V; entitlement thật ở `download-url`, "Tải tất cả" của bộ premium = lặp gọi download-url); `transaction_id` lưu secure storage, không log. Từ contract v0.5.0: `transaction_id` phải **gửi kèm mọi `download-url` premium**; giữ nguyên id đã lưu qua các kỳ renewal (entitlement theo original transaction id); coi `in_grace_period` và `auto_renew=false` (còn trong kỳ) là **vẫn còn quyền**; `402 ENTITLEMENT_REQUIRED` → Paywall; refresh trạng thái qua `GET /iap/subscription-status`.
+- **⚠️ Điểm đồng bộ**: chỉ merge sau khi repo backend xác nhận `BE-005` đã merge và hoạt động thật (không mock) — contract v0.5.0 đã sync, backend còn đang trên branch `BE-005-iap-verify-entitlement`.
 
 ### MO-007: Polish & Store Submission
 
@@ -135,4 +135,4 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 - **Branch**: `MO-007-polish-store-submission`
 - **Depends on**: MO-006
 - **Scope**: App icon, store metadata (giải thích rõ flow iOS Shortcuts trong App Review Notes), TestFlight + Internal testing, submit App Store/Play Store — build bằng flavor `production`.
-- **⚠️ Điểm đồng bộ**: chỉ submit sau khi repo backend xác nhận `BE-006` — production đã sẵn sàng.
+- **⚠️ Điểm đồng bộ**: chỉ submit sau khi repo backend xác nhận **`BE-007 Deploy & Launch`** — production đã sẵn sàng. (Trước đây ghi nhầm `BE-006`; BE-006 là Security Hardening, deploy là BE-007.)
