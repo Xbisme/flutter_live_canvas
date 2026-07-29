@@ -60,7 +60,7 @@ MO-006: IAP & Paywall                             ⇄ Điểm đồng bộ: cầ
     │
     ▼
 MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cần repo backend đã
-(App icon, store metadata, TestFlight +                deploy production (BE-006) trước khi
+(App icon, store metadata, TestFlight +                deploy production (BE-007) trước khi
  Internal testing, submit store)                       submit
 ```
 
@@ -135,4 +135,4 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 - **Branch**: `MO-007-polish-store-submission`
 - **Depends on**: MO-006
 - **Scope**: App icon, store metadata (giải thích rõ flow iOS Shortcuts trong App Review Notes), TestFlight + Internal testing, submit App Store/Play Store — build bằng flavor `production`.
-- **⚠️ Điểm đồng bộ**: chỉ submit sau khi repo backend xác nhận `BE-006` — production đã sẵn sàng.
+- **⚠️ Điểm đồng bộ**: chỉ submit sau khi repo backend xác nhận **`BE-007 Deploy & Launch`** — production đã sẵn sàng. (Trước đây ghi nhầm `BE-006`; BE-006 là Security Hardening, deploy là BE-007.)
