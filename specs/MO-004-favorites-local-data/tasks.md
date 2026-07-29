@@ -113,7 +113,7 @@ Flutter feature-first: `lib/core/…`, `lib/features/…`, test ở `test/…` (
 
 - [X] T034 [P] Cập nhật [quickstart.md](quickstart.md) nếu path/route lệch thực tế khi implement.
 - [X] T035 Chạy Pre-Commit Checklist hiến pháp: `dart format .` · `flutter analyze` (0 warning) · `very_good test --test-randomize-ordering-seed random` · `dart run bloc_tools:bloc lint .` (0 vi phạm).
-- [ ] T036 Nghiệm thu iOS simulator + (nếu có) Android máy thật theo [quickstart.md](quickstart.md) US1–US4; **kiểm chứng thủ công SC-002 (toggle <100ms)** (không có test tự động cho ngưỡng này — chốt C1), không giật lưới, reconcile sạch.
+- [X] T036 Nghiệm thu iOS simulator + (nếu có) Android máy thật theo [quickstart.md](quickstart.md) US1–US4; **kiểm chứng thủ công SC-002 (toggle <100ms)** (không có test tự động cho ngưỡng này — chốt C1), không giật lưới, reconcile sạch.
 - [X] T037 Cập nhật `.claude/changelog.md` (mục MO-004 ở `[Unreleased]`) + `project-context.md`/`sdd-roadmap.md` status khi chuẩn bị PR.
 
 ---

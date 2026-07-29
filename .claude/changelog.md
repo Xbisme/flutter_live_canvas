@@ -4,6 +4,29 @@
 
 ## [Unreleased]
 
+- **MO — Browse sections + Mô tả Detail (implement v0.7.0, 2026-07-29)**: sau khi backend ship BE-008, regenerate `packages/livecanvas_api` (thêm `homeGet`, `HomeSection`, `HomeResponse`, `Wallpaper.description`; kèm 3 quote-fix YAML cho description có dấu phẩy trong flow-mapping — `home_position`/admin token — để `openapi-generator` validate được). Dựng:
+  - **`HomeRepository`** (`core/catalog/`, bọc `PublicApi.homeGet` → `Result<List<HomeSection>>`).
+  - **Browse dạng section**: chip **"Tất cả"** → `GET /home` render các **`SectionGrid`** (title Clash 22 + đếm mono + lưới 2 cột, tap title → Collection Detail); chọn **tag cụ thể** → lưới phẳng `GET /wallpapers?tags=` (cursor pagination giữ nguyên). `BrowseState.BrowseLoaded` thêm `sections` + `isSectionsView`; `sections: []` → EmptyState (không phải lỗi). Bỏ ghi chú design-pass "giữ lưới phẳng vì thiếu data".
+  - **Wallpaper Detail — mục "Mô tả"**: hiện `wallpaper.description` (ẩn khi null/rỗng) giữa khối stats và "Hình nền liên quan", bám `SectionLabel` design.
+  - Tests cập nhật: `browse_cubit_test`/`browse_page_test` theo model sections (mock `HomeRepository`). **91 test** + 4 gate xanh.
+
+- **Contract Sync v0.7.0** (2026-07-29, từ `livecanvas-backend` branch `BE-008-mobile-driven-content`):
+  copy nguyên văn `openapi.yaml` (→ `.claude/` + `contracts/`), `api-context.md`, `screen-inventory.md`.
+  **⚠️ KHÁC v0.5.0/v0.6.0: bump này ĐỔI PATH + SCHEMA → BẮT BUỘC chạy `scripts/generate_api.sh`** trước khi code MO tiếp theo.
+  Backend đã **implement xong và test xanh** (237 test, ruff sạch, không migration drift) — không còn là khai báo trước:
+  - **`GET /home` (mới)** — cả màn Browse trong **1 lần gọi**, không phân trang, không query param. Trả `{ "sections": [...] }`; mỗi section = `{ key, title, collection_id, cover_url, accent_color, is_premium, items }`.
+    - `key` = **slug của collection** (định danh ổn định cho analytics/scroll-state; đổi title không đổi key). `collection_id` là target "Xem tất cả" → `GET /collections/{id}` đã có.
+    - **Bounded cứng ≤10 section × ≤10 wallpaper/section** (đã ghi `maxItems` trong contract để client cỡ UI). Trần áp phía server lúc đọc — client không phải tự cắt.
+    - Section rỗng bị **bỏ hẳn** khỏi mảng (không có row tiêu đề trống). Chưa bật gì → `{"sections": []}` + **200**, KHÔNG phải 404 → đừng map thành error state.
+    - Thứ tự **ổn định giữa các request** kể cả khi admin đặt trùng vị trí → cache/scroll-state an toàn.
+    - `items[*]` dùng **đúng schema `Wallpaper`** như `GET /wallpapers` (có test khẳng định key trùng khít) → tái dùng thẳng model + `WallpaperCard` sẵn có, `collections` rỗng như mọi list.
+    - **Không nhận `transaction_id`**, không chứa download URL nào. Section premium vẫn xem thoải mái, chỉ hiện badge — gate vẫn ở `download-url`.
+  - **`Wallpaper.description` nay có giá trị thật** (v0.6.0 mới chỉ khai báo, backend luôn trả `null`). Rỗng/whitespace được backend chuẩn hoá thành `null` → **giữ nguyên logic ẩn mục "Mô tả" bằng null check**, không cần so sánh chuỗi rỗng. Lưu ý: catalog 397 item hiện tại vẫn `null` tới khi admin điền.
+  - `PATCH /admin/wallpapers/{id}` (admin-only, app không gọi) để điền mô tả cho wallpaper cũ.
+  - `GET /collections` **KHÔNG đổi payload** — `show_on_home`/`home_position` chỉ là input phía admin.
+  - **Không error code mới**; client viết theo v0.6.0 vẫn chạy nguyên (backward compatible).
+  - **Việc mobile**: regenerate client → dựng Browse dạng section (bỏ ghi chú "giữ lưới phẳng vì thiếu data" ở design pass MO-004) → bật mục "Mô tả" ở Wallpaper Detail. Đề xuất giữ lưới phẳng `GET /wallpapers?tags=` khi user chọn tag, section chỉ hiện ở chip "Tất cả" (backend không ràng buộc, tuỳ client).
+
 - **Backend trả lời 2 ask (2026-07-27)**: backend gộp cả `Wallpaper.description` lẫn **Browse sections** vào **`BE-008 Mobile-Driven Content`** và **đẩy lên làm spec kế tiếp** (chạy ngay sau BE-005, trước BE-006 Security). Chốt hướng section: **tái dùng `Collection`** (thêm `show_on_home` + `home_position`, KHÔNG resource mới) + endpoint public mới **`GET /home`** trả `{ sections: [{ key, title, collection_id, cover_url, accent_color, is_premium, items: Wallpaper[] }] }`, **không phân trang**, bounded **≤10 wallpaper/section**; "Xem tất cả" → `GET /collections/{id}` đã có. Section chỉ hiện khi chip tag = "Tất cả" (đề xuất, chốt khi backend plan). Sẽ bump **contract v0.7.0** → **lần này BẮT BUỘC regenerate `packages/livecanvas_api`** (đổi schema + path, khác v0.5.0/v0.6.0). Việc mobile khi backend ship: bật mục "Mô tả" ở Detail + dựng Browse dạng section (bỏ giới hạn "giữ lưới phẳng" ghi ở design pass MO-004).
 
 - **Contract v0.6.0 — mobile-driven (2026-07-27)**: design pass MO-004 phát hiện màn Wallpaper Detail cần **`Wallpaper.description`** (mục "Mô tả") mà schema chưa có. Theo Contract Sync (Principle I): sửa `screen-inventory.md` (#7) → `openapi.yaml` (`.claude/` + `contracts/`, thêm `description: string, nullable`, bump `v0.5.0→v0.6.0`) → `api-context.md`; copy verbatim sang repo backend; **báo backend** qua backend `.claude/sdd-roadmap.md` **BE-008** + `project-context.md` (backend chưa implement → trả `null`, client ẩn mục "Mô tả" khi null). Related-wallpapers KHÔNG thêm endpoint (client suy theo `?tags=<tag đầu>`). **Chưa regenerate `packages/livecanvas_api`** cho v0.6.0 — làm khi backend ship `description` thật, rồi bật mục "Mô tả" ở Detail.

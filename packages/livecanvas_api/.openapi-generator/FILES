@@ -6,8 +6,12 @@ build.yaml
 doc/AdminApi.md
 doc/AdminCollectionCreateRequest.md
 doc/AdminCollectionUpdateRequest.md
+doc/AdminLoginRequest.md
+doc/AdminRefreshRequest.md
 doc/AdminTagCreateRequest.md
+doc/AdminTokenResponse.md
 doc/AdminWallpaperCreateRequest.md
+doc/AdminWallpapersIdPatchRequest.md
 doc/AppleServerNotification.md
 doc/Category.md
 doc/Collection.md
@@ -18,6 +22,8 @@ doc/ErrorResponse.md
 doc/ErrorResponseError.md
 doc/GoogleRtdnNotification.md
 doc/GoogleRtdnNotificationMessage.md
+doc/HomeResponse.md
+doc/HomeSection.md
 doc/IAPApi.md
 doc/PresignedUploadRequest.md
 doc/PresignedUploadResponse.md
@@ -41,8 +47,12 @@ lib/src/auth/oauth.dart
 lib/src/deserialize.dart
 lib/src/model/admin_collection_create_request.dart
 lib/src/model/admin_collection_update_request.dart
+lib/src/model/admin_login_request.dart
+lib/src/model/admin_refresh_request.dart
 lib/src/model/admin_tag_create_request.dart
+lib/src/model/admin_token_response.dart
 lib/src/model/admin_wallpaper_create_request.dart
+lib/src/model/admin_wallpapers_id_patch_request.dart
 lib/src/model/apple_server_notification.dart
 lib/src/model/category.dart
 lib/src/model/collection.dart
@@ -53,6 +63,8 @@ lib/src/model/error_response.dart
 lib/src/model/error_response_error.dart
 lib/src/model/google_rtdn_notification.dart
 lib/src/model/google_rtdn_notification_message.dart
+lib/src/model/home_response.dart
+lib/src/model/home_section.dart
 lib/src/model/presigned_upload_request.dart
 lib/src/model/presigned_upload_response.dart
 lib/src/model/subscription_status.dart
@@ -65,8 +77,12 @@ pubspec.yaml
 test/admin_api_test.dart
 test/admin_collection_create_request_test.dart
 test/admin_collection_update_request_test.dart
+test/admin_login_request_test.dart
+test/admin_refresh_request_test.dart
 test/admin_tag_create_request_test.dart
+test/admin_token_response_test.dart
 test/admin_wallpaper_create_request_test.dart
+test/admin_wallpapers_id_patch_request_test.dart
 test/apple_server_notification_test.dart
 test/category_test.dart
 test/collection_detail_test.dart
@@ -77,6 +93,8 @@ test/error_response_error_test.dart
 test/error_response_test.dart
 test/google_rtdn_notification_message_test.dart
 test/google_rtdn_notification_test.dart
+test/home_response_test.dart
+test/home_section_test.dart
 test/iap_api_test.dart
 test/presigned_upload_request_test.dart
 test/presigned_upload_response_test.dart

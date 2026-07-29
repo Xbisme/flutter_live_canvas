@@ -13,6 +13,7 @@ Wallpaper _$WallpaperFromJson(Map<String, dynamic> json) => $checkedCreate(
     final val = Wallpaper(
       id: $checkedConvert('id', (v) => (v as num?)?.toInt()),
       title: $checkedConvert('title', (v) => v as String?),
+      description: $checkedConvert('description', (v) => v as String?),
       category: $checkedConvert(
         'category',
         (v) => v == null ? null : Category.fromJson(v as Map<String, dynamic>),
@@ -76,6 +77,7 @@ Wallpaper _$WallpaperFromJson(Map<String, dynamic> json) => $checkedCreate(
 Map<String, dynamic> _$WallpaperToJson(Wallpaper instance) => <String, dynamic>{
   'id': ?instance.id,
   'title': ?instance.title,
+  'description': ?instance.description,
   'category': ?instance.category?.toJson(),
   'tags': ?instance.tags?.map((e) => e.toJson()).toList(),
   'orientation': ?_$WallpaperOrientationEnumEnumMap[instance.orientation],

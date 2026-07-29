@@ -10,12 +10,13 @@ All URIs are relative to *https://api.example.com/v1*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**categoriesGet**](PublicApi.md#categoriesget) | **GET** /categories | Danh sách category (không phân trang — số lượng nhỏ, admin curate)
-[**collectionsGet**](PublicApi.md#collectionsget) | **GET** /collections | Danh sách bộ sưu tập curated (không phân trang — chỉ meta, không nhúng items)
+[**collectionsGet**](PublicApi.md#collectionsget) | **GET** /collections | Danh sách bộ sưu tập curated (không phân trang — chỉ meta, không nhúng items). v0.7.0 KHÔNG đổi payload này: &#x60;show_on_home&#x60;/&#x60;home_position&#x60; là input phía admin, không xuất hiện ở đây. 
 [**collectionsIdGet**](PublicApi.md#collectionsidget) | **GET** /collections/{id} | Chi tiết 1 bộ sưu tập + danh sách wallpaper thành viên (đúng thứ tự, không phân trang)
+[**homeGet**](PublicApi.md#homeget) | **GET** /home | (v0.7.0) Màn Browse dạng section curated. KHÔNG phân trang, bounded cứng: tối đa 10 section × tối đa 10 wallpaper/section. Trần áp LÚC ĐỌC — admin bật dư thì phần dư bị bỏ qua im lặng (không lỗi, không chặn admin lúc ghi). Section sắp theo &#x60;home_position&#x60; tăng dần, trùng vị trí thì tie-break theo id nên thứ tự ổn định giữa các request. Chỉ chứa wallpaper published; section không còn wallpaper nào hiển thị được thì bị bỏ hẳn khỏi mảng VÀ không chiếm slot (section kế tiếp lấp vào). Chưa bật collection nào → &#x60;sections: []&#x60; + 200 (KHÔNG phải 404). \&quot;Xem tất cả\&quot; của 1 section &#x3D; gọi &#x60;GET /collections/{collection_id}&#x60; đã có. Không nhận và không đọc &#x60;transaction_id&#x60; — premium chỉ hiển thị badge, gate vẫn ở &#x60;download-url&#x60;. 
 [**tagsGet**](PublicApi.md#tagsget) | **GET** /tags | Danh sách tag curated (không phân trang — dùng cho filter chips + admin chọn)
 [**wallpapersBatchPost**](PublicApi.md#wallpapersbatchpost) | **POST** /wallpapers/batch | Lấy lại data mới nhất cho nhiều wallpaper theo ID (dùng cho màn Favorites)
 [**wallpapersGet**](PublicApi.md#wallpapersget) | **GET** /wallpapers | Danh sách wallpaper — cursor pagination, filter category/tags/orientation/search
-[**wallpapersIdDownloadUrlGet**](PublicApi.md#wallpapersiddownloadurlget) | **GET** /wallpapers/{id}/download-url | 
+[**wallpapersIdDownloadUrlGet**](PublicApi.md#wallpapersiddownloadurlget) | **GET** /wallpapers/{id}/download-url | Presigned URL thật — hết hạn ≤5 phút, chỉ 1 object. Domain là S3/R2 endpoint, KHÁC domain CDN của thumbnail/preview. Free → 200 luôn. Premium (v0.5.0): cần &#x60;transaction_id&#x60; resolve tới entitlement đang active/in_grace_period → 200; thiếu/hết hạn/không entitled → 402. Wallpaper processing/failed/đã xóa → 404 (đánh giá trước gate entitlement). 
 [**wallpapersIdGet**](PublicApi.md#wallpapersidget) | **GET** /wallpapers/{id} | 
 
 
@@ -63,7 +64,7 @@ This endpoint does not need any parameter.
 # **collectionsGet**
 > List<Collection> collectionsGet()
 
-Danh sách bộ sưu tập curated (không phân trang — chỉ meta, không nhúng items)
+Danh sách bộ sưu tập curated (không phân trang — chỉ meta, không nhúng items). v0.7.0 KHÔNG đổi payload này: `show_on_home`/`home_position` là input phía admin, không xuất hiện ở đây. 
 
 ### Example
 ```dart
@@ -134,6 +135,47 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**CollectionDetail**](CollectionDetail.md)
+
+### Authorization
+
+[AppApiKey](../README.md#AppApiKey)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **homeGet**
+> HomeResponse homeGet()
+
+(v0.7.0) Màn Browse dạng section curated. KHÔNG phân trang, bounded cứng: tối đa 10 section × tối đa 10 wallpaper/section. Trần áp LÚC ĐỌC — admin bật dư thì phần dư bị bỏ qua im lặng (không lỗi, không chặn admin lúc ghi). Section sắp theo `home_position` tăng dần, trùng vị trí thì tie-break theo id nên thứ tự ổn định giữa các request. Chỉ chứa wallpaper published; section không còn wallpaper nào hiển thị được thì bị bỏ hẳn khỏi mảng VÀ không chiếm slot (section kế tiếp lấp vào). Chưa bật collection nào → `sections: []` + 200 (KHÔNG phải 404). \"Xem tất cả\" của 1 section = gọi `GET /collections/{collection_id}` đã có. Không nhận và không đọc `transaction_id` — premium chỉ hiển thị badge, gate vẫn ở `download-url`. 
+
+### Example
+```dart
+import 'package:livecanvas_api/api.dart';
+// TODO Configure API key authorization: AppApiKey
+//defaultApiClient.getAuthentication<ApiKeyAuth>('AppApiKey').apiKey = 'YOUR_API_KEY';
+// uncomment below to setup prefix (e.g. Bearer) for API key, if needed
+//defaultApiClient.getAuthentication<ApiKeyAuth>('AppApiKey').apiKeyPrefix = 'Bearer';
+
+final api = LivecanvasApi().getPublicApi();
+
+try {
+    final response = api.homeGet();
+    print(response);
+} catch on DioException (e) {
+    print('Exception when calling PublicApi->homeGet: $e\n');
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**HomeResponse**](HomeResponse.md)
 
 ### Authorization
 
@@ -294,7 +336,7 @@ Name | Type | Description  | Notes
 # **wallpapersIdDownloadUrlGet**
 > DownloadUrlResponse wallpapersIdDownloadUrlGet(id, transactionId)
 
-
+Presigned URL thật — hết hạn ≤5 phút, chỉ 1 object. Domain là S3/R2 endpoint, KHÁC domain CDN của thumbnail/preview. Free → 200 luôn. Premium (v0.5.0): cần `transaction_id` resolve tới entitlement đang active/in_grace_period → 200; thiếu/hết hạn/không entitled → 402. Wallpaper processing/failed/đã xóa → 404 (đánh giá trước gate entitlement). 
 
 ### Example
 ```dart
@@ -306,7 +348,7 @@ import 'package:livecanvas_api/api.dart';
 
 final api = LivecanvasApi().getPublicApi();
 final int id = 56; // int | 
-final String transactionId = transactionId_example; // String | Bắt buộc nếu wallpaper.is_premium = true
+final String transactionId = transactionId_example; // String | Bắt buộc nếu wallpaper.is_premium = true (bỏ qua nếu free)
 
 try {
     final response = api.wallpapersIdDownloadUrlGet(id, transactionId);
@@ -321,7 +363,7 @@ try {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **id** | **int**|  | 
- **transactionId** | **String**| Bắt buộc nếu wallpaper.is_premium = true | [optional] 
+ **transactionId** | **String**| Bắt buộc nếu wallpaper.is_premium = true (bỏ qua nếu free) | [optional] 
 
 ### Return type
 

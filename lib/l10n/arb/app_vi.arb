@@ -76,6 +76,8 @@
     "@detailStatLikes": { "description": "Nhãn thống kê số lượt thích" },
     "detailStatResolution": "Độ phân giải",
     "@detailStatResolution": { "description": "Nhãn thống kê độ phân giải" },
+    "detailDescription": "Mô tả",
+    "@detailDescription": { "description": "Tiêu đề mục mô tả ở Detail" },
     "detailRelated": "Hình nền liên quan",
     "@detailRelated": { "description": "Tiêu đề mục hình nền liên quan ở Detail" },
     "collectionDownloadAll": "Tải tất cả",

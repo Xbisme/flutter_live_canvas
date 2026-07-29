@@ -10,6 +10,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **int** |  | [optional] 
 **title** | **String** |  | [optional] 
+**description** | **String** | (v0.6.0) Mô tả ngắn của wallpaper — hiển thị ở mục \"Mô tả\" màn Wallpaper Detail. Nullable; BACKEND CHƯA IMPLEMENT (trả null tới khi ship — xem info.description v0.6.0). Client ẩn mục khi null.  | [optional] 
 **category** | [**Category**](Category.md) |  | [optional] 
 **tags** | [**List&lt;Tag&gt;**](Tag.md) |  | [optional] 
 **orientation** | **String** |  | [optional] 

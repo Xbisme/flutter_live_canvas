@@ -14,6 +14,7 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:livecanvas/core/catalog/catalog_module.dart' as _i479;
 import 'package:livecanvas/core/catalog/collection_repository.dart' as _i218;
+import 'package:livecanvas/core/catalog/home_repository.dart' as _i546;
 import 'package:livecanvas/core/catalog/tag_repository.dart' as _i836;
 import 'package:livecanvas/core/catalog/wallpaper_repository.dart' as _i141;
 import 'package:livecanvas/core/config/app_config.dart' as _i950;
@@ -73,6 +74,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1046.PublicApi>(
       () => catalogModule.publicApi(gh<_i361.Dio>()),
     );
+    gh.lazySingleton<_i546.HomeRepository>(
+      () => _i546.HomeRepositoryImpl(gh<_i1046.PublicApi>()),
+    );
     gh.lazySingleton<_i218.CollectionRepository>(
       () => _i218.CollectionRepositoryImpl(gh<_i1046.PublicApi>()),
     );
@@ -86,6 +90,13 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i677.FavoritesCubit(
         gh<_i141.WallpaperRepository>(),
         gh<_i113.FavoritesRepository>(),
+      ),
+    );
+    gh.factory<_i124.BrowseCubit>(
+      () => _i124.BrowseCubit(
+        gh<_i141.WallpaperRepository>(),
+        gh<_i836.TagRepository>(),
+        gh<_i546.HomeRepository>(),
       ),
     );
     gh.factory<_i343.DownloadHistoryCubit>(
@@ -105,12 +116,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i1059.CollectionsCubit>(
       () => _i1059.CollectionsCubit(gh<_i218.CollectionRepository>()),
-    );
-    gh.factory<_i124.BrowseCubit>(
-      () => _i124.BrowseCubit(
-        gh<_i141.WallpaperRepository>(),
-        gh<_i836.TagRepository>(),
-      ),
     );
     return this;
   }

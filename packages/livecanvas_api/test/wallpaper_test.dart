@@ -17,6 +17,12 @@ void main() {
       // TODO
     });
 
+    // (v0.6.0) Mô tả ngắn của wallpaper — hiển thị ở mục \"Mô tả\" màn Wallpaper Detail. Nullable; BACKEND CHƯA IMPLEMENT (trả null tới khi ship — xem info.description v0.6.0). Client ẩn mục khi null.
+    // String description
+    test('to test the property `description`', () async {
+      // TODO
+    });
+
     // Category category
     test('to test the property `category`', () async {
       // TODO

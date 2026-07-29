@@ -303,6 +303,19 @@ class _Sheet extends StatelessWidget {
           _Actions(wallpaper: w),
           const SizedBox(height: AppSpacing.sp5),
           _Stats(wallpaper: w),
+          if ((w.description ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sp6),
+            _SectionLabel(text: context.l10n.detailDescription),
+            const SizedBox(height: AppSpacing.sp3),
+            Text(
+              w.description!.trim(),
+              style: AppTypography.bodyText.copyWith(
+                fontSize: 14,
+                height: 1.6,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
           if (related.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.sp6),
             _SectionLabel(text: context.l10n.detailRelated),

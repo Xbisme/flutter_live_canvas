@@ -30,6 +30,10 @@ class AdminCollectionUpdateRequest {
 
     this.isPremium,
 
+    this.showOnHome,
+
+    this.homePosition,
+
     this.wallpaperIds,
   });
 
@@ -54,6 +58,15 @@ class AdminCollectionUpdateRequest {
   @JsonKey(name: r'is_premium', required: false, includeIfNull: false)
   final bool? isPremium;
 
+  /// (v0.7.0) Bật/tắt section ở màn Browse
+  @JsonKey(name: r'show_on_home', required: false, includeIfNull: false)
+  final bool? showOnHome;
+
+  /// (v0.7.0) Vị trí section, tăng dần
+  // minimum: 0
+  @JsonKey(name: r'home_position', required: false, includeIfNull: false)
+  final int? homePosition;
+
   @JsonKey(name: r'wallpaper_ids', required: false, includeIfNull: false)
   final List<int>? wallpaperIds;
 
@@ -68,6 +81,8 @@ class AdminCollectionUpdateRequest {
           other.coverUploadKey == coverUploadKey &&
           other.accentColor == accentColor &&
           other.isPremium == isPremium &&
+          other.showOnHome == showOnHome &&
+          other.homePosition == homePosition &&
           other.wallpaperIds == wallpaperIds;
 
   @override
@@ -79,6 +94,8 @@ class AdminCollectionUpdateRequest {
       coverUploadKey.hashCode +
       (accentColor == null ? 0 : accentColor.hashCode) +
       isPremium.hashCode +
+      showOnHome.hashCode +
+      homePosition.hashCode +
       wallpaperIds.hashCode;
 
   factory AdminCollectionUpdateRequest.fromJson(Map<String, dynamic> json) =>

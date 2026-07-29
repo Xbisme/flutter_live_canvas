@@ -4,7 +4,7 @@
 >
 > **Vai trò file này**: pure planning cho track mobile. Trạng thái hiện tại → [`project-context.md`](project-context.md). Ship history → [`changelog.md`](changelog.md).
 >
-> Last updated: 2026-07-26 (MO-001 + MO-002 + MO-003 đã MERGE vào `main` qua PR #3 & #5 & #6 · MO-004 implemented chờ PR · contract **v0.5.0** — synced từ backend BE-005 · backend đã merge BE-001→BE-004, BE-005 đang trên branch · tiếp theo: MO-005)
+> Last updated: 2026-07-26 (MO-001 + MO-002 + MO-003 đã MERGE vào `main` qua PR #3 & #5 & #6 · MO-004 implemented chờ PR · contract **v0.7.0** — synced từ backend BE-008 (đã implement + test xanh; BẮT BUỘC regenerate client) · backend đã merge BE-001→BE-004, BE-005 đang trên branch · tiếp theo: MO-005)
 > Full requirements: `docs/PRD.md` · Nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md)
 
 ---
@@ -109,7 +109,7 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 
 ### MO-004: Favorites & Local Data
 
-- **Status**: 🟡 Implemented trên branch `MO-004-favorites-local-data` (2026-07-26) — 4 US, 36 test mới (tổng 87) + 4 CI gate xanh. `shared_preferences` cho ID cục bộ; tầng `core/favorites/` dùng chung (repo stream đồng bộ tim xuyên màn). Chờ PR/merge. Deviation: màn Download History tối giản (chưa có design). Còn chờ device: nghiệm thu US1–US4 + SC-002 (<100ms) thủ công (T036).
+- **Status**: 🟢 Implemented + **nghiệm thu device xong** (37/37 task, 2026-07-29) trên branch `MO-004-favorites-local-data` — chờ PR/merge. 4 US favorites/history (`shared_preferences` ID cục bộ; `core/favorites/` repo `ValueListenable` đồng bộ tim xuyên màn) + **2 bugfix máy thật** (tim đồng bộ, favorites refresh) + **design fidelity pass** (component dùng chung + Detail/Collection/Browse/chrome bám prototype) + **v0.7.0**: regenerate client, **Browse dạng section** (`GET /home`, chip "Tất cả") + mục **"Mô tả"** Detail (`Wallpaper.description`). **91 test** + 4 CI gate xanh. Deviation: state native sealed class + Equatable (đã duyệt); Download History tối giản (chưa có design).
 - **Branch**: `MO-004-favorites-local-data`
 - **Depends on**: MO-003
 - **Scope**: Favorite lưu local (chỉ mảng ID — Principle IX), mỗi lần mở màn gọi `POST /wallpapers/batch` để lấy data mới nhất (không cache full data); reconcile khi ID bị xóa (bỏ favorite, không lỗi); lịch sử tải local.

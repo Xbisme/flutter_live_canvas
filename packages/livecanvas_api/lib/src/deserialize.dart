@@ -1,7 +1,11 @@
 import 'package:livecanvas_api/src/model/admin_collection_create_request.dart';
 import 'package:livecanvas_api/src/model/admin_collection_update_request.dart';
+import 'package:livecanvas_api/src/model/admin_login_request.dart';
+import 'package:livecanvas_api/src/model/admin_refresh_request.dart';
 import 'package:livecanvas_api/src/model/admin_tag_create_request.dart';
+import 'package:livecanvas_api/src/model/admin_token_response.dart';
 import 'package:livecanvas_api/src/model/admin_wallpaper_create_request.dart';
+import 'package:livecanvas_api/src/model/admin_wallpapers_id_patch_request.dart';
 import 'package:livecanvas_api/src/model/apple_server_notification.dart';
 import 'package:livecanvas_api/src/model/category.dart';
 import 'package:livecanvas_api/src/model/collection.dart';
@@ -12,6 +16,8 @@ import 'package:livecanvas_api/src/model/error_response.dart';
 import 'package:livecanvas_api/src/model/error_response_error.dart';
 import 'package:livecanvas_api/src/model/google_rtdn_notification.dart';
 import 'package:livecanvas_api/src/model/google_rtdn_notification_message.dart';
+import 'package:livecanvas_api/src/model/home_response.dart';
+import 'package:livecanvas_api/src/model/home_section.dart';
 import 'package:livecanvas_api/src/model/presigned_upload_request.dart';
 import 'package:livecanvas_api/src/model/presigned_upload_response.dart';
 import 'package:livecanvas_api/src/model/subscription_status.dart';
@@ -53,11 +59,25 @@ ReturnType deserialize<ReturnType, BaseType>(
             value as Map<String, dynamic>,
           )
           as ReturnType;
+    case 'AdminLoginRequest':
+      return AdminLoginRequest.fromJson(value as Map<String, dynamic>)
+          as ReturnType;
+    case 'AdminRefreshRequest':
+      return AdminRefreshRequest.fromJson(value as Map<String, dynamic>)
+          as ReturnType;
     case 'AdminTagCreateRequest':
       return AdminTagCreateRequest.fromJson(value as Map<String, dynamic>)
           as ReturnType;
+    case 'AdminTokenResponse':
+      return AdminTokenResponse.fromJson(value as Map<String, dynamic>)
+          as ReturnType;
     case 'AdminWallpaperCreateRequest':
       return AdminWallpaperCreateRequest.fromJson(value as Map<String, dynamic>)
+          as ReturnType;
+    case 'AdminWallpapersIdPatchRequest':
+      return AdminWallpapersIdPatchRequest.fromJson(
+            value as Map<String, dynamic>,
+          )
           as ReturnType;
     case 'AppleServerNotification':
       return AppleServerNotification.fromJson(value as Map<String, dynamic>)
@@ -89,6 +109,10 @@ ReturnType deserialize<ReturnType, BaseType>(
             value as Map<String, dynamic>,
           )
           as ReturnType;
+    case 'HomeResponse':
+      return HomeResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+    case 'HomeSection':
+      return HomeSection.fromJson(value as Map<String, dynamic>) as ReturnType;
     case 'PresignedUploadRequest':
       return PresignedUploadRequest.fromJson(value as Map<String, dynamic>)
           as ReturnType;

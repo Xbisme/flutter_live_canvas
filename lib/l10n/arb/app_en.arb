@@ -76,6 +76,8 @@
     "@detailStatLikes": { "description": "Likes stat label" },
     "detailStatResolution": "Resolution",
     "@detailStatResolution": { "description": "Resolution stat label" },
+    "detailDescription": "Description",
+    "@detailDescription": { "description": "Description section title on Detail" },
     "detailRelated": "Related wallpapers",
     "@detailRelated": { "description": "Related wallpapers section title on Detail" },
     "collectionDownloadAll": "Download all",

@@ -18,6 +18,8 @@ class AdminWallpaperCreateRequest {
   AdminWallpaperCreateRequest({
     required this.title,
 
+    this.description,
+
     required this.categoryId,
 
     this.tagIds,
@@ -35,6 +37,10 @@ class AdminWallpaperCreateRequest {
 
   @JsonKey(name: r'title', required: true, includeIfNull: false)
   final String title;
+
+  /// (v0.7.0) Mô tả ngắn, optional. Chuỗi rỗng hoặc toàn khoảng trắng được chuẩn hoá thành `null` để client ẩn mục \"Mô tả\" chỉ bằng phép kiểm tra null.
+  @JsonKey(name: r'description', required: false, includeIfNull: false)
+  final String? description;
 
   @JsonKey(name: r'category_id', required: true, includeIfNull: false)
   final int categoryId;
@@ -68,6 +74,7 @@ class AdminWallpaperCreateRequest {
       identical(this, other) ||
       other is AdminWallpaperCreateRequest &&
           other.title == title &&
+          other.description == description &&
           other.categoryId == categoryId &&
           other.tagIds == tagIds &&
           other.orientation == orientation &&
@@ -79,6 +86,7 @@ class AdminWallpaperCreateRequest {
   @override
   int get hashCode =>
       title.hashCode +
+      (description == null ? 0 : description.hashCode) +
       categoryId.hashCode +
       tagIds.hashCode +
       orientation.hashCode +

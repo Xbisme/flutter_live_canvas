@@ -43,6 +43,18 @@ void main() {
       // TODO
     });
 
+    // (v0.7.0) Bật/tắt section ở màn Browse
+    // bool showOnHome
+    test('to test the property `showOnHome`', () async {
+      // TODO
+    });
+
+    // (v0.7.0) Vị trí section, tăng dần
+    // int homePosition
+    test('to test the property `homePosition`', () async {
+      // TODO
+    });
+
     // List<int> wallpaperIds
     test('to test the property `wallpaperIds`', () async {
       // TODO

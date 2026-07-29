@@ -13,6 +13,12 @@ void main() {
       // TODO
     });
 
+    // (v0.7.0) Mô tả ngắn, optional. Chuỗi rỗng hoặc toàn khoảng trắng được chuẩn hoá thành `null` để client ẩn mục \"Mô tả\" chỉ bằng phép kiểm tra null.
+    // String description
+    test('to test the property `description`', () async {
+      // TODO
+    });
+
     // int categoryId
     test('to test the property `categoryId`', () async {
       // TODO

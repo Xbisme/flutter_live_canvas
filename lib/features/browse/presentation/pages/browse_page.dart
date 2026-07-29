@@ -8,15 +8,18 @@ import 'package:livecanvas/core/router/app_routes.dart';
 import 'package:livecanvas/core/theme/app_colors.dart';
 import 'package:livecanvas/core/theme/app_icons.dart';
 import 'package:livecanvas/core/theme/app_spacing.dart';
+import 'package:livecanvas/core/theme/app_typography.dart';
 import 'package:livecanvas/core/widgets/feedback/empty_state.dart';
 import 'package:livecanvas/core/widgets/feedback/failure_view.dart';
 import 'package:livecanvas/core/widgets/feedback/skeleton/wallpaper_grid_skeleton.dart';
 import 'package:livecanvas/core/widgets/navigation/top_bar.dart';
+import 'package:livecanvas/core/widgets/wallpaper/favoritable_wallpaper_tile.dart';
 import 'package:livecanvas/features/browse/presentation/cubit/browse_cubit.dart';
 import 'package:livecanvas/features/browse/presentation/cubit/browse_state.dart';
 import 'package:livecanvas/features/browse/presentation/widgets/tag_filter_bar.dart';
 import 'package:livecanvas/features/browse/presentation/widgets/wallpaper_grid.dart';
 import 'package:livecanvas/l10n/l10n.dart';
+import 'package:livecanvas_api/livecanvas_api.dart';
 
 /// Browse tab (US1): the live wallpaper grid with tag filtering, cursor
 /// pagination, pull-to-refresh, and state-driven skeleton shimmer.
@@ -100,14 +103,19 @@ class _GridArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.isReloading) return const WallpaperGridSkeleton();
-    if (state.items.isEmpty) {
-      final l10n = context.l10n;
-      return EmptyState(
-        icon: AppIcons.imageSquare,
-        title: l10n.browseEmptyTitle,
-        message: l10n.browseEmptyMessage,
+
+    // "Tất cả" → curated sections; a specific tag → the flat grid.
+    if (state.isSectionsView) {
+      if (state.sections.isEmpty) return const _Empty();
+      return RefreshIndicator(
+        onRefresh: cubit.refresh,
+        color: AppColors.accent,
+        backgroundColor: AppColors.bgSurface,
+        child: _SectionsList(sections: state.sections),
       );
     }
+
+    if (state.items.isEmpty) return const _Empty();
     return RefreshIndicator(
       onRefresh: cubit.refresh,
       color: AppColors.accent,
@@ -120,6 +128,129 @@ class _GridArea extends StatelessWidget {
         onLoadMore: cubit.loadMore,
         onTap: (wallpaper) => context.push('/wallpaper/${wallpaper.id}'),
       ),
+    );
+  }
+}
+
+class _Empty extends StatelessWidget {
+  const _Empty();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return EmptyState(
+      icon: AppIcons.imageSquare,
+      title: l10n.browseEmptyTitle,
+      message: l10n.browseEmptyMessage,
+    );
+  }
+}
+
+/// The curated Browse: a scroll of titled sections (handoff `SectionGrid`).
+class _SectionsList extends StatelessWidget {
+  const _SectionsList({required this.sections});
+
+  final List<HomeSection> sections;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sp6),
+      itemCount: sections.length,
+      itemBuilder: (context, index) => _SectionGrid(section: sections[index]),
+    );
+  }
+}
+
+class _SectionGrid extends StatelessWidget {
+  const _SectionGrid({required this.section});
+
+  final HomeSection section;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = section.items;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.gutter,
+        0,
+        AppSpacing.gutter,
+        AppSpacing.sp6 + 2,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () =>
+                      context.push('/collection/${section.collectionId}'),
+                  child: Text(
+                    section.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.h1.copyWith(
+                      fontSize: 22,
+                      fontWeight: AppTypography.medium,
+                      letterSpacing: -0.44,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sp2),
+              Text(
+                '${items.length}',
+                style: AppTypography.monoMeta.copyWith(fontSize: 11),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sp3),
+          _SectionItems(items: items),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionItems extends StatelessWidget {
+  const _SectionItems({required this.items});
+
+  final List<Wallpaper> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const columns = 2;
+        final columnWidth =
+            (constraints.maxWidth - AppSpacing.gridGap * (columns - 1)) /
+            columns;
+        final cellHeight = columnWidth / AppSpacing.wallRatio;
+        return GridView.builder(
+          padding: EdgeInsets.zero,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: AppSpacing.gridGap,
+            mainAxisSpacing: AppSpacing.gridGap,
+            childAspectRatio: columnWidth / cellHeight,
+          ),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final wallpaper = items[index];
+            return RepaintBoundary(
+              child: FavoritableWallpaperTile(
+                wallpaper: wallpaper,
+                onTap: () => context.push('/wallpaper/${wallpaper.id}'),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

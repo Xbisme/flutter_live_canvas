@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:livecanvas/core/catalog/home_repository.dart';
 import 'package:livecanvas/core/catalog/tag_repository.dart';
 import 'package:livecanvas/core/catalog/wallpaper_repository.dart';
 import 'package:livecanvas/core/di/injection.dart';
@@ -10,9 +11,9 @@ import 'package:livecanvas/core/widgets/feedback/empty_state.dart';
 import 'package:livecanvas/core/widgets/feedback/failure_view.dart';
 import 'package:livecanvas/core/widgets/feedback/skeleton/shimmer_box.dart';
 import 'package:livecanvas/core/widgets/feedback/skeleton/wallpaper_grid_skeleton.dart';
+import 'package:livecanvas/core/widgets/wallpaper/wallpaper_tile.dart';
 import 'package:livecanvas/features/browse/presentation/cubit/browse_cubit.dart';
 import 'package:livecanvas/features/browse/presentation/pages/browse_page.dart';
-import 'package:livecanvas/features/browse/presentation/widgets/wallpaper_grid.dart';
 import 'package:livecanvas/l10n/l10n.dart';
 import 'package:livecanvas_api/livecanvas_api.dart';
 import 'package:mocktail/mocktail.dart';
@@ -23,32 +24,39 @@ class _MockWallpaperRepo extends Mock implements WallpaperRepository {}
 
 class _MockTagRepo extends Mock implements TagRepository {}
 
+class _MockHomeRepo extends Mock implements HomeRepository {}
+
+HomeSection _section(List<Wallpaper> items) => HomeSection(
+  key: 'sec',
+  title: 'Section',
+  collectionId: 1,
+  isPremium: false,
+  items: items,
+);
+
 void main() {
   late _MockWallpaperRepo wallpapers;
   late _MockTagRepo tags;
+  late _MockHomeRepo home;
 
   setUp(() {
     wallpapers = _MockWallpaperRepo();
     tags = _MockTagRepo();
+    home = _MockHomeRepo();
     when(() => tags.list()).thenAnswer(
       (_) async => Ok([Tag(id: 0, slug: 'all', name: 'All')]),
     );
     getIt
-      ..registerFactory<BrowseCubit>(() => BrowseCubit(wallpapers, tags))
+      ..registerFactory<BrowseCubit>(
+        () => BrowseCubit(wallpapers, tags, home),
+      )
       ..registerSingleton<FavoritesRepository>(FakeFavoritesRepository());
   });
 
   tearDown(getIt.reset);
 
-  void stub(Result<WallpaperCursorPage> result) {
-    when(
-      () => wallpapers.list(
-        cursor: any(named: 'cursor'),
-        limit: any(named: 'limit'),
-        tags: any(named: 'tags'),
-        search: any(named: 'search'),
-      ),
-    ).thenAnswer((_) async => result);
+  void stubHome(Result<List<HomeSection>> result) {
+    when(() => home.sections()).thenAnswer((_) async => result);
   }
 
   Widget app() => const MaterialApp(
@@ -58,10 +66,14 @@ void main() {
     home: BrowsePage(),
   );
 
-  testWidgets('shows skeleton while loading, then the grid when loaded '
+  testWidgets('shows skeleton while loading, then curated sections '
       '(shimmer stops on state, not a timer)', (tester) async {
-    stub(
-      Ok(WallpaperCursorPage(items: [Wallpaper(id: 1, title: 'a')])),
+    await tester.binding.setSurfaceSize(const Size(400, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    stubHome(
+      Ok([
+        _section([Wallpaper(id: 1, title: 'a')]),
+      ]),
     );
 
     await tester.pumpWidget(app());
@@ -69,16 +81,17 @@ void main() {
     expect(find.byType(WallpaperGridSkeleton), findsOneWidget);
     expect(find.byType(ShimmerBox), findsWidgets);
 
-    // Let load() complete — the skeleton is replaced immediately.
+    // Let load() complete — the skeleton is replaced by the sections.
     await tester.pump();
     await tester.pump();
 
     expect(find.byType(WallpaperGridSkeleton), findsNothing);
-    expect(find.byType(WallpaperGrid), findsOneWidget);
+    expect(find.text('Section'), findsOneWidget);
+    expect(find.byType(WallpaperTile), findsOneWidget);
   });
 
   testWidgets('shows a retryable FailureView on error', (tester) async {
-    stub(const Err(NetworkFailure()));
+    stubHome(const Err(NetworkFailure()));
 
     await tester.pumpWidget(app());
     await tester.pump();
@@ -86,21 +99,14 @@ void main() {
 
     expect(find.byType(FailureView), findsOneWidget);
 
-    // Retrying calls the repository again.
+    // Retrying reloads the home sections.
     await tester.tap(find.text('Thử lại'));
     await tester.pump();
-    verify(
-      () => wallpapers.list(
-        cursor: any(named: 'cursor'),
-        limit: any(named: 'limit'),
-        tags: any(named: 'tags'),
-        search: any(named: 'search'),
-      ),
-    ).called(2);
+    verify(() => home.sections()).called(2);
   });
 
-  testWidgets('shows EmptyState when the grid has no items', (tester) async {
-    stub(Ok(WallpaperCursorPage(items: const [])));
+  testWidgets('shows EmptyState when nothing is curated', (tester) async {
+    stubHome(const Ok(<HomeSection>[]));
 
     await tester.pumpWidget(app());
     await tester.pump();
