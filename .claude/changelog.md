@@ -4,9 +4,48 @@
 
 ## [Unreleased]
 
-- **Contract Sync v0.7.1** (2026-07-29, từ backend `BE-008-mobile-driven-content`): **KHÔNG cần regenerate client, không ảnh hưởng app.** Chỉ sửa mô tả contract cho khớp hành vi có sẵn: `/admin/wallpapers` (POST/GET/PATCH) từ BE-004 tới nay khai response `Wallpaper` (18 field) nhưng backend luôn trả **20** (thêm `status` + `failure_reason`). Nay khai đúng bằng `AdminWallpaper` (`allOf`) + `AdminWallpaperCursorPage`. **Không đổi phía server, không chạm endpoint app tier nào** — app không gọi `/admin/*`. Đã copy verbatim `openapi.yaml` (`.claude/` + `contracts/`) + `api-context.md`; `screen-inventory.md` không đổi.
+- **MO-005 — Set Wallpaper Native Integration** (implemented 2026-08-09, branch `MO-005-set-wallpaper-native`, **38/46 task — 8 task còn lại đều là nghiệm thu trên máy thật**):
+  4 user story trên nền tảng thật. **Spec đầu tiên của dự án viết code native ngoài scaffold.**
+  **US1 Android** (Kotlin `LiveCanvasWallpaperService` + `MediaPlayer` trên `SurfaceHolder`, intent `ACTION_CHANGE_LIVE_WALLPAPER` mở màn xem trước hệ thống),
+  **US2 iOS** (Swift `PHPhotoLibrary` add-only, lưu **video gốc nguyên trạng** + 3 bước hướng dẫn Shortcuts),
+  **US3** nối **điểm ghi lịch sử tải thật** mà MO-004 để treo,
+  **US4** chặn premium `402` → thông báo + Paywall bản tạm.
+  Nền mới: `lib/core/wallpaper/` (`WallpaperFile`, `DownloadProgress`, `WallpaperDownloadRepository`, `WallpaperPlatformService`, `SetWallpaperUseCase`) + `lib/core/constants/channel_methods.dart` (Principle VIII) + `features/set_wallpaper/` (sheet bám `SetWallpaper.jsx`) + `features/paywall/` (bản tạm) + `AppRoutes.paywall`.
+  `failure_l10n` lần đầu **thực sự sinh ra** `DownloadFailedFailure`/`FileWriteFailedFailure`/`WallpaperSetFailedFailure`/`PlatformUnsupportedFailure` (khai từ MO-003, trước đó gộp vào `failureUnknown`).
+  **157 test** (91 → 157, **+66**) + 4 CI gate xanh + build xanh cả Android APK lẫn iOS.
+  Dep mới duy nhất: **`path_provider ^2.1.6`** (flutter.dev verified) — lưu Photos iOS viết Swift thuần thay vì thêm `gal` (research R3).
+  - **4 lỗi bắt được trong lúc implement, đều là loại chỉ lộ ra trên máy thật**:
+    - **DI tự nối nhầm Dio mang `X-App-Key`**: `injectable` thấy tham số `{Dio? fileDio}` nên inject `gh<Dio>()` — đúng client Dio có interceptor app-key, mà liên kết tải trỏ host S3/R2. Sửa: constructor DI tự dựng Dio trần, seam test tách sang constructor `.withDio`. Có **test đọc `injection.config.dart`** khoá lại đúng lỗi này.
+    - **Android 11+ package visibility**: thiếu `<queries>` cho `CHANGE_LIVE_WALLPAPER` thì `resolveActivity` trả null trên mọi máy đời mới → `isLiveWallpaperSupported()` luôn false → FR-017 "thiết bị không hỗ trợ" bắn cho tất cả mọi người.
+    - **iOS chưa từng lưu vào Ảnh**: nút "Lưu video vào Ảnh" chỉ tải file rồi hiện hướng dẫn Shortcuts — `saveToPhotos` không bao giờ được gọi, người dùng không có gì để chọn trong Phím tắt. Sửa: `BlocListener` nối tải → lưu, và `_DoneBody` của iOS chỉ hiện ở `LoadedApplied`.
+    - **Vuốt đóng sheet để lại file rác**: `cancel()` có dọn `.part` nhưng đường vuốt đóng không đi qua `cancel()` — nay `close()` dọn luôn (đây chính là phát hiện G1 của `/speckit-analyze`).
+  - **4 lỗi nữa lộ ra khi build thật 2 nền tảng** (vòng sau, trước khi bàn giao để test máy):
+    - **Nút "Mở Shortcuts" không bao giờ chạy được**: code gọi channel `plugins.flutter.io/url_launcher` mà **`url_launcher` không hề có trong dependencies** → luôn `MissingPluginException` → luôn hiện "không mở được app Phím tắt". Sửa: thêm method `openShortcuts` vào **channel của chính app** (Swift `UIApplication.open`), không thêm dep (Principle XIV).
+    - **`LSApplicationQueriesSchemes` thiếu**: không khai `shortcuts` thì `canOpenURL` **luôn trả false** — bản iOS của đúng cái bẫy `<queries>` bên Android.
+    - **`applicationMessenger` không tồn tại**: `FlutterImplicitEngineBridge` chỉ có `pluginRegistry` + `applicationRegistrar`; đúng API là `engineBridge.applicationRegistrar.messenger()` (tra header `FlutterEngine.h`/`FlutterPlugin.h` của engine, không đoán).
+    - **`.addOnly` là iOS 14+ nhưng project target iOS 13**: thêm nhánh `if #available(iOS 14, *)` fallback sang API quyền gộp — kéo theo **bắt buộc** khai `NSPhotoLibraryUsageDescription`, vì gọi API cũ mà thiếu khoá này thì **iOS kill app**. Nếu sau này nâng target lên iOS 14+ thì bỏ được khoá đó.
+  - **Verify được bằng máy CI** (không cần thiết bị): **build xanh cả `flutter build apk --flavor development` lẫn `flutter build ios --no-codesign`**; merged manifest có `LiveCanvasWallpaperService` + `BIND_WALLPAPER` + `<queries>` và **0 `WRITE_EXTERNAL_STORAGE`** (INV-8 kiểm ở đúng nơi thực sự ship); ARB `vi`/`en` cùng 80 khoá, 0 chuỗi cứng trong `features/set_wallpaper/`.
+  - **Deviation kế thừa**: state native sealed class + Equatable (duyệt ở MO-003); màn Lịch sử tải vẫn tối giản (không có bản dựng thiết kế — đã rà lại ở bước plan). **Paywall là bản tạm có chủ đích** chờ MO-006.
+  - **Ghi chú Principle XI**: `wallpaper_detail` mở sheet qua barrel `features/set_wallpaper/set_wallpaper.dart` (chỉ export `showSetWallpaperSheet`) thay vì import thẳng file nội bộ của feature khác.
+  - **Còn lại 8 task, đều cần thiết bị**: T025 (nghiệm thu Android + reboot), T032 (iPhone + quyền Ảnh), T039 (premium), T041 (kịch bản lỗi), T042 (bố cục tablet), T043 (SC-007 chỉ còn 1 file), T045 (máy Android thứ hai), T046 (cập nhật docs khi mở PR).
+  - **⚠️ Chưa xử lý contract v0.8.0**: `RATE_LIMITED` (429) trên `download-url` vừa sync vào repo **sau khi** spec/tasks MO-005 được duyệt — xem mục dưới. Hiện 429 rơi vào `failureUnknown`; không có retry tự động nên không có retry storm, nhưng thông điệp chưa đúng.
 
-- **MO — Browse sections + Mô tả Detail (implement v0.7.0, 2026-07-29)**: sau khi backend ship BE-008, regenerate `packages/livecanvas_api` (thêm `homeGet`, `HomeSection`, `HomeResponse`, `Wallpaper.description`; kèm 3 quote-fix YAML cho description có dấu phẩy trong flow-mapping — `home_position`/admin token — để `openapi-generator` validate được). Dựng:
+
+
+## Shipped
+
+- **Contract Sync v0.8.0** (2026-08-09, từ backend branch `BE-006-security-hardening` — backend **chưa merge**, contract đồng bộ trước theo Constitution I): thêm **2 error code**, **không đổi path/schema nào**.
+  - **`RATE_LIMITED` (429)** — vượt hạn mức. Chạm thật ở 2 chỗ: **Wallpaper Detail** nút Tải (`download-url`: 120/giờ + 20/phút mỗi **địa chỉ nguồn**) và **luồng mua/khôi phục premium** (`verify-receipt`: 30/giờ). Admin login: 5 lần sai/15 phút mỗi account.
+  - **`SERVICE_UNAVAILABLE` (503)** — backend không đánh giá được hạn mức nên từ chối fail-closed. **Chỉ admin login** phát mã này (tầng app fail-open). ⚠️ KHÔNG phải lỗi credential — đừng bắt nhập lại mật khẩu.
+  - **⚠️ VIỆC PHẢI LÀM BẰNG TAY, regenerate client KHÔNG tự cho**: xử lý 429 bằng cách đọc header **`Retry-After`** (giây) rồi backoff. Retry ngay chỉ làm nặng thêm đúng cái tải mà hạn mức đang xả. Cần map vào `failure_l10n` một trạng thái "tạm thời, thử lại sau" **tách khỏi** lỗi hệ thống.
+  - **⚠️ Ảnh hưởng luồng "Tải tất cả" của bộ sưu tập**: client đang lặp gọi `download-url` cho từng item — bộ **>20 item** sẽ tự chặn chính mình ở trần 20/phút. Cần giãn nhịp.
+  - Hạn mức đếm theo **địa chỉ nguồn**, không theo `X-App-Key` (mọi bản cài chung 1 key) và không theo thiết bị.
+  - Webhook store không có 429 — chỉ đếm request sai chữ ký, nên không bao giờ mất event gia hạn.
+  - **Regenerate client**: tuỳ generator có mô hình hoá response theo status code hay không; path + schema không đổi nên nhiều khả năng **không cần**. Copy verbatim `openapi.yaml` (`.claude/` + `contracts/`), `api-context.md`, `screen-inventory.md`.
+
+- **Contract Sync v0.7.1** (merged 2026-08-09 vào `main` qua PR #9, từ backend `BE-008-mobile-driven-content`): **KHÔNG cần regenerate client, không ảnh hưởng app.** Chỉ sửa mô tả contract cho khớp hành vi có sẵn: `/admin/wallpapers` (POST/GET/PATCH) từ BE-004 tới nay khai response `Wallpaper` (18 field) nhưng backend luôn trả **20** (thêm `status` + `failure_reason`). Nay khai đúng bằng `AdminWallpaper` (`allOf`) + `AdminWallpaperCursorPage`. **Không đổi phía server, không chạm endpoint app tier nào** — app không gọi `/admin/*`. Đã copy verbatim `openapi.yaml` (`.claude/` + `contracts/`) + `api-context.md`; `screen-inventory.md` không đổi.
+
+- **MO — Browse sections + Mô tả Detail (implement v0.7.0, merged 2026-07-29 qua PR #8)**: sau khi backend ship BE-008, regenerate `packages/livecanvas_api` (thêm `homeGet`, `HomeSection`, `HomeResponse`, `Wallpaper.description`; kèm 3 quote-fix YAML cho description có dấu phẩy trong flow-mapping — `home_position`/admin token — để `openapi-generator` validate được). Dựng:
   - **`HomeRepository`** (`core/catalog/`, bọc `PublicApi.homeGet` → `Result<List<HomeSection>>`).
   - **Browse dạng section**: chip **"Tất cả"** → `GET /home` render các **`SectionGrid`** (title Clash 22 + đếm mono + lưới 2 cột, tap title → Collection Detail); chọn **tag cụ thể** → lưới phẳng `GET /wallpapers?tags=` (cursor pagination giữ nguyên). `BrowseState.BrowseLoaded` thêm `sections` + `isSectionsView`; `sections: []` → EmptyState (không phải lỗi). Bỏ ghi chú design-pass "giữ lưới phẳng vì thiếu data".
   - **Wallpaper Detail — mục "Mô tả"**: hiện `wallpaper.description` (ẩn khi null/rỗng) giữa khối stats và "Hình nền liên quan", bám `SectionLabel` design.
@@ -47,7 +86,7 @@
   - **Không cần regenerate `packages/livecanvas_api`**: v0.5.0 chỉ đổi mô tả/semantics, không đổi path/schema — client sinh sẵn đã có `iapVerifyReceiptPost`, `iapSubscriptionStatusGet` và param `transactionId` (optional) ở `download-url`. Regenerate chỉ để làm mới doc-comment.
   - Ảnh hưởng spec sắp tới: MO-005 (download/set wallpaper) + màn Paywall #9 nay có backend thật để test end-to-end premium.
 
-- **MO-004 — Favorites & Local Data** (implemented 2026-07-26, branch `MO-004-favorites-local-data`, chờ PR):
+- **MO-004 — Favorites & Local Data** (merged 2026-07-29 vào `main` qua PR #8, branch `MO-004-favorites-local-data`):
   4 user story chỉ dùng persistence cục bộ + `POST /wallpapers/batch` có sẵn (Principle IX — **chỉ lưu mảng ID**, không cache full data):
   **US1 Toggle** (nút tim ở mọi lưới + Wallpaper Detail, đồng bộ tức thời <100ms + haptic),
   **US2 Màn Yêu thích** (batch data tươi, chunk ≤100, empty/FailureView),
@@ -85,9 +124,7 @@
   **`GET /wallpapers/{id}/download-url` hết mock** — free trả presigned URL thật hết hạn ≤5 phút
   (⚠️ domain S3/R2 KHÁC domain CDN của thumbnail/preview — client không hardcode/so sánh domain);
   premium vẫn 402 tới BE-005; backend đã có media tự host thật → MO-002 có thể test download end-to-end.
-  Cần regenerate `packages/livecanvas_api` từ contract mới (`scripts/generate_api.sh`) — **chưa chạy, làm trước khi bắt đầu MO-004**.
-
-## Shipped
+  Cần regenerate `packages/livecanvas_api` từ contract mới (`scripts/generate_api.sh`) — ~~chưa chạy~~ **đã chạy ở lần regenerate v0.7.0 (2026-07-29)**, client hiện khớp contract tới v0.7.0 (v0.7.1 chỉ đụng `/admin/*`, không cần chạy lại).
 
 - **MO-003 — Wallpaper Browse, Collections & Detail** (merged 2026-07-26 vào `main` qua PR #6, branch `MO-003-wallpaper-browse-detail`):
   4 user story trên API thật (contract v0.3.2, `PublicApi`): **US1 Khám phá** (lưới cursor-pagination + tag chips single-select "Tất cả" + pull-to-refresh + skeleton shimmer + video tile bounded), **US2 Wallpaper Detail** (preview full-screen, link bộ sưu tập, premium display-only), **US3 Bộ sưu tập + Collection Detail** (cover card list + hero/accent + grid items), **US4 Tìm** (debounce 350ms/≥2 ký tự + seq-guard). Nền mới: `Result<T>`/`AppFailure` sealed + `dio_error_mapper` + `failure_l10n` (Principle IV); tầng **catalog dùng chung** `lib/core/catalog/` (3 repository trả Result, bọc PublicApi — core không phụ thuộc features, Principle XI); shared widget `VideoPreview` (poster tĩnh; video chạy khi hover/chạm-giữ rồi dispose khi rời — ≤1 decoder sống, Principle II; xem sub-bullet Hiệu năng), `ShimmerBox`+skeleton, `WallpaperTile` (aura hue chọn theo id từ bộ màu brand), `FailureView`. **51 test** (unit mapper/repo, bloc_test 5 Cubit, widget 4 màn) + 4 CI gate xanh (format · analyze 0 · test · bloc lint 0). Verify iOS simulator: build OK (video_player link SPM), app boot render Browse grid data thật qua Prism mock (wordmark/chips/WallpaperCard+Aura+PRO), FailureView khi mất backend.

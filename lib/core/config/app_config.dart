@@ -40,7 +40,7 @@ class AppConfig {
     final isAndroid = defaultTargetPlatform == TargetPlatform.android;
     final host = hostOverride.isNotEmpty
         ? hostOverride
-        : (isAndroid ? '192.168.1.243' : 'localhost');
+        : (isAndroid ? '10.0.2.2' : 'localhost');
     return AppConfig(
       environment: AppEnvironment.development,
       apiBaseUrl: 'http://$host:$port',

@@ -1,6 +1,6 @@
 # Screen Inventory — LiveCanvas
 
-> **Vai trò**: Đây là bước làm TRƯỚC khi chốt API — liệt kê màn hình/luồng chính, data mỗi màn cần, action mỗi màn có. `contracts/openapi.yaml` và `.claude/api-context.md` được suy ra từ file này, không phải ngược lại. Khi thêm/sửa 1 màn hình → sửa file này trước → rồi mới sửa contract.
+> **Vai trò**: Đây là bước làm TRƯỚC khi chốt API — liệt kê màn hình/luồng chính, data mỗi màn cần, action mỗi màn có. `.claude/openapi.yaml` và `.claude/api-context.md` được suy ra từ file này, không phải ngược lại. Khi thêm/sửa 1 màn hình → sửa file này trước → rồi mới sửa contract.
 >
 > File này tồn tại độc lập ở CẢ 2 REPO (đồng bộ tay giống `api-context.md`).
 >
@@ -52,6 +52,11 @@
   - Section premium **chỉ hiển thị badge**; entitlement vẫn quyết duy nhất ở `download-url` (không đổi).
   - `show_on_home`/`home_position` là **input của admin**, KHÔNG xuất hiện trong payload công khai `GET /collections`.
 - **Mô tả wallpaper (v0.7.0)**: `Wallpaper.description` nay có thật (nullable). Đặt lúc đăng ký qua `POST /admin/wallpapers`, sửa/xoá sau qua `PATCH /admin/wallpapers/{id}` (**chỉ sửa được mô tả**, không đụng media/status/tag/category/collection). Chuỗi rỗng hoặc toàn khoảng trắng → lưu `null`, để client ẩn mục "Mô tả" chỉ bằng phép kiểm tra null.
+- **Rate limiting (v0.8.0)**: mọi màn gọi API đều có thể nhận **429 `RATE_LIMITED`** khi vượt hạn mức. Client phải xử lý như trạng thái **tạm thời**, KHÔNG phải lỗi hệ thống: đọc header `Retry-After` (giây), hiện thông báo chờ, và **KHÔNG retry ngay lập tức** — retry ngay chỉ làm tình trạng nặng thêm.
+  - Hai màn chạm hạn mức thật: **Wallpaper Detail (#7)** khi bấm Tải (`download-url`: 120/giờ + 20/phút mỗi địa chỉ) và **luồng mua/khôi phục premium** (`verify-receipt`: 30/giờ mỗi địa chỉ). Người dùng bình thường không bao giờ chạm tới — ngưỡng đặt để chặn việc mirror catalogue, không phải để chặn người dùng.
+  - **Hạn mức đếm theo địa chỉ nguồn**, KHÔNG theo `X-App-Key` (mọi bản cài dùng chung một key) và KHÔNG theo thiết bị. Nhiều người dùng chung một địa chỉ nhà mạng sẽ dùng chung bộ đếm — ngưỡng đã đặt đủ rộng cho việc đó.
+  - Màn **admin login (#11)**: sai mật khẩu 5 lần trong 15 phút thì khoá account đó tới hết cửa sổ, mật khẩu đúng cũng bị từ chối. Đăng nhập thành công reset bộ đếm.
+  - Riêng admin login còn có thể trả **503 `SERVICE_UNAVAILABLE`**: hệ thống không kiểm được hạn mức nên đóng cửa cho chắc. **Khác hẳn 429** — người dùng không hề gọi quá nhiều, cũng không phải sai credential. UI phải nói "thử lại sau", đừng bảo họ nhập lại mật khẩu.
 - **Admin auth (v0.4.0)**: các màn admin #11–13 xác thực bằng **Bearer JWT** (access 30 phút / refresh 7 ngày rotate) đổi từ credential staff qua `POST /admin/auth/login` — tách tuyệt đối khỏi `X-App-Key` của app end-user. Backend không thêm hệ thống user mới: tài khoản admin là Django staff user sẵn có.
 - **Download thật (v0.4.0)**: `GET /wallpapers/{id}/download-url` từ v0.4.0 trả **presigned URL thật** (hết hạn ≤5 phút) cho wallpaper free thay vì mock. Lưu ý client: domain của `download_url` (S3/R2 endpoint) **khác** domain thumbnail/preview (CDN) — không hardcode/so sánh domain.
 - **Entitlement thật (v0.5.0)**: gate premium ở `download-url` đã hết vô điều kiện — client gửi `transaction_id` (query) và backend tra entitlement thật.

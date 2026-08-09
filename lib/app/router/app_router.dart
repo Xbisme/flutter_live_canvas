@@ -8,6 +8,7 @@ import 'package:livecanvas/features/collections/presentation/pages/collections_p
 import 'package:livecanvas/features/dev_gallery/presentation/pages/dev_gallery_page.dart';
 import 'package:livecanvas/features/download_history/presentation/pages/download_history_page.dart';
 import 'package:livecanvas/features/favorites/presentation/pages/favorites_page.dart';
+import 'package:livecanvas/features/paywall/presentation/pages/paywall_placeholder_page.dart';
 import 'package:livecanvas/features/profile/presentation/pages/profile_placeholder_page.dart';
 import 'package:livecanvas/features/search/presentation/pages/search_page.dart';
 import 'package:livecanvas/features/wallpaper_detail/presentation/pages/wallpaper_detail_page.dart';
@@ -88,6 +89,11 @@ GoRouter buildAppRouter() => GoRouter(
       path: AppRoutes.downloadHistory,
       parentNavigatorKey: _rootKey,
       builder: (context, state) => const DownloadHistoryPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.paywall,
+      parentNavigatorKey: _rootKey,
+      builder: (context, state) => const PaywallPlaceholderPage(),
     ),
     GoRoute(
       path: AppRoutes.devGallery,

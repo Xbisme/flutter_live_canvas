@@ -1,10 +1,18 @@
 # API Context — LiveCanvas
 
-> **Vai trò**: Companion đọc-được-cho-người/LLM của [`contracts/openapi.yaml`](openapi.yaml). File này được suy ra từ [`docs/screen-inventory.md`](../docs/screen-inventory.md) — mọi thay đổi màn hình phải sửa file đó trước, rồi mới sửa 2 file này.
+> **Vai trò**: Companion đọc-được-cho-người/LLM của [`openapi.yaml`](openapi.yaml). File này được suy ra từ [`screen-inventory.md`](screen-inventory.md) — mọi thay đổi màn hình phải sửa file đó trước, rồi mới sửa 2 file này.
 >
 > File này tồn tại độc lập ở CẢ 2 REPO (`livecanvas-backend`, `livecanvas-mobile`). Khi API đổi, sửa cả `openapi.yaml` lẫn `api-context.md` ở repo đang implement, rồi copy nguyên văn sang repo còn lại (xem "Contract Sync" trong `dev-workflow.md`).
 >
-> Last updated: 2026-07-29 · Contract version: **`v0.7.1`**
+> Last updated: 2026-08-09 · Contract version: **`v0.8.0`**
+>
+> **Đổi so với v0.7.1 (BE-006)**: thêm **2 error code**, không đổi path/schema nào.
+> - **`RATE_LIMITED` (429)** — caller vượt hạn mức. Áp cho `GET /wallpapers/{id}/download-url` (**120/giờ + 20/phút** mỗi địa chỉ nguồn), `POST /iap/verify-receipt` (**30/giờ**), `POST /admin/auth/login` (**5 lần sai/15 phút** mỗi account; đăng nhập thành công **reset** bộ đếm).
+> - **`SERVICE_UNAVAILABLE` (503)** — hệ thống **không đánh giá được** hạn mức (bộ đếm không truy cập được) nên từ chối fail-closed. Hiện **chỉ `POST /admin/auth/login`** phát mã này: tầng app **fail-open** khi mất bộ đếm nên không bao giờ trả mã này. ⚠️ **Khác hẳn 429** — caller không hề gọi quá nhiều, và cũng **không phải** lỗi credential; UI phải nói "thử lại sau", đừng bắt nhập lại mật khẩu.
+> - Cả hai đều mang header **`Retry-After`** (giây). Client **PHẢI** backoff theo header, **KHÔNG** retry ngay — retry ngay chỉ làm nặng thêm đúng cái tải mà hạn mức đang xả.
+> - **Hạn mức đếm theo địa chỉ nguồn**, KHÔNG theo `X-App-Key` (mọi bản cài dùng chung 1 key) và KHÔNG theo thiết bị. Nhiều người dùng sau một địa chỉ nhà mạng dùng chung bộ đếm — ngưỡng đã đặt đủ rộng cho việc đó.
+> - **Webhook store KHÔNG có 429**: chỉ request **sai chữ ký** mới bị đếm; chữ ký hợp lệ luôn đi qua, nên bão gia hạn không bao giờ bị bóp và không mất event.
+> - **Mobile**: path + schema **không đổi** → regenerate client hay không tuỳ generator của bạn có mô hình hoá response theo từng status code hay không. Việc **bắt buộc** phải làm bằng tay: **xử lý 429 bằng cách đọc `Retry-After` và backoff** — regenerate client không tự cho bạn hành vi đó.
 >
 > **Đổi so với v0.7.0 (sửa mô tả contract, KHÔNG đổi hành vi server)**: các endpoint `/admin/wallpapers` từ BE-004 tới nay khai response `Wallpaper` (18 field) nhưng server luôn trả **20** — `AdminWallpaperSerializer` thêm `status` + `failure_reason`. Nay khai đúng bằng schema **`AdminWallpaper`** (`allOf: Wallpaper + status + failure_reason`) và **`AdminWallpaperCursorPage`**, áp cho `POST`/`GET`/`PATCH /admin/wallpapers`. **Không có thay đổi phía server**; tầng app không đụng tới; **mobile KHÔNG cần regenerate** (app không gọi `/admin/*`). Hai field này vẫn **tuyệt đối không** xuất hiện ở tầng app.
 >
@@ -84,6 +92,10 @@ Cả 3 đều là danh sách curated bởi admin, số lượng nhỏ (dự ki�
 | `WALLPAPER_NOT_FOUND` | 400 | `wallpaper_ids` chứa ID không tồn tại khi tạo/sửa collection |
 | `COLLECTION_SLUG_CONFLICT` | 409 | Tạo collection với `slug` đã tồn tại |
 | `SERVER_ERROR` | 500 | Lỗi máy chủ không lường trước (generic; không lộ chi tiết nội bộ) |
+| `RATE_LIMITED` *(v0.8.0)* | 429 | Vượt hạn mức request. Header `Retry-After` = số giây phải đợi. Tạm thời — client backoff, **KHÔNG** retry ngay |
+| `SERVICE_UNAVAILABLE` *(v0.8.0)* | 503 | Không đánh giá được hạn mức (bộ đếm không truy cập được) → từ chối fail-closed. Hiện chỉ `POST /admin/auth/login` phát mã này. Tạm thời — backoff theo `Retry-After` |
+
+⚠️ **`RATE_LIMITED` và `SERVICE_UNAVAILABLE` khác nhau về nguyên nhân**, không phải hai cách nói cùng một chuyện: `RATE_LIMITED` = caller đã gọi quá nhiều; `SERVICE_UNAVAILABLE` = caller **không làm gì sai cả**, nhưng hệ thống không kiểm được nên đóng cửa cho chắc. Hiển thị nhầm sẽ khiến người dùng đi tìm một hạn mức mà họ chưa từng chạm.
 
 Format chung:
 ```json
@@ -232,6 +244,7 @@ Format chung:
 - Header: `X-App-Key` · Path: `id` · Query: `transaction_id` (bắt buộc nếu premium)
 - **200** (v0.4.0 — presigned thật): `{ "download_url": "https://<s3-r2-endpoint>/masters/<uuid>.mp4?X-Amz-Signature=...", "expires_at": "..." }` — hết hạn **≤ 5 phút**, chỉ 1 object. ⚠️ Domain là **S3/R2 endpoint**, KHÁC domain CDN của thumbnail/preview — client không hardcode/so sánh domain.
 - **402**: `ENTITLEMENT_REQUIRED` — wallpaper premium mà `transaction_id` thiếu / hết hạn / không resolve tới entitlement đang active|in_grace_period (v0.5.0). Free bỏ qua check. · **404**: `NOT_FOUND` (không tồn tại, `processing`, `failed`, hoặc đã xóa — đánh giá **trước** gate entitlement) · **401**: `INVALID_APP_KEY`
+- **429** *(v0.8.0)*: `RATE_LIMITED` — **120/giờ + 20/phút** mỗi địa chỉ nguồn. Vượt trần thì **không** có URL nào được ký. Phiên dùng thật (xem lướt, mở vài tấm, tải một nắm) không bao giờ chạm tới; ngưỡng này để chặn việc mirror catalogue. Đọc `Retry-After` rồi đợi, đừng retry ngay. Lưu ý cho luồng "Tải tất cả" của bộ sưu tập: client lặp gọi endpoint này nên **phải** tôn trọng trần phút — bộ >20 item cần giãn nhịp, nếu không sẽ tự chặn chính mình.
 
 ---
 
@@ -245,6 +258,7 @@ Format chung:
 - Backend verify trực tiếp với App Store Server API / Google Play Developer API, upsert entitlement (idempotent theo original transaction id).
 - **200**: `{ "transaction_id": "...", "product_id": "premium_monthly", "status": "active", "expires_at": "2026-08-22T00:00:00Z", "auto_renew": true }` (schema `SubscriptionStatus`)
 - **400**: `RECEIPT_INVALID` (store từ chối) · **409**: `RECEIPT_CONFLICT` (`transaction_id` đã gắn subscription/tài khoản store khác — KHÔNG phải chỉ khác device) · **503**: `STORE_API_UNAVAILABLE` (store timeout/5xx, retryable) · **401**: `INVALID_APP_KEY`
+- **429** *(v0.8.0)*: `RATE_LIMITED` — **30/giờ** mỗi địa chỉ nguồn. Mua và khôi phục bình thường không bao giờ chạm; trần này chặn việc dò `transaction_id` của người khác và bảo vệ quota gọi ra store. Đợi theo `Retry-After`.
 
 ### `GET /iap/subscription-status`
 - Header: `X-App-Key` · Query: `transaction_id` (bắt buộc; chấp nhận bất kỳ id trong chuỗi renewal)
@@ -270,6 +284,8 @@ Format chung:
 - **Body**: `{ "username": "...", "password": "..." }` (Django staff user — không có hệ thống user app)
 - **200**: `{ "access": "<jwt 30 phút>", "refresh": "<token 7 ngày>", "expires_in": 1800 }`
 - **401**: `UNAUTHORIZED_ADMIN` (sai username/password) · **403**: `FORBIDDEN_ADMIN_ROLE` (đúng credential nhưng không phải staff hoặc tài khoản bị khoá)
+- **429** *(v0.8.0)*: `RATE_LIMITED` — **5 lần sai trong 15 phút** cho mỗi account thì khoá tới hết cửa sổ. Trong cửa sổ đó, **mật khẩu đúng cũng bị từ chối**. Đăng nhập thành công trước khi chạm trần sẽ **reset** bộ đếm. Đếm theo **account**, không theo địa chỉ — nên kẻ đổi IP liên tục vẫn chỉ có 5 lần đoán, và operator không bị người lạ chung nhà mạng khoá oan.
+- **503** *(v0.8.0)*: `SERVICE_UNAVAILABLE` — bộ đếm không truy cập được nên hệ thống **đóng cửa cho chắc** (fail-closed), thà chặn tạm còn hơn mở toang cửa đoán mật khẩu. ⚠️ **Không phải** lỗi credential: UI hiện "thử lại sau", **đừng** bảo operator nhập lại mật khẩu.
 - Mọi attempt (thành công/thất bại) đều được audit; password không bao giờ được ghi log.
 
 ### `POST /admin/auth/refresh`
