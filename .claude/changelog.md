@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- **Contract Sync v0.7.1** (2026-07-29, từ backend `BE-008-mobile-driven-content`): **KHÔNG cần regenerate client, không ảnh hưởng app.** Chỉ sửa mô tả contract cho khớp hành vi có sẵn: `/admin/wallpapers` (POST/GET/PATCH) từ BE-004 tới nay khai response `Wallpaper` (18 field) nhưng backend luôn trả **20** (thêm `status` + `failure_reason`). Nay khai đúng bằng `AdminWallpaper` (`allOf`) + `AdminWallpaperCursorPage`. **Không đổi phía server, không chạm endpoint app tier nào** — app không gọi `/admin/*`. Đã copy verbatim `openapi.yaml` (`.claude/` + `contracts/`) + `api-context.md`; `screen-inventory.md` không đổi.
+
 - **MO — Browse sections + Mô tả Detail (implement v0.7.0, 2026-07-29)**: sau khi backend ship BE-008, regenerate `packages/livecanvas_api` (thêm `homeGet`, `HomeSection`, `HomeResponse`, `Wallpaper.description`; kèm 3 quote-fix YAML cho description có dấu phẩy trong flow-mapping — `home_position`/admin token — để `openapi-generator` validate được). Dựng:
   - **`HomeRepository`** (`core/catalog/`, bọc `PublicApi.homeGet` → `Result<List<HomeSection>>`).
   - **Browse dạng section**: chip **"Tất cả"** → `GET /home` render các **`SectionGrid`** (title Clash 22 + đếm mono + lưới 2 cột, tap title → Collection Detail); chọn **tag cụ thể** → lưới phẳng `GET /wallpapers?tags=` (cursor pagination giữ nguyên). `BrowseState.BrowseLoaded` thêm `sections` + `isSectionsView`; `sections: []` → EmptyState (không phải lỗi). Bỏ ghi chú design-pass "giữ lưới phẳng vì thiếu data".
