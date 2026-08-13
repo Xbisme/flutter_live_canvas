@@ -145,6 +145,9 @@ class _IntroBody extends StatelessWidget {
     final l10n = context.l10n;
     final cubit = context.read<SetWallpaperCubit>();
     final downloading = state is SetWallpaperLoadingDownload;
+    // iOS only: the file has landed and the Photos write is running. Offering
+    // the CTA here invites a second download of a file we already have.
+    final saving = !isAndroid && state is SetWallpaperLoadedReady;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -178,6 +181,8 @@ class _IntroBody extends StatelessWidget {
         const SizedBox(height: AppSpacing.sp4),
         if (downloading)
           _DownloadingBlock(state: state as SetWallpaperLoadingDownload)
+        else if (saving)
+          _BusyBlock(label: l10n.setWallpaperSaving)
         else
           AppButton(
             label: state is SetWallpaperError
@@ -188,6 +193,38 @@ class _IntroBody extends StatelessWidget {
             icon: AppIcons.download,
             onPressed: () => cubit.startDownload(wallpaperId),
           ),
+      ],
+    );
+  }
+}
+
+/// Indeterminate progress for a step with no byte count to report.
+class _BusyBlock extends StatelessWidget {
+  const _BusyBlock({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.rPill),
+          child: const LinearProgressIndicator(
+            minHeight: AppSpacing.sp2,
+            backgroundColor: AppColors.bgRaised,
+            valueColor: AlwaysStoppedAnimation(AppColors.accent),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sp3),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: AppTypography.monoMeta.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
       ],
     );
   }
@@ -284,19 +321,19 @@ class _DoneBody extends StatelessWidget {
                   icon: AppIcons.paintBrush,
                   onPressed: context.read<SetWallpaperCubit>().applyWallpaper,
                 )
-              : const _ShortcutsGuide(),
+              : const _PhotosGuide(),
         ),
       ],
     );
   }
 }
 
-/// The three-step Shortcuts guide from the prototype.
+/// The three-step guide from the prototype.
 ///
-/// iOS has no public API for setting a video wallpaper, so this is genuinely
-/// what the user has to do — the copy must never imply otherwise (FR-018).
-class _ShortcutsGuide extends StatelessWidget {
-  const _ShortcutsGuide();
+/// iOS has no public API for setting a wallpaper, so this is genuinely what the
+/// user has to do — the copy must never imply otherwise (FR-018).
+class _PhotosGuide extends StatelessWidget {
+  const _PhotosGuide();
 
   @override
   Widget build(BuildContext context) {
@@ -310,10 +347,10 @@ class _ShortcutsGuide extends StatelessWidget {
         _Step(number: 3, text: l10n.setWallpaperStep3),
         const SizedBox(height: AppSpacing.sp3),
         AppButton(
-          label: l10n.setWallpaperOpenShortcuts,
+          label: l10n.setWallpaperOpenPhotos,
           icon: AppIcons.arrowSquareOut,
           variant: AppButtonVariant.ghost,
-          onPressed: () => _openShortcuts(context),
+          onPressed: () => _openPhotos(context),
         ),
       ],
     );
@@ -321,9 +358,9 @@ class _ShortcutsGuide extends StatelessWidget {
 
   /// Goes through our own channel rather than adding `url_launcher` for a
   /// single scheme (Principle XIV).
-  Future<void> _openShortcuts(BuildContext context) async {
-    final message = context.l10n.setWallpaperShortcutsMissing;
-    final opened = await getIt<WallpaperPlatformService>().openShortcuts();
+  Future<void> _openPhotos(BuildContext context) async {
+    final message = context.l10n.setWallpaperPhotosMissing;
+    final opened = await getIt<WallpaperPlatformService>().openPhotos();
     if (opened || !context.mounted) return;
     showToast(context, message);
   }

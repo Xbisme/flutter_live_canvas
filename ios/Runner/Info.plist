@@ -14,12 +14,13 @@
 	     if the deployment target ever moves to iOS 14+. -->
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>LiveCanvas cần quyền truy cập thư viện Ảnh để lưu video hình nền vào máy bạn.</string>
-	<!-- Without this, canOpenURL("shortcuts://") always returns false and the
-	     "Mở Shortcuts" button would report the app as missing on every device —
+	<!-- Without this, canOpenURL("photos-redirect://") always returns false and
+	     the "Mở app Ảnh" button would report it as unopenable on every device —
 	     the iOS twin of Android's <queries> package-visibility rule. -->
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-		<string>shortcuts</string>
+		<string>photos-redirect</string>
+		<string>photos</string>
 	</array>
 	<key>CFBundleLocalizations</key>
 	<array>

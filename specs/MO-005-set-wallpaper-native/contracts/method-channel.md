@@ -51,9 +51,9 @@ Xin quyền **add-only** rồi ghi video vào thư viện Ảnh.
 
 ---
 
-## `openShortcuts` — chỉ iOS/iPadOS
+## `openPhotos` — chỉ iOS/iPadOS
 
-Mở app Phím tắt của hệ thống.
+Mở app Ảnh — nơi Live Photo vừa lưu nằm ở đó, và cũng là nơi người dùng đặt hình nền.
 
 | | |
 |---|---|
@@ -61,8 +61,8 @@ Mở app Phím tắt của hệ thống.
 | **Trả về** | `{ "opened": bool }` |
 | **Trên Android** | ném `UNSUPPORTED` |
 
-- `opened = false` khi máy không có app Phím tắt — **không phải lỗi**, UI chỉ đổi câu chữ (FR-022).
-- ⚠️ Cần khai **`LSApplicationQueriesSchemes` = ["shortcuts"]** trong `Info.plist`; thiếu nó thì `canOpenURL("shortcuts://")` **luôn trả false** và nút sẽ báo "không có app Phím tắt" trên mọi máy — đây là bản iOS của bẫy `<queries>` bên Android.
+- `opened = false` khi không mở được — **không phải lỗi**, UI chỉ đổi câu chữ (FR-022).
+- ⚠️ Cần khai **`LSApplicationQueriesSchemes` = ["photos-redirect", "photos"]** trong `Info.plist`; thiếu nó thì `canOpenURL` **luôn trả false** và nút sẽ báo "không mở được app Ảnh" trên mọi máy — đây là bản iOS của bẫy `<queries>` bên Android.
 - Xử lý ở channel của chính app thay vì thêm `url_launcher` cho đúng một scheme (Principle XIV).
 
 ---
@@ -77,7 +77,7 @@ Mở app Phím tắt của hệ thống.
 - Android: kiểm tra có activity nào xử lý được `ACTION_CHANGE_LIVE_WALLPAPER` không.
 - iOS: luôn `false`.
 
-⚠️ **Đây là câu hỏi về NĂNG LỰC, không phải về nền tảng.** Tầng Dart **KHÔNG** được dùng kết quả này để chọn nhánh giao diện Android/iOS — máy Android thiếu màn chọn hình nền động cũng trả `false`, và nếu gộp hai thứ lại thì người dùng Android đó sẽ thấy hướng dẫn Shortcuts của iOS, còn thông báo "thiết bị không hỗ trợ" (FR-017) **không bao giờ hiển thị được**. Chọn nhánh giao diện bằng `defaultTargetPlatform` (test override được qua `debugDefaultTargetPlatformOverride` — vẫn đạt mục tiêu testability của [research.md](../research.md) R8); dùng `isLiveWallpaperSupported` **chỉ** để bắn `PlatformUnsupportedFailure`.
+⚠️ **Đây là câu hỏi về NĂNG LỰC, không phải về nền tảng.** Tầng Dart **KHÔNG** được dùng kết quả này để chọn nhánh giao diện Android/iOS — máy Android thiếu màn chọn hình nền động cũng trả `false`, và nếu gộp hai thứ lại thì người dùng Android đó sẽ thấy hướng dẫn app Ảnh của iOS, còn thông báo "thiết bị không hỗ trợ" (FR-017) **không bao giờ hiển thị được**. Chọn nhánh giao diện bằng `defaultTargetPlatform` (test override được qua `debugDefaultTargetPlatformOverride` — vẫn đạt mục tiêu testability của [research.md](../research.md) R8); dùng `isLiveWallpaperSupported` **chỉ** để bắn `PlatformUnsupportedFailure`.
 
 ---
 

@@ -17,13 +17,21 @@ class SetWallpaperCubit extends Cubit<SetWallpaperState> {
   CancelToken? _token;
   int? _downloadingId;
 
+  /// True from the moment the Photos write starts until it answers.
+  ///
+  /// The download finishing is NOT the end of the iOS flow — building the Live
+  /// Photo and handing it to Photos takes seconds more, and nothing in the
+  /// state says so. Without this guard a second tap in that window starts a
+  /// whole second download and saves the wallpaper to the library twice.
+  bool _saving = false;
+
   /// Whether a transfer is in flight (FR-009: at most one at a time). Private:
   /// the UI reads this from the state, and `bloc_lint` only allows void-ish
   /// public members on a Cubit.
   bool get _isDownloading => _token != null;
 
   Future<void> startDownload(int wallpaperId) async {
-    if (_isDownloading) return;
+    if (_isDownloading || _saving) return;
 
     final token = CancelToken();
     _token = token;
@@ -90,9 +98,11 @@ class SetWallpaperCubit extends Cubit<SetWallpaperState> {
   /// iOS: writes the video into the Photos library.
   Future<void> saveToPhotos() async {
     final current = state;
-    if (current is! SetWallpaperLoadedReady) return;
+    if (current is! SetWallpaperLoadedReady || _saving) return;
 
+    _saving = true;
     final result = await _useCase.saveToPhotos(current.file);
+    _saving = false;
     if (isClosed) return;
 
     switch (result) {

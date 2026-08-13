@@ -93,7 +93,7 @@ void main() {
       expect(find.textContaining('Neon City Loop'), findsOneWidget);
       expect(find.text('Đặt làm hình nền'), findsWidgets);
       // The Shortcuts guide belongs to iOS only.
-      expect(find.text('Mở Shortcuts'), findsNothing);
+      expect(find.text('Mở app Ảnh'), findsNothing);
     });
 
     testWidgets('a failure shows Vietnamese copy, never a technical code', (
@@ -129,7 +129,7 @@ void main() {
           find.textContaining('không hỗ trợ hình nền động'),
           findsOneWidget,
         );
-        expect(find.text('Mở Shortcuts'), findsNothing);
+        expect(find.text('Mở app Ảnh'), findsNothing);
       },
     );
 
@@ -187,7 +187,7 @@ void main() {
       },
     );
 
-    testWidgets('after saving it shows the three Shortcuts steps', (
+    testWidgets('after saving it shows the three steps', (
       tester,
     ) async {
       stubPrepare(const Ok(_file));
@@ -205,10 +205,42 @@ void main() {
       expect(find.text('3'), findsOneWidget);
       // The route iOS actually supports: a Live Photo, set from Photos.
       expect(find.textContaining('Live Photo'), findsWidgets);
-      expect(find.text('Mở Shortcuts'), findsOneWidget);
+      expect(find.text('Mở app Ảnh'), findsOneWidget);
       // The Android one-tap CTA must not appear on iOS.
       expect(find.text('Đặt làm hình nền'), findsNothing);
     });
+
+    testWidgets(
+      'the Photos write blocks a second tap — it takes seconds with nothing '
+      'in the state to say so, and a second download would save the wallpaper '
+      'to the library twice',
+      (tester) async {
+        stubPrepare(const Ok(_file));
+        when(() => useCase.saveToPhotos(any())).thenAnswer((_) async {
+          await Future<void>.delayed(const Duration(milliseconds: 200));
+          return const Ok(true);
+        });
+
+        await tester.pumpWidget(app(TargetPlatform.iOS));
+        await tester.tap(find.text('Lưu video vào Ảnh'));
+        await tester.pump();
+
+        // The CTA is gone while the write runs, replaced by progress.
+        expect(find.text('Lưu video vào Ảnh'), findsNothing);
+        expect(find.text('Đang lưu vào Ảnh…'), findsOneWidget);
+
+        await tester.pumpAndSettle();
+
+        verify(() => useCase.saveToPhotos(_file)).called(1);
+        verify(
+          () => useCase.prepare(
+            any(),
+            onProgress: any(named: 'onProgress'),
+            cancelToken: any(named: 'cancelToken'),
+          ),
+        ).called(1);
+      },
+    );
 
     testWidgets('a denied Photos permission explains itself in Vietnamese', (
       tester,

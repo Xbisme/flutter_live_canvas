@@ -22,12 +22,12 @@ abstract interface class WallpaperPlatformService {
   /// is a normal action and NOT a failure (FR-016).
   Future<Result<bool>> setLiveWallpaper(WallpaperFile file);
 
-  /// iOS: saves the video to the Photos library as-is.
+  /// iOS: saves the video into the Photos library as a Live Photo.
   Future<Result<bool>> saveVideoToPhotos(WallpaperFile file);
 
-  /// iOS: opens the Shortcuts app. `false` = it isn't installed, which the UI
+  /// iOS: opens the Photos app. `false` = it could not be opened, which the UI
   /// explains in plain language rather than as an error (FR-022).
-  Future<bool> openShortcuts();
+  Future<bool> openPhotos();
 }
 
 @LazySingleton(as: WallpaperPlatformService)
@@ -83,14 +83,14 @@ class WallpaperPlatformServiceImpl implements WallpaperPlatformService {
   }
 
   @override
-  Future<bool> openShortcuts() async {
+  Future<bool> openPhotos() async {
     try {
       final result = await _channel.invokeMapMethod<String, dynamic>(
-        WallpaperChannel.openShortcuts,
+        WallpaperChannel.openPhotos,
       );
       return result?['opened'] as bool? ?? false;
     } on Object catch (_) {
-      // Not installed, or Android: the caller shows friendly copy, not an
+      // Could not open, or Android: the caller shows friendly copy, not an
       // error.
       return false;
     }

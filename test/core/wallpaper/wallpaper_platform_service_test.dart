@@ -130,28 +130,28 @@ void main() {
     });
   });
 
-  group('openShortcuts', () {
+  group('openPhotos', () {
     test('reports what native opened', () async {
       mockChannel((_) async => {'opened': true});
 
-      expect(await service.openShortcuts(), isTrue);
-      expect(calls.single.method, WallpaperChannel.openShortcuts);
+      expect(await service.openPhotos(), isTrue);
+      expect(calls.single.method, WallpaperChannel.openPhotos);
     });
 
     test(
-      'a missing Shortcuts app is false, not an error — the user has not hit '
+      'a Photos app that will not open is false, not an error — the user has '
       'a failure, they just need different wording (FR-022)',
       () async {
         mockChannel((_) async => {'opened': false});
 
-        expect(await service.openShortcuts(), isFalse);
+        expect(await service.openPhotos(), isFalse);
       },
     );
 
     test('UNSUPPORTED (Android) is false rather than a thrown error', () async {
       mockThrows(WallpaperChannelError.unsupported);
 
-      expect(await service.openShortcuts(), isFalse);
+      expect(await service.openPhotos(), isFalse);
     });
   });
 

@@ -25,7 +25,7 @@ class WallpaperChannelHandler(
         when (call.method) {
             METHOD_IS_SUPPORTED -> result.success(isLiveWallpaperSupported())
             METHOD_SET_LIVE_WALLPAPER -> setLiveWallpaper(call, result)
-            METHOD_SAVE_TO_PHOTOS, METHOD_OPEN_SHORTCUTS ->
+            METHOD_SAVE_TO_PHOTOS, METHOD_OPEN_PHOTOS ->
                 result.error(ERROR_UNSUPPORTED, "iOS only", null)
             else -> result.notImplemented()
         }
@@ -118,7 +118,7 @@ class WallpaperChannelHandler(
 
         private const val METHOD_SET_LIVE_WALLPAPER = "setLiveWallpaper"
         private const val METHOD_SAVE_TO_PHOTOS = "saveVideoToPhotos"
-        private const val METHOD_OPEN_SHORTCUTS = "openShortcuts"
+        private const val METHOD_OPEN_PHOTOS = "openPhotos"
         private const val METHOD_IS_SUPPORTED = "isLiveWallpaperSupported"
 
         private const val ERROR_UNSUPPORTED = "UNSUPPORTED"

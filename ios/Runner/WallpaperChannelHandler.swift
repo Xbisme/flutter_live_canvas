@@ -24,7 +24,7 @@ final class WallpaperChannelHandler {
         static let setLiveWallpaper = "setLiveWallpaper"
         static let saveVideoToPhotos = "saveVideoToPhotos"
         static let isLiveWallpaperSupported = "isLiveWallpaperSupported"
-        static let openShortcuts = "openShortcuts"
+        static let openPhotos = "openPhotos"
     }
 
     /// Contract with the Dart side, which is the only place these become an
@@ -55,8 +55,8 @@ final class WallpaperChannelHandler {
         case Method.saveVideoToPhotos:
             saveVideoToPhotos(call, result: result)
 
-        case Method.openShortcuts:
-            openShortcuts(result: result)
+        case Method.openPhotos:
+            openPhotos(result: result)
 
         default:
             result(FlutterMethodNotImplemented)
@@ -83,15 +83,20 @@ final class WallpaperChannelHandler {
         }
     }
 
-    /// Opens the Shortcuts app. Reported as `opened: false` rather than an
-    /// error when it is missing — a user without Shortcuts has not hit a
-    /// failure, they just need different wording (FR-022).
-    private func openShortcuts(result: @escaping FlutterResult) {
-        guard let url = URL(string: "shortcuts://") else {
-            result(["opened": false])
-            return
-        }
-        guard UIApplication.shared.canOpenURL(url) else {
+    /// Opens the Photos app, where the Live Photo just landed and where the
+    /// wallpaper is actually set from.
+    ///
+    /// Reported as `opened: false` rather than an error — a scheme that will
+    /// not open is not a failure the user can act on, it just needs different
+    /// wording (FR-022).
+    private func openPhotos(result: @escaping FlutterResult) {
+        // `photos-redirect` is the scheme that survives across iOS versions;
+        // `photos` is kept as a fallback rather than assumed.
+        let candidates = ["photos-redirect://", "photos://"]
+            .compactMap(URL.init(string:))
+            .filter { UIApplication.shared.canOpenURL($0) }
+
+        guard let url = candidates.first else {
             result(["opened": false])
             return
         }
@@ -213,9 +218,13 @@ enum LivePhotoExporter {
     ///
     /// A Live Photo the camera produces is ~3 seconds, and that is the shape
     /// the system is built around — handing it a 26-second movie is outside
-    /// anything iOS ever has to render. Trimming also keeps the library from
-    /// growing by the full master on every save.
+    /// anything iOS ever has to render.
     private static let pairedDuration = CMTime(seconds: 3, preferredTimescale: 600)
+
+    /// Longest side of the paired video. Kept well under the 4096 that many
+    /// hardware decoders stop at, and far under it there is nothing to gain:
+    /// the tallest iPhone screen is under 2800px.
+    private static let maxPairedSide: CGFloat = 2048
 
     /// Returns nil on any failure: the caller falls back to the plain video
     /// rather than turning a cosmetic problem into a dead end.
@@ -229,14 +238,15 @@ enum LivePhotoExporter {
                 at: directory,
                 withIntermediateDirectories: true
             )
-            let poster = try posterFrame(of: AVURLAsset(url: source))
+            let asset = AVURLAsset(url: source)
+            let poster = try posterFrame(of: asset)
             let still = try writeStill(
                 poster.image,
                 identifier: identifier,
                 into: directory
             )
             writePairedVideo(
-                from: source,
+                from: asset,
                 identifier: identifier,
                 stillTime: poster.time,
                 into: directory
@@ -279,6 +289,11 @@ enum LivePhotoExporter {
         // Portrait masters carry their orientation in the track transform;
         // without this the still lands sideways next to an upright video.
         generator.appliesPreferredTrackTransform = true
+        // The default tolerance is INFINITE, which lets the generator answer
+        // every request with the nearest keyframe — in practice frame zero for
+        // all of them, so the sampling below would compare one frame to itself.
+        generator.requestedTimeToleranceBefore = .zero
+        generator.requestedTimeToleranceAfter = .zero
 
         let duration = asset.duration
         let fractions: [Double] =
@@ -364,7 +379,8 @@ enum LivePhotoExporter {
 
         // "17" is the maker-note key Photos reads the asset identifier from.
         let properties: [String: Any] = [
-            kCGImagePropertyMakerAppleDictionary as String: ["17": identifier]
+            kCGImagePropertyMakerAppleDictionary as String: ["17": identifier],
+            kCGImageDestinationLossyCompressionQuality as String: 0.9,
         ]
         CGImageDestinationAddImage(destination, image, properties as CFDictionary)
         guard CGImageDestinationFinalize(destination) else {
@@ -374,13 +390,12 @@ enum LivePhotoExporter {
     }
 
     private static func writePairedVideo(
-        from source: URL,
+        from asset: AVURLAsset,
         identifier: String,
         stillTime: CMTime,
         into directory: URL,
         completion: @escaping (URL?) -> Void
     ) {
-        let asset = AVURLAsset(url: source)
         let url = directory.appendingPathComponent("paired.mov")
 
         do {
@@ -388,10 +403,9 @@ enum LivePhotoExporter {
                 throw ExportError.noVideoTrack
             }
 
-            let reader = try AVAssetReader(asset: asset)
             // The clip runs from the poster frame, so the still is the first
             // thing shown and the marker sits inside the range that was kept.
-            reader.timeRange = CMTimeRange(
+            let range = CMTimeRange(
                 start: stillTime,
                 duration: CMTimeMinimum(
                     pairedDuration,
@@ -399,17 +413,34 @@ enum LivePhotoExporter {
                 )
             )
 
-            let writer = try AVAssetWriter(outputURL: url, fileType: .mov)
-            writer.metadata = [contentIdentifierItem(identifier)]
+            let reader = try AVAssetReader(asset: asset)
+            reader.timeRange = range
 
-            // outputSettings nil = passthrough. Re-encoding a 4K master would
-            // cost minutes of the user's time and a generation of quality, for
-            // a file the system is about to re-encode anyway.
-            let output = AVAssetReaderTrackOutput(track: track, outputSettings: nil)
+            let output = AVAssetReaderTrackOutput(
+                track: track,
+                outputSettings: [
+                    kCVPixelBufferPixelFormatTypeKey as String:
+                        kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
+                ]
+            )
             guard reader.canAdd(output) else { throw ExportError.readerRejected }
             reader.add(output)
 
-            let videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: nil)
+            let writer = try AVAssetWriter(outputURL: url, fileType: .mov)
+            writer.metadata = [contentIdentifierItem(identifier)]
+
+            // Sized in the track's OWN orientation and rotated by the transform
+            // below, exactly as passthrough did — measuring the rotated size
+            // here and also keeping the transform would rotate it twice.
+            let target = scaledSize(of: track.naturalSize)
+            let videoInput = AVAssetWriterInput(
+                mediaType: .video,
+                outputSettings: [
+                    AVVideoCodecKey: AVVideoCodecType.h264,
+                    AVVideoWidthKey: Int(target.width),
+                    AVVideoHeightKey: Int(target.height),
+                ]
+            )
             videoInput.expectsMediaDataInRealTime = false
             videoInput.transform = track.preferredTransform
             guard writer.canAdd(videoInput) else { throw ExportError.writerRejected }
@@ -432,10 +463,10 @@ enum LivePhotoExporter {
             // Sample timestamps stay on the SOURCE timeline even when the
             // reader is trimmed, so the session has to start where the trim
             // does — starting at zero would prepend seconds of nothing.
-            writer.startSession(atSourceTime: stillTime)
+            writer.startSession(atSourceTime: range.start)
 
-            // Placed at the frame the still was actually taken from, not at
-            // zero: this marker is how Photos knows which frame the poster is.
+            // Placed at the frame the still was actually taken from: this
+            // marker is how Photos knows which frame the poster is.
             try adaptor.append(
                 AVTimedMetadataGroup(
                     items: [stillImageTimeItem()],
@@ -475,6 +506,17 @@ enum LivePhotoExporter {
             NSLog("\(logTag): could not write the paired video - \(error)")
             completion(nil)
         }
+    }
+
+    /// Caps the longest side at [maxPairedSide], keeping the aspect ratio and
+    /// landing on even numbers — H.264 cannot encode odd dimensions in 4:2:0.
+    private static func scaledSize(of size: CGSize) -> CGSize {
+        let longest = max(size.width, size.height)
+        let scale = longest > maxPairedSide ? maxPairedSide / longest : 1
+        func even(_ value: CGFloat) -> CGFloat {
+            max(2, (value * scale / 2).rounded() * 2)
+        }
+        return CGSize(width: even(size.width), height: even(size.height))
     }
 
     private static func contentIdentifierItem(_ identifier: String) -> AVMetadataItem {
