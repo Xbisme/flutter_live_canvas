@@ -25,6 +25,29 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Live wallpaper engine (MO-005). No storage permission is declared
+             anywhere in this manifest on purpose: the master file lives in the
+             app's private directory and is never exported to the gallery
+             (FR-014). -->
+        <!-- Its own process on purpose: the system keeps this engine alive for
+             as long as the wallpaper is set, while the Flutter process is
+             restarted, hot-restarted and killed constantly during development
+             and by the OS in production. Sharing a process also means two 4K
+             decoders (the app's preview player and this one) competing for the
+             same heap. -->
+        <service
+            android:name=".LiveCanvasWallpaperService"
+            android:exported="true"
+            android:label="@string/wallpaper_label"
+            android:process=":wallpaper"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/livecanvas_wallpaper"/>
+        </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -40,6 +63,13 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Android 11+ package visibility: without this, resolveActivity for
+             the live-wallpaper picker returns null even when the picker exists,
+             so isLiveWallpaperSupported() would report "not supported" on every
+             modern device (FR-017 would fire universally). -->
+        <intent>
+            <action android:name="android.service.wallpaper.CHANGE_LIVE_WALLPAPER"/>
         </intent>
     </queries>
 </manifest>

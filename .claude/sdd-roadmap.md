@@ -4,7 +4,7 @@
 >
 > **Vai trò file này**: pure planning cho track mobile. Trạng thái hiện tại → [`project-context.md`](project-context.md). Ship history → [`changelog.md`](changelog.md).
 >
-> Last updated: 2026-07-26 (MO-001 + MO-002 + MO-003 đã MERGE vào `main` qua PR #3 & #5 & #6 · MO-004 implemented chờ PR · contract **v0.7.0** — synced từ backend BE-008 (đã implement + test xanh; BẮT BUỘC regenerate client) · backend đã merge BE-001→BE-004, BE-005 đang trên branch · tiếp theo: MO-005)
+> Last updated: 2026-08-09 (MO-001→**MO-004 đã MERGE** vào `main` qua PR #3 & #5 & #6 & #8 · contract **v0.8.0** vừa sync từ backend branch `BE-006-security-hardening` — thêm `RATE_LIMITED` 429 + `SERVICE_UNAVAILABLE` 503; path/schema không đổi nhưng **client cần code tay: đọc `Retry-After` + backoff**, và giãn nhịp "Tải tất cả" vì trần 20/phút · backend đã merge BE-001→**BE-005 + BE-008** vào `main`, BE-006 đang implement trên branch · **tiếp theo: MO-005 Set Wallpaper Native**)
 > Full requirements: `docs/PRD.md` · Nguyên tắc: [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md)
 
 ---
@@ -109,17 +109,19 @@ MO-007: Polish & Store Submission                 ⇄ Điểm đồng bộ: cầ
 
 ### MO-004: Favorites & Local Data
 
-- **Status**: 🟢 Implemented + **nghiệm thu device xong** (37/37 task, 2026-07-29) trên branch `MO-004-favorites-local-data` — chờ PR/merge. 4 US favorites/history (`shared_preferences` ID cục bộ; `core/favorites/` repo `ValueListenable` đồng bộ tim xuyên màn) + **2 bugfix máy thật** (tim đồng bộ, favorites refresh) + **design fidelity pass** (component dùng chung + Detail/Collection/Browse/chrome bám prototype) + **v0.7.0**: regenerate client, **Browse dạng section** (`GET /home`, chip "Tất cả") + mục **"Mô tả"** Detail (`Wallpaper.description`). **91 test** + 4 CI gate xanh. Deviation: state native sealed class + Equatable (đã duyệt); Download History tối giản (chưa có design).
+- **Status**: ✅ **Merged vào `main` qua PR #8** (2026-07-29) — 37/37 task, nghiệm thu device xong. 4 US favorites/history (`shared_preferences` ID cục bộ; `core/favorites/` repo `ValueListenable` đồng bộ tim xuyên màn) + **2 bugfix máy thật** (tim đồng bộ, favorites refresh) + **design fidelity pass** (component dùng chung + Detail/Collection/Browse/chrome bám prototype) + **v0.7.0**: regenerate client, **Browse dạng section** (`GET /home`, chip "Tất cả") + mục **"Mô tả"** Detail (`Wallpaper.description`). **91 test** + 4 CI gate xanh. Deviation: state native sealed class + Equatable (đã duyệt); Download History tối giản (chưa có design).
 - **Branch**: `MO-004-favorites-local-data`
 - **Depends on**: MO-003
 - **Scope**: Favorite lưu local (chỉ mảng ID — Principle IX), mỗi lần mở màn gọi `POST /wallpapers/batch` để lấy data mới nhất (không cache full data); reconcile khi ID bị xóa (bỏ favorite, không lỗi); lịch sử tải local.
 
-### MO-005: Set Wallpaper Native Integration
+### MO-005: Set Wallpaper Native Integration 🔜 KẾ TIẾP
 
-- **Status**: ⬜ Not started
+- **Status**: 🟢 **Implemented** trên branch `MO-005-set-wallpaper-native` (2026-08-09) — **38/46 task**, 157 test + 4 CI gate xanh, build xanh cả Android APK lẫn iOS. 8 task còn lại **đều là nghiệm thu trên thiết bị thật** (T025 Android+reboot, T032 iPhone, T039 premium, T041 kịch bản lỗi, T042 tablet, T043 SC-007, T045 máy Android thứ hai, T046 docs khi mở PR). Chi tiết + 4 lỗi bắt được lúc implement: `.claude/changelog.md`
 - **Branch**: `MO-005-set-wallpaper-native`
-- **Depends on**: MO-003
+- **Depends on**: MO-003 ✅ (MO-004 ✅ đã merge, không phải dependency nhưng cung cấp `DownloadHistoryRepository`)
 - **Scope**: Android Method Channel `com.livecanvas/wallpaper` gọi `WallpaperManager`/`WallpaperService` (Kotlin); iOS màn preview + hướng dẫn Shortcuts (convert Live Photo `.heic`+`.mov`); map lỗi native → `AppFailure` (`wallpaperSetFailed`/`platformUnsupported`). Principle VII + VIII.
+- **Nối việc treo từ MO-004**: gắn **điểm ghi `DownloadHistoryRepository.record(id)`** vào flow tải thật (MO-004 mới test qua seed); nếu có design handoff thì thay màn `DownloadHistoryPage` tối giản bằng thiết kế thật.
+- **Lưu ý contract**: file lấy từ `GET /wallpapers/{id}/download-url` — presigned ≤5 phút, ⚠️ **domain S3/R2 KHÁC domain CDN** của `thumbnail_url`/`preview_video_url` → không hardcode/so sánh domain. Premium vẫn `402 ENTITLEMENT_REQUIRED` cho tới khi MO-006 có `transaction_id` (backend BE-005 chưa merge) → MO-005 chỉ test end-to-end trên wallpaper **free**.
 
 ### MO-006: IAP & Paywall
 

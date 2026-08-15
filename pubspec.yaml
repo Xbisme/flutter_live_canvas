@@ -22,6 +22,11 @@ dependencies:
   intl: ^0.20.2
   livecanvas_api:
     path: packages/livecanvas_api
+  # App-private directory for the downloaded master file (MO-005). Uses
+  # getApplicationSupportDirectory, NOT the cache dir — the OS may purge cache
+  # at any time, which would kill a live wallpaper still pointing at the file.
+  # flutter.dev verified publisher / Flutter Favorite. MO-005 research R4.
+  path_provider: ^2.1.6
   # Phosphor icons — phosphoricons_flutter (NOT phosphor_flutter, whose 2.1.0
   # extends the now-final IconData and breaks on Flutter 3.44). Same Phosphor
   # set, Dart 3.x safe via `typedef PhosphorIconData = IconData`. Decision

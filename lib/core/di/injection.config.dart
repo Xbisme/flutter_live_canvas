@@ -25,6 +25,12 @@ import 'package:livecanvas/core/favorites/download_history_store.dart' as _i101;
 import 'package:livecanvas/core/favorites/favorites_repository.dart' as _i113;
 import 'package:livecanvas/core/favorites/favorites_store.dart' as _i857;
 import 'package:livecanvas/core/favorites/local_data_module.dart' as _i331;
+import 'package:livecanvas/core/wallpaper/set_wallpaper_use_case.dart'
+    as _i1065;
+import 'package:livecanvas/core/wallpaper/wallpaper_download_repository.dart'
+    as _i685;
+import 'package:livecanvas/core/wallpaper/wallpaper_platform_service.dart'
+    as _i102;
 import 'package:livecanvas/features/browse/presentation/cubit/browse_cubit.dart'
     as _i124;
 import 'package:livecanvas/features/collection_detail/presentation/cubit/collection_detail_cubit.dart'
@@ -37,6 +43,8 @@ import 'package:livecanvas/features/favorites/presentation/cubit/favorites_cubit
     as _i677;
 import 'package:livecanvas/features/search/presentation/cubit/search_cubit.dart'
     as _i763;
+import 'package:livecanvas/features/set_wallpaper/presentation/cubit/set_wallpaper_cubit.dart'
+    as _i184;
 import 'package:livecanvas/features/wallpaper_detail/presentation/cubit/wallpaper_detail_cubit.dart'
     as _i503;
 import 'package:livecanvas_api/livecanvas_api.dart' as _i1046;
@@ -54,6 +62,9 @@ extension GetItInjectableX on _i174.GetIt {
     final catalogModule = _$CatalogModule();
     gh.lazySingleton<_i460.SharedPreferencesAsync>(
       () => localDataModule.sharedPreferences(),
+    );
+    gh.lazySingleton<_i102.WallpaperPlatformService>(
+      () => _i102.WallpaperPlatformServiceImpl(),
     );
     gh.lazySingleton<_i101.DownloadHistoryStore>(
       () => _i101.DownloadHistoryStore(gh<_i460.SharedPreferencesAsync>()),
@@ -86,6 +97,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i836.TagRepository>(
       () => _i836.TagRepositoryImpl(gh<_i1046.PublicApi>()),
     );
+    gh.lazySingleton<_i685.WallpaperDownloadRepository>(
+      () => _i685.WallpaperDownloadRepositoryImpl(gh<_i1046.PublicApi>()),
+    );
     gh.factory<_i677.FavoritesCubit>(
       () => _i677.FavoritesCubit(
         gh<_i141.WallpaperRepository>(),
@@ -110,6 +124,16 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i763.SearchCubit>(
       () => _i763.SearchCubit(gh<_i141.WallpaperRepository>()),
+    );
+    gh.lazySingleton<_i1065.SetWallpaperUseCase>(
+      () => _i1065.SetWallpaperUseCaseImpl(
+        gh<_i685.WallpaperDownloadRepository>(),
+        gh<_i102.WallpaperPlatformService>(),
+        gh<_i1047.DownloadHistoryRepository>(),
+      ),
+    );
+    gh.factory<_i184.SetWallpaperCubit>(
+      () => _i184.SetWallpaperCubit(gh<_i1065.SetWallpaperUseCase>()),
     );
     gh.factory<_i611.CollectionDetailCubit>(
       () => _i611.CollectionDetailCubit(gh<_i218.CollectionRepository>()),

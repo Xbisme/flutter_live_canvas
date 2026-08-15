@@ -16,6 +16,11 @@ abstract final class AppRoutes {
   /// Local download history (US4) — pushed over the shell from the You tab.
   static const downloadHistory = '/download-history';
 
+  /// Premium paywall — pushed over the shell when the server refuses a
+  /// download with 402. A placeholder in MO-005; MO-006 builds the real
+  /// purchase flow behind this same path.
+  static const paywall = '/paywall';
+
   /// Dev-only widget gallery (FR-006a) — not part of the user-facing flow.
   static const devGallery = '/dev/gallery';
 }

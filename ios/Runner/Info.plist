@@ -2,6 +2,26 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Add-only Photos access (MO-005). The app writes one video so the user
+	     can pick it in Shortcuts; it never reads the library, so
+	     NSPhotoLibraryUsageDescription is deliberately absent. App Review reads
+	     this string verbatim, and the audience is Vietnamese. -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>LiveCanvas lưu video hình nền vào thư viện Ảnh để bạn đặt làm hình nền qua Phím tắt.</string>
+	<!-- Only reached on iOS 13, where the add-only scope does not exist yet and
+	     the combined permission is the sole option. Calling that API without
+	     this key terminates the app, so it is required, not optional. Drop it
+	     if the deployment target ever moves to iOS 14+. -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>LiveCanvas cần quyền truy cập thư viện Ảnh để lưu video hình nền vào máy bạn.</string>
+	<!-- Without this, canOpenURL("photos-redirect://") always returns false and
+	     the "Mở app Ảnh" button would report it as unopenable on every device —
+	     the iOS twin of Android's <queries> package-visibility rule. -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>photos-redirect</string>
+		<string>photos</string>
+	</array>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>

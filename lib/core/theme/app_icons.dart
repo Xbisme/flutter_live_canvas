@@ -40,4 +40,8 @@ abstract final class AppIcons {
   static const IconData flag = PhosphorIconsRegular.flag;
   static const IconData warning = PhosphorIconsRegular.warningCircle;
   static const IconData imageSquare = PhosphorIconsRegular.imageSquare;
+
+  /// Set-wallpaper sheet (MO-005), matching `SetWallpaper.jsx`.
+  static const IconData checkCircle = PhosphorIconsFill.checkCircle;
+  static const IconData arrowSquareOut = PhosphorIconsRegular.arrowSquareOut;
 }

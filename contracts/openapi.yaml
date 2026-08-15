@@ -55,7 +55,19 @@ info:
     `AdminWallpaperCursorPage`, áp cho POST/GET/PATCH `/admin/wallpapers`. Đây là sửa
     contract cho khớp hành vi có sẵn — KHÔNG có thay đổi phía server, KHÔNG ảnh hưởng
     tầng app. Mobile KHÔNG cần regenerate (chỉ chạm admin tier, app không gọi `/admin/*`).
-  version: "0.7.1"
+
+    v0.8.0 (BE-006): thêm 2 error code. `RATE_LIMITED` (429) — caller vượt hạn mức;
+    áp cho `GET /wallpapers/{id}/download-url` (120/giờ + 20/phút mỗi địa chỉ nguồn),
+    `POST /iap/verify-receipt` (30/giờ) và `POST /admin/auth/login` (5 lần sai/15 phút
+    mỗi account, thành công thì reset). `SERVICE_UNAVAILABLE` (503) — hệ thống KHÔNG
+    đánh giá được hạn mức (bộ đếm không truy cập được) nên từ chối fail-closed; hiện chỉ
+    `POST /admin/auth/login` phát mã này, vì tầng app fail-open khi mất bộ đếm. Cả hai
+    response đều mang header `Retry-After` (giây) — client PHẢI backoff theo header,
+    KHÔNG retry ngay. Hạn mức đếm theo **địa chỉ nguồn**, không theo `X-App-Key` (mọi bản
+    cài dùng chung 1 key) và không theo thiết bị. Webhook store KHÔNG có 429: chỉ request
+    sai chữ ký mới bị đếm, chữ ký hợp lệ luôn đi qua nên không bao giờ mất event gia hạn.
+    Không đổi schema/path nào khác; hành vi endpoint khi dưới hạn mức giữ nguyên.
+  version: "0.8.0"
 
 servers:
   - url: https://api.example.com/v1
@@ -79,6 +91,34 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  responses:
+    RateLimited:
+      description: >
+        Vượt hạn mức request (v0.8.0). Body dùng ErrorResponse với code `RATE_LIMITED`.
+        Header `Retry-After` cho biết số giây phải đợi. Tạm thời — client backoff theo
+        header, KHÔNG retry ngay.
+      headers:
+        Retry-After:
+          description: Số giây client phải đợi trước khi thử lại.
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+    ControlUnavailable:
+      description: >
+        Không đánh giá được hạn mức (bộ đếm không truy cập được) nên request bị từ chối
+        fail-closed (v0.8.0). Body dùng ErrorResponse với code `SERVICE_UNAVAILABLE`.
+        KHÁC 429: caller KHÔNG hề gọi quá nhiều. Cũng KHÔNG phải lỗi credential — đừng
+        bắt người dùng nhập lại mật khẩu. Tạm thời — thử lại theo `Retry-After`.
+      headers:
+        Retry-After:
+          description: Số giây client phải đợi trước khi thử lại.
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   parameters:
     CursorParam:
@@ -675,6 +715,8 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404':
           description: Not found
+        '429':
+          $ref: '#/components/responses/RateLimited'
 
   /iap/verify-receipt:
     post:
@@ -694,6 +736,8 @@ paths:
           description: Receipt không hợp lệ
         '409':
           description: Receipt đã được dùng bởi transaction_id/device khác
+        '429':
+          $ref: '#/components/responses/RateLimited'
         '503':
           description: App Store/Google Play API tạm không phản hồi
 
@@ -766,6 +810,10 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ControlUnavailable'
 
   /admin/auth/refresh:
     post:

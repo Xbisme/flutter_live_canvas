@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Shown by the system live-wallpaper picker, outside the Flutter UI, so it
+      cannot come from the ARB files. Vietnamese is the product's primary
+      language (Principle XV); values-vi/ would be redundant here.
+    -->
+    <string name="wallpaper_label">LiveCanvas</string>
+    <string name="wallpaper_description">Hình nền động từ LiveCanvas</string>
+</resources>

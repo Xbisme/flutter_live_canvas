@@ -19,6 +19,7 @@ import 'package:livecanvas/core/widgets/feedback/toast.dart';
 import 'package:livecanvas/core/widgets/wallpaper/favoritable_wallpaper_tile.dart';
 import 'package:livecanvas/core/widgets/wallpaper/premium_badge.dart';
 import 'package:livecanvas/core/widgets/wallpaper/video_preview.dart';
+import 'package:livecanvas/features/set_wallpaper/set_wallpaper.dart';
 import 'package:livecanvas/features/wallpaper_detail/presentation/cubit/wallpaper_detail_cubit.dart';
 import 'package:livecanvas/features/wallpaper_detail/presentation/cubit/wallpaper_detail_state.dart';
 import 'package:livecanvas/l10n/l10n.dart';
@@ -457,14 +458,29 @@ class _Actions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    // MO-003: visual placeholders — native set / download + real entitlement
-    // land in MO-005/MO-006 (Principle V).
-    void soon() => showToast(context, l10n.placeholderComingSoon);
+
+    // The prototype wires BOTH "Tải xuống" and "Đặt làm hình nền" to the same
+    // sheet, which is where the actual action is chosen (FR-001). Premium is
+    // NOT gated here — the sheet calls download-url and lets the server's 402
+    // decide (Principle V, FR-027).
+    // The generated model types `id` as nullable; without one there is
+    // nothing to download, so the actions are disabled rather than
+    // force-unwrapped.
+    final id = wallpaper.id;
+    final openSheet = id == null
+        ? null
+        : () => unawaited(
+            showSetWallpaperSheet(
+              context,
+              wallpaperId: id,
+              wallpaperTitle: wallpaper.title ?? '',
+            ),
+          );
 
     if (wallpaper.isPremium ?? false) {
       return AppButton(
         label: l10n.detailUnlock,
-        onPressed: soon,
+        onPressed: openSheet,
         gradient: true,
         icon: AppIcons.sparkle,
       );
@@ -474,7 +490,7 @@ class _Actions extends StatelessWidget {
         Expanded(
           child: AppButton(
             label: l10n.detailDownload,
-            onPressed: soon,
+            onPressed: openSheet,
             variant: AppButtonVariant.ghost,
             icon: AppIcons.download,
           ),
@@ -483,7 +499,7 @@ class _Actions extends StatelessWidget {
         Expanded(
           child: AppButton(
             label: l10n.detailSetWallpaper,
-            onPressed: soon,
+            onPressed: openSheet,
             variant: AppButtonVariant.light,
             icon: AppIcons.paintBrush,
           ),
